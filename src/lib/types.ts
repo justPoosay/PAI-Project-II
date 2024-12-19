@@ -1,5 +1,3 @@
-import type { ClientBoundWebSocketMessage, ServerBoundWebSocketMessage } from "../../shared";
-
 export interface Chat {
   id: string;
   name: string;
@@ -8,10 +6,8 @@ export interface Chat {
 type Role = "user" | "assistant" | "tool" | "function" | "system"
 
 export interface Message {
-  role: Role,
-  content: string,
-  timestamp: number,
+  id: number;
+  content: string;
+  createdAt: Date;
+  role: Role;
 }
-
-export type OutboundWSMessage = ServerBoundWebSocketMessage;
-export type InboundWSMessage = ClientBoundWebSocketMessage;

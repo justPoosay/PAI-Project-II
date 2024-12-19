@@ -1,11 +1,25 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
+import { useChatStore } from "@/stores/chats.ts";
+import { storeToRefs } from "pinia";
+
+const chatStore = useChatStore();
+const { chats } = storeToRefs(chatStore);
+
+onMounted(() => {
+  chatStore.$fetch();
+  console.log(chats);
+});
 
 let open = ref(false);
 </script>
 
 <template>
-  <div role="complementary" class="fixed h-full" :data-open="open">
-    <div class="w-10 h-10 flex items-center justify-center">+</div>
+  <div role="complementary" class="fixed h-full bg-vue-black shadow-md" :data-open="open">
+    <div class="flex flex-col p-2">
+      <RouterLink class="text-vue-white" v-for="{ name, id } in chats" :to="`/chat/${id}`">
+        {{ name || "Untitled" }}
+      </RouterLink>
+    </div>
   </div>
 </template>

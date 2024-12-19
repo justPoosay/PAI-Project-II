@@ -5,14 +5,17 @@ import type { Chat } from "@/lib/types";
 export const useChatStore = defineStore("chat", () => {
   const chats = ref<Chat[]>([]);
   
-  const fetchChats = async () => {
-    const response = await fetch("/api/chats");
-    chats.value = await response.json();
-  };
-  
-  fetchChats().then();
+  async function $fetch () {
+    try {
+      const response = await fetch("/api/chats");
+      const json = await response.json();
+      chats.value = json;
+    } catch ( error ) {
+    }
+  }
   
   return {
     chats,
+    $fetch,
   };
 });
