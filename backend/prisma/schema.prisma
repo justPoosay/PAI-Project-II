@@ -1,0 +1,30 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ASSISTANT
+  TOOL
+  FUNCTION
+  SYSTEM
+}
+
+model Message {
+  id        Int      @id @default(autoincrement())
+  content   String
+  createdAt DateTime @default(now())
+  role      Role
+  chatId    String
+  chat      Chat     @relation(fields: [chatId], references: [id])
+}
+
+model Chat {
+  id       String    @id @default(uuid())
+  messages Message[]
+}
