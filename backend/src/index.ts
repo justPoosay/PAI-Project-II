@@ -29,18 +29,23 @@ const server = serve({
     
     if (!match) return Response.json({ success: false, error: "Not Found" }, { status: 404 });
     
-    if (/\.(js|ts)$/.test(match.src)) {
-      const module = await import(match.filePath);
-      const method = module[req.method];
-      if (method && typeof method === "function") {
-        const result = await method(Object.assign(req, { route: match }));
-        if (result instanceof Response) return result;
-      }
+    const module = await import(match.filePath);
+    const method = module[req.method];
+    if (method && typeof method === "function") {
+      const result = await method(Object.assign(req, { route: match }));
+      if (result instanceof Response) return result;
     }
     
     return Response.json({ success: false, error: "Not Found" }, { status: 404 });
   },
   websocket: {
+    open(ws) {
+      ws.subscribe((ws.data as { id: string }).id);
+      ws.send();
+    },
+    close(ws, code: number, reason: string) {
+      ws.unsubscribe((ws.data as { id: string }).id);
+    },
     message(ws, message) {
     },
   },
