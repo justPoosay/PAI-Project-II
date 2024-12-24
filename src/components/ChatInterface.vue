@@ -1,7 +1,7 @@
 <template>
   <div class="flex h-screen bg-vue-black">
     <!-- Sidebar -->
-    <Sidebar />
+    <Sidebar/>
 
     <!-- Chat Area -->
     <div class="flex-1 flex flex-col">
@@ -37,7 +37,7 @@
       <div class="border-t border-vue-black-mute p-4">
         <div class="flex items-start max-w-2xl mx-auto">
           <button class="p-2 rounded-full hover:bg-vue-black-mute transition mt-1">
-            <PaperclipIcon class="w-6 h-6 text-vue-white-soft" />
+            <PaperclipIcon class="w-6 h-6 text-vue-white-soft"/>
           </button>
           <textarea
               v-model="newMessage"
@@ -50,7 +50,7 @@
               @click="sendMessage"
               class="p-2 bg-indigo text-vue-white rounded-full hover:bg-opacity-80 transition mt-1"
           >
-            <SendIcon class="w-6 h-6" />
+            <SendIcon class="w-6 h-6"/>
           </button>
         </div>
       </div>
@@ -62,9 +62,10 @@
 import { ref, computed, onMounted, nextTick } from "vue";
 import { SendIcon, PaperclipIcon } from "lucide-vue-next";
 import Sidebar from "@/components/Sidebar.vue";
-import { marked, type MarkedOptions } from "marked";
+import { marked } from "marked";
 import hljs from "highlight.js";
 import "highlight.js/styles/github-dark.css";
+import DOMPurify from "dompurify";
 
 type Message = { id: number; text: string; isMe: boolean };
 
@@ -87,7 +88,7 @@ const groupedMessages = computed(() => {
     const isSameSender = prevMessage && prevMessage.isMe === message.isMe;
     const group: Message[] = isSameSender ? groups[groups.length - 1] : [];
     group.push(message);
-    if (!isSameSender) {
+    if(!isSameSender) {
       groups.push(group);
     }
     return groups;
@@ -97,7 +98,7 @@ const groupedMessages = computed(() => {
 const newMessage = ref("");
 
 const sendMessage = () => {
-  if (newMessage.value.trim()) {
+  if(newMessage.value.trim()) {
     messages.value.push({
       id: messages.value.length + 1,
       text: newMessage.value,
@@ -111,7 +112,7 @@ const sendMessage = () => {
 };
 
 const handleKeyDown = (e: KeyboardEvent) => {
-  if (e.key === "Enter" && !e.shiftKey) {
+  if(e.key === "Enter" && !e.shiftKey) {
     e.preventDefault();
     sendMessage();
   }
@@ -119,14 +120,10 @@ const handleKeyDown = (e: KeyboardEvent) => {
 
 const parseMarkdown = (text: string) => {
   marked.setOptions({
-    highlight: function (code: string, lang: string) {
-      const language = hljs.getLanguage(lang) ? lang : "plaintext";
-      return hljs.highlight(code, { language }).value;
-    },
     breaks: true,
     gfm: true,
-  } as MarkedOptions);
-  return marked(text);
+  });
+  return DOMPurify.sanitize(marked(text.replace(/^[\u200B\u200C\u200D\u200E\u200F\uFEFF]/, "")) as string);
 };
 
 const highlightCode = () => {
@@ -144,40 +141,47 @@ onMounted(() => {
 
 <style>
 /* Add some basic styling for Markdown elements */
-.markdown-content {
-  word-break: break-word;
+.markdown-content
+{
+  word-break : break-word;
 }
 
-.markdown-content .hljs {
-  background: #1e1e1e;
-  color: #d4d4d4;
-  border-radius: 0.5rem;
-  padding: 1rem;
-  margin: 0.5rem 0;
+.markdown-content .hljs
+{
+  background    : #1e1e1e;
+  color         : #d4d4d4;
+  border-radius : 0.5rem;
+  padding       : 1rem;
+  margin        : 0.5rem 0;
 }
 
-.markdown-content strong {
-  font-weight: bold;
+.markdown-content strong
+{
+  font-weight : bold;
 }
 
-.markdown-content em {
-  font-style: italic;
+.markdown-content em
+{
+  font-style : italic;
 }
 
-.markdown-content code:not(.hljs) {
-  background-color: rgba(255, 255, 255, 0.1);
-  border-radius: 0.25rem;
-  padding: 0.1rem 0.25rem;
-  font-family: monospace;
+.markdown-content code:not(.hljs)
+{
+  background-color : rgba(255, 255, 255, 0.1);
+  border-radius    : 0.25rem;
+  padding          : 0.1rem 0.25rem;
+  font-family      : monospace;
 }
 
-.markdown-content pre {
-  margin-top: 0.5rem;
-  margin-bottom: 0.5rem;
+.markdown-content pre
+{
+  margin-top    : 0.5rem;
+  margin-bottom : 0.5rem;
 }
 
-.markdown-content pre code {
-  background-color: transparent;
-  padding: 0;
+.markdown-content pre code
+{
+  background-color : transparent;
+  padding          : 0;
 }
 </style>

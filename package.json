@@ -11,6 +11,7 @@
     "type-check": "vue-tsc --build"
   },
   "dependencies": {
+    "dompurify": "^3.2.3",
     "highlight.js": "^11.11.0",
     "lucide-vue-next": "^0.469.0",
     "marked": "^15.0.4",
