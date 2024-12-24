@@ -2,15 +2,12 @@ import { db } from "../lib/db.ts";
 import type { ServerWebSocket } from "bun";
 import type { WSData } from "../lib/types.ts";
 import type { ClientBoundWebSocketMessage, ServerBoundWebSocketMessage } from "../../../shared";
-import OpenAI from "openai";
 import { server } from "../index.ts";
-import { type CoreAssistantMessage, type CoreMessage, type CoreUserMessage, streamText, tool } from "ai";
+import { type CoreAssistantMessage, type CoreMessage, type CoreUserMessage, streamText } from "ai";
 import { openai } from "@ai-sdk/openai";
-import { z } from "zod";
-import { type TOOLS, tools } from "./tools";
+import { tools } from "./tools";
 
 class ConversationClass {
-  private readonly client = new OpenAI();
   private readonly id: string;
   private readonly ws: ServerWebSocket<WSData>;
   private messages: CoreMessage[] = [];
@@ -55,11 +52,10 @@ class ConversationClass {
       model: openai("gpt-4o"),
       messages: this.messages,
       tools,
-      maxSteps: 16, // nice round number
+      maxSteps: 16,
       onChunk: ({ chunk }) => {
         if(["tool-call", "tool-result", "text-delta"].includes(chunk.type)) {
           this.publish({ role: "chunk", ...chunk } as ClientBoundWebSocketMessage);
-          console.log(chunk);
         }
       }
     });
@@ -77,18 +73,11 @@ class ConversationClass {
     this.publish({ role: "finish" });
     // ---
     
-    this.messages.length = 0; // REMOVE ME
     return message;
   }
 }
 
 export type TConversation = ConversationClass;
-
-interface ConversationClassConstructor {
-  new(chatID: string): ConversationClass;
-  
-  (chatID: string): ConversationClass;
-}
 
 const Conversation = function(this: ConversationClass | void, ws: ServerWebSocket<WSData>) {
   return new ConversationClass(ws);

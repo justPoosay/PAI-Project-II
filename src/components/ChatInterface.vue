@@ -8,25 +8,24 @@
       <!-- Chat Messages -->
       <div class="flex-1 overflow-y-auto p-4">
         <div class="max-w-5xl mx-auto">
-          <div v-for="(group, groupIndex) in groupedMessages" :key="groupIndex" class="mb-2">
+          <div v-for="(message, i) in messages" :key="i" class="mb-2">
             <div
-                v-for="(message, messageIndex) in group"
-                :key="message.id"
                 :class="[
-                'mb-1 last:mb-0',
-                message.isMe ? 'flex justify-end' : 'flex justify-start'
+                'flex',
+                message.role === 'user'
+                ? 'justify-end'
+                : 'justify-start'
               ]"
             >
               <div
                   :class="[
                   'max-w-[80%] p-3 relative',
-                  message.isMe
+                  message.role === 'user'
                     ? 'bg-teal-600 text-vue-white rounded-tl-2xl rounded-tr-2xl rounded-bl-2xl'
                     : 'bg-vue-black-mute text-vue-white-soft rounded-tl-2xl rounded-tr-2xl rounded-br-2xl',
-                  messageIndex === group.length - 1 ? 'mb-1' : 'mb-0.5'
                 ]"
               >
-                <div v-html="parseMarkdown(message.text)" class="markdown-content"></div>
+                <div v-html="parseMarkdown(message.content)" class="markdown-content"></div>
               </div>
             </div>
           </div>
@@ -40,9 +39,9 @@
             <PaperclipIcon class="w-6 h-6 text-vue-white-soft"/>
           </button>
           <textarea
-              v-model="newMessage"
+              v-model="input"
               @keydown="handleKeyDown"
-              placeholder="Type a message... (Markdown supported)"
+              placeholder="Type a message..."
               class="flex-1 bg-vue-black-soft text-vue-white border-vue-black-mute rounded-lg px-4 py-2 mx-2 focus:outline-none focus:ring-2 focus:ring-indigo resize-none"
               rows="3"
           ></textarea>
@@ -59,52 +58,92 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick } from "vue";
+import { ref, onMounted, nextTick } from "vue";
 import { SendIcon, PaperclipIcon } from "lucide-vue-next";
 import Sidebar from "@/components/Sidebar.vue";
 import { marked } from "marked";
 import hljs from "highlight.js";
 import "highlight.js/styles/github-dark.css";
 import DOMPurify from "dompurify";
+import { isValidJSON } from "@/lib/utils.ts";
+import type { ClientBoundWebSocketMessage, ServerBoundWebSocketMessage } from "../../shared";
+import { useRoute } from "vue-router";
 
-type Message = { id: number; text: string; isMe: boolean };
+interface Message {
+  role: "user" | "assistant";
+  content: string;
+  finished: boolean;
+}
 
-const messages = ref<Message[]>([
-  { id: 1, text: "Hey there! Here's some **bold** and *italic* text.", isMe: true },
-  {
-    id: 2,
-    text: "Hi! How are you? Here's a code block:\n```javascript\nconsole.log('Hello, world!');\n```",
-    isMe: false
-  },
-  { id: 3, text: "I'm doing great, thanks for asking!", isMe: true },
-  { id: 4, text: "That's wonderful to hear!", isMe: false },
-  { id: 5, text: "Do you have any plans for the weekend?", isMe: true },
-  { id: 6, text: "Not yet, but I'm thinking about going hiking. How about you?", isMe: false },
-]);
+const route = useRoute();
+const messages = ref<Message[]>([]);
+const input = ref("");
 
-const groupedMessages = computed(() => {
-  return messages.value.reduce((groups, message, index) => {
-    const prevMessage = messages.value[index - 1];
-    const isSameSender = prevMessage && prevMessage.isMe === message.isMe;
-    const group: Message[] = isSameSender ? groups[groups.length - 1] : [];
-    group.push(message);
-    if(!isSameSender) {
-      groups.push(group);
+let ws: WebSocket;
+const send = (data: ServerBoundWebSocketMessage) => ws.send(JSON.stringify(data));
+onMounted(async() => {
+  ws = new WebSocket(`ws://${window.location.host}/api/chat/${route.params.id}`);
+  ws.onmessage = (event: MessageEvent<string>) => {
+    if(!isValidJSON(event.data)) return;
+    const msg = JSON.parse(event.data) as ClientBoundWebSocketMessage;
+
+    if(msg.role === "chunk") {
+      if(msg.type === "text-delta") {
+        if(messages.value[messages.value.length - 1].finished) {
+          messages.value.push({
+            role: "assistant",
+            content: msg.textDelta,
+            finished: false,
+          });
+        } else {
+          messages.value[messages.value.length - 1].content += msg.textDelta;
+        }
+      }
+
+      if(msg.type === "tool-call") {
+        // TODO
+      }
+
+      if(msg.type === "tool-result") {
+        // TODO
+      }
     }
-    return groups;
-  }, [] as Message[][]);
+
+    if(msg.role === "finish") {
+      messages.value[messages.value.length - 1].finished = true;
+      console.log(messages.value);
+    }
+
+    console.log(msg);
+  };
+
+  ws.onclose = (event) => {
+    const isError = event.code !== 1000;
+    const reason = event.reason || "Unknown";
+
+    console.log(event);
+  };
+
+  // const res = await fetch(`/api/chat/${route.params.id}/msgs`);
+  // if(res.ok) {
+  //   const data = await res.json();
+  //   messages.value = [...messages.value, ...data];
+  // }
 });
 
-const newMessage = ref("");
-
 const sendMessage = () => {
-  if(newMessage.value.trim()) {
+  if(input.value.trim()) {
     messages.value.push({
-      id: messages.value.length + 1,
-      text: newMessage.value,
-      isMe: true,
+      role: "user",
+      content: input.value,
+      finished: true,
     });
-    newMessage.value = "";
+    send({
+      role: "message",
+      action: "create",
+      content: input.value,
+    });
+    input.value = "";
     nextTick(() => {
       highlightCode();
     });
