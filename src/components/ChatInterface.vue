@@ -7,7 +7,7 @@
     <div class="flex-1 flex flex-col">
       <!-- Chat Messages -->
       <div class="flex-1 overflow-y-auto p-4">
-        <div class="max-w-2xl mx-auto">
+        <div class="max-w-5xl mx-auto">
           <div v-for="(group, groupIndex) in groupedMessages" :key="groupIndex" class="mb-2">
             <div
                 v-for="(message, messageIndex) in group"
@@ -19,7 +19,7 @@
             >
               <div
                   :class="[
-                  'max-w-[70%] p-3 relative',
+                  'max-w-[80%] p-3 relative',
                   message.isMe
                     ? 'bg-teal-600 text-vue-white rounded-tl-2xl rounded-tr-2xl rounded-bl-2xl'
                     : 'bg-vue-black-mute text-vue-white-soft rounded-tl-2xl rounded-tr-2xl rounded-br-2xl',
