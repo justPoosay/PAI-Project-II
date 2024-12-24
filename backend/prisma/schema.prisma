@@ -8,24 +8,28 @@ datasource db {
 }
 
 enum Role {
-  USER
-  ASSISTANT
-  TOOL
-  FUNCTION
-  SYSTEM
+  user
+  assistant
+  tool
+  system
 }
 
 model Message {
-  id        Int      @id @default(autoincrement())
-  content   String
-  createdAt DateTime @default(now())
-  role      Role
-  chatId    String
-  chat      Chat     @relation(fields: [chatId], references: [id])
+  id      Int     @id @default(autoincrement())
+  content String?
+  refusal String?
+  role    Role
+
+  chat_id    String
+  created_at DateTime @default(now())
+  chat       Chat     @relation(fields: [chat_id], references: [id])
 }
 
 model Chat {
   id       String    @id @default(uuid())
   name     String?
   messages Message[]
+
+  created_at DateTime  @default(now())
+  updated_at DateTime? @updatedAt
 }

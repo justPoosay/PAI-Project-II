@@ -8,14 +8,13 @@ const { chats } = storeToRefs(chatStore);
 
 onMounted(() => {
   chatStore.$fetch();
-  console.log(chats);
 });
 
 let open = ref(false);
 </script>
 
 <template>
-  <div role="complementary" class="fixed h-full bg-vue-black shadow-md" :data-open="open">
+  <div role="complementary" class="h-full bg-vue-black shadow-md w-max max-w-[10vw]" :data-open="open">
     <div class="flex flex-col p-2">
       <RouterLink class="text-vue-white" v-for="{ name, id } in chats" :to="`/chat/${id}`">
         {{ name || "Untitled" }}

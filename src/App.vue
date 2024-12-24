@@ -4,7 +4,7 @@ import Sidebar from "@/components/Sidebar.vue";
 </script>
 
 <template>
-  <main class="h-full bg-vue-black-soft">
+  <main class="h-full bg-vue-black-soft flex flex-row">
     <Sidebar />
     <RouterView />
   </main>

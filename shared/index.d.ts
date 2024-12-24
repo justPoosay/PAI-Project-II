@@ -1,12 +1,23 @@
 export type WebSocketMessage =
-  | { type: "tmp" }
+  | { role: "finish" }
 
+/** @description message sent from the server to the client */
 export type ClientBoundWebSocketMessage =
-  | { type: "message", action: "create", id: number, content: string, role: "assistant" | "user" }
-  | { type: "stream", target: "message", id: number, role: "start" | "end" }
-  | { type: "stream", target: "message", id: number, role: "chunk", content: string }
+  | { role: "chunk", type: "tool-call", toolCallId: string, toolName: string, args: Record<string, unknown> }
+  |
+  {
+    role: "chunk",
+    type: "tool-result",
+    toolCallId: string,
+    toolName: string,
+    args: Record<string, unknown>,
+    result: unknown
+  }
+  | { role: "chunk", type: "text-delta", textDelta: string }
   | WebSocketMessage
 
+/** @description message sent from the client to the server */
 export type ServerBoundWebSocketMessage =
-  | { type: "message", action: "create", content: string }
+  | { role: "message", action: "create", content: string }
+  | { role: "action", action: "abort" }
   | WebSocketMessage
