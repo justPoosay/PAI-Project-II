@@ -16,7 +16,7 @@
         </button>
         <button
             @click="toggleSidebar"
-            class="p-2 text-vue-white-soft hover:bg-vue-black-mute rounded-full transition"
+            class="p-2 w-full flex justify-end text-vue-white-soft hover:bg-vue-black-mute transition"
         >
           <ChevronLeftIcon v-if="isExpanded" class="w-5 h-5" />
           <ChevronRightIcon v-else class="w-5 h-5" />
@@ -28,7 +28,7 @@
           <RouterLink
               :to="`/chat/${chat.id}`"
               :class="[
-              'block p-2 rounded transition text-vue-white-soft',
+              'block py-1 px-2 rounded transition text-vue-white-soft',
               isExpanded ? 'hover:bg-vue-black-mute' : 'text-center hover:bg-vue-black-mute'
             ]"
               :title="!isExpanded ? chat.name : ''"
@@ -66,3 +66,4 @@ const createNewChat = () => {
   console.log("Creating new chat");
 };
 </script>
+

@@ -52,24 +52,26 @@
       </div>
 
       <!-- Input Area -->
-      <div class="border-t border-vue-black-mute p-4">
-        <div class="flex items-start max-w-2xl mx-auto">
-          <button class="p-2 rounded-full hover:bg-vue-black-mute transition mt-1">
-            <PaperclipIcon class="w-6 h-6 text-vue-white-soft"/>
-          </button>
+      <div class="p-4">
+        <div class="flex flex-col items-start max-w-2xl mx-auto bg-vue-black-soft rounded-lg p-2">
           <textarea
               v-model="input"
               @keydown="handleKeyDown"
               placeholder="Type a message..."
-              class="flex-1 bg-transparent text-vue-white border-vue-black-mute rounded-lg px-4 py-2 mx-2 focus:outline-none focus:ring-2 focus:ring-indigo resize-none"
-              rows="3"
-          ></textarea>
-          <button
-              @click="sendMessage"
-              class="p-2 bg-indigo text-vue-white rounded-full hover:bg-opacity-80 transition mt-1"
-          >
-            <SendIcon class="w-6 h-6"/>
-          </button>
+              class="bg-transparent text-vue-white border-vue-black-mute p-2 focus:outline-none resize-none w-full"
+          />
+          <div class="flex justify-between w-full">
+            <button class="p-2 rounded-full hover:bg-vue-black-mute transition mt-1">
+              <PaperclipIcon class="w-6 h-6 text-vue-white-soft"/>
+            </button>
+            <button
+                @click="sendMessage"
+                class="p-2 bg-indigo text-vue-white rounded-full hover:bg-vue-black-mute transition mt-1"
+                :data-empty="!input.trim()"
+            >
+              <SendIcon class="w-6 h-6"/>
+            </button>
+          </div>
         </div>
       </div>
     </div>
