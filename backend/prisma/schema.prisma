@@ -10,19 +10,27 @@ datasource db {
 enum Role {
   user
   assistant
-  tool
-  system
 }
 
 model Message {
-  id      Int     @id @default(autoincrement())
-  content String?
-  refusal String?
-  role    Role
+  id        Int        @id @default(autoincrement())
+  content   String
+  role      Role
+  toolCalls ToolCall[]
 
-  chat_id    String
+  Chat   Chat   @relation(fields: [chatId], references: [id])
+  chatId String
+
   created_at DateTime @default(now())
-  chat       Chat     @relation(fields: [chat_id], references: [id])
+}
+
+model ToolCall {
+  id   String @id
+  name String
+  args String // JSON
+
+  Message   Message? @relation(fields: [messageId], references: [id])
+  messageId Int?
 }
 
 model Chat {

@@ -33,17 +33,17 @@
                 </div>
               </div>
             </div>
-            <div v-if="message.tools && message.tools.length > 0" class="absolute top-0 left-0 flex">
-              <div v-for="(tool, index) in message.tools" :key="index" class="relative group">
+            <div v-if="message.toolCalls && message.toolCalls.length > 0" class="absolute top-0 left-0 flex">
+              <div v-for="(tool, index) in message.toolCalls" :key="index" class="relative">
                 <div
+                    v-tooltip="{ content: DOMPurify.sanitize(`
+                    <b>${tool.name}</b>
+                    <pre>${Object.entries(tool.args).map(([k,v]) => ` <b>${k}:</b> ${v}`).join('<br />')}</pre>
+                    `.trim()), html: true }"
                     class="w-6 h-6 bg-indigo text-vue-white rounded-full flex items-center justify-center -mt-2 -ml-2"
                     :style="{ zIndex: 10 - index }"
                 >
                   <component :is="getToolIcon(tool.name)" class="w-4 h-4"/>
-                </div>
-                <div
-                    class="absolute left-0 bottom-full mb-2 bg-vue-black-soft text-vue-white-soft p-2 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
-                  {{ tool.name }}: {{ tool.description }}
                 </div>
               </div>
             </div>
@@ -92,20 +92,10 @@ import hljs from "highlight.js";
 import "highlight.js/styles/github-dark.css";
 import DOMPurify from "dompurify";
 import { isValidJSON } from "@/lib/utils.ts";
-import type { ClientBoundWebSocketMessage, ServerBoundWebSocketMessage } from "../../shared";
+import type { ClientBoundWebSocketMessage, ClientMessage as Message, ServerBoundWebSocketMessage } from "../../shared";
 import { useRoute } from "vue-router";
-
-interface Tool {
-  name: string;
-  description: string;
-}
-
-interface Message {
-  role: "user" | "assistant";
-  content: string;
-  finished: boolean;
-  tools?: Tool[];
-}
+import "floating-vue/dist/style.css";
+import { MsgEndpointSchema } from "../../shared/schemas.ts";
 
 const route = useRoute();
 const messages = ref<Message[]>([]);
@@ -161,12 +151,13 @@ onMounted(async() => {
 
       if(msg.type === "tool-call") {
         const lastMessage = messages.value[messages.value.length - 1];
-        if(!lastMessage.tools) {
-          lastMessage.tools = [];
+        if(!lastMessage.toolCalls) {
+          lastMessage.toolCalls = [];
         }
-        lastMessage.tools.push({
+        lastMessage.toolCalls.push({
+          id: msg.toolCallId,
           name: msg.toolName,
-          description: `${JSON.stringify(msg.args, null, 2)}`,
+          args: msg.args,
         });
       }
 
@@ -188,10 +179,16 @@ onMounted(async() => {
   };
 
   ws.onclose = (event) => {
-    const isError = event.code !== 1000;
-    const reason = event.reason || "Unknown";
     console.log(event);
   };
+
+  const res = await fetch(`/api/chat/${route.params.id}/msgs`);
+  if (res.ok) {
+    const result = MsgEndpointSchema.safeParse(await res.json());
+    if (result.success) messages.value = result.data.map((msg) => ({ ...msg, finished: true }));
+  } else {
+    // TODO
+  }
 
   if(chatContainer.value) {
     chatContainer.value.addEventListener("scroll", checkIfAtBottom);
@@ -375,4 +372,3 @@ onMounted(() => {
   }
 }
 </style>
-

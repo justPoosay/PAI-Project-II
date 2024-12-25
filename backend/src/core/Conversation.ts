@@ -1,7 +1,7 @@
 import { db } from "../lib/db.ts";
 import type { ServerWebSocket } from "bun";
 import type { WSData } from "../lib/types.ts";
-import type { ClientBoundWebSocketMessage, ServerBoundWebSocketMessage } from "../../../shared";
+import type { ClientBoundWebSocketMessage, ServerBoundWebSocketMessage, ToolCall } from "../../../shared";
 import { server } from "../index.ts";
 import { type CoreAssistantMessage, type CoreMessage, type CoreUserMessage, streamText } from "ai";
 import { openai } from "@ai-sdk/openai";
@@ -16,7 +16,8 @@ class ConversationClass {
     const existing = await db.chat.findUnique({ where: { id: this.id } });
     if(!existing) return db.chat.create({ data: { id: this.id } });
     
-    // this.messages = await db.message.findMany({ where: { chatId: this.id } });
+    const msgs = await db.message.findMany({ where: { chatId: this.id } });
+    this.messages = msgs.map(({ role, content }) => ({ role, content }));
   }
   
   async close() {
@@ -45,9 +46,10 @@ class ConversationClass {
   private async createCompletion(userInput: string): Promise<CoreAssistantMessage> {
     // ---
     this.messages.push({ role: "user", content: userInput } satisfies CoreUserMessage);
-    await db.message.create({ data: { chat_id: this.id, role: "user", content: userInput } });
+    await db.message.create({ data: { chatId: this.id, role: "user", content: userInput } });
     // ---
     
+    const toolCalls: (Omit<ToolCall, "args"> & { args: string })[] = [];
     const result = streamText({
       model: openai("gpt-4o"),
       messages: this.messages,
@@ -56,6 +58,9 @@ class ConversationClass {
       onChunk: ({ chunk }) => {
         if(["tool-call", "tool-result", "text-delta"].includes(chunk.type)) {
           this.publish({ role: "chunk", ...chunk } as ClientBoundWebSocketMessage);
+          if(chunk.type === "tool-call") {
+            toolCalls.push({ id: chunk.toolCallId, name: chunk.toolName, args: JSON.stringify(chunk.args) });
+          }
         }
       }
     });
@@ -69,7 +74,17 @@ class ConversationClass {
     
     // ---
     this.messages.push(message);
-    await db.message.create({ data: { chat_id: this.id, ...message } });
+    await db.message.create({
+      data: {
+        chatId: this.id,
+        ...message,
+        ...(toolCalls.length && {
+          toolCalls: {
+            create: toolCalls
+          }
+        })
+      }
+    });
     this.publish({ role: "finish" });
     // ---
     
