@@ -6,15 +6,13 @@
     <!-- Chat Area -->
     <div class="flex-1 flex flex-col">
       <!-- Chat Messages -->
-      <div class="flex-1 overflow-y-auto p-4">
+      <div class="flex-1 overflow-y-auto p-4" ref="chatContainer">
         <div class="max-w-5xl mx-auto">
-          <div v-for="(message, i) in messages" :key="i" class="mb-2">
+          <div v-for="(message, i) in messages" :key="i" class="mb-2 relative">
             <div
                 :class="[
                 'flex',
-                message.role === 'user'
-                ? 'justify-end'
-                : 'justify-start'
+                message.role === 'user' ? 'justify-end' : 'justify-start'
               ]"
             >
               <div
@@ -26,6 +24,20 @@
                 ]"
               >
                 <div v-html="parseMarkdown(message.content)" class="markdown-content"></div>
+              </div>
+            </div>
+            <div v-if="message.tools && message.tools.length > 0" class="absolute top-0 left-0 flex">
+              <div v-for="(tool, index) in message.tools" :key="index" class="relative group">
+                <div
+                    class="w-6 h-6 bg-indigo text-vue-white rounded-full flex items-center justify-center -mt-2 -ml-2"
+                    :style="{ zIndex: 10 - index }"
+                >
+                  <component :is="getToolIcon(tool.name)" class="w-4 h-4"/>
+                </div>
+                <div
+                    class="absolute left-0 bottom-full mb-2 bg-vue-black-soft text-vue-white-soft p-2 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                  {{ tool.name }}: {{ tool.description }}
+                </div>
               </div>
             </div>
           </div>
@@ -58,10 +70,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, nextTick } from "vue";
-import { SendIcon, PaperclipIcon } from "lucide-vue-next";
+import { ref, onMounted, nextTick, watch } from "vue";
+import {
+  SendIcon,
+  PaperclipIcon,
+  HammerIcon,
+  CloudLightningIcon, BracesIcon
+} from "lucide-vue-next";
 import Sidebar from "@/components/Sidebar.vue";
-import { marked } from "marked";
+import { marked, type MarkedOptions } from "marked";
 import hljs from "highlight.js";
 import "highlight.js/styles/github-dark.css";
 import DOMPurify from "dompurify";
@@ -69,18 +86,51 @@ import { isValidJSON } from "@/lib/utils.ts";
 import type { ClientBoundWebSocketMessage, ServerBoundWebSocketMessage } from "../../shared";
 import { useRoute } from "vue-router";
 
+interface Tool {
+  name: string;
+  description: string;
+}
+
 interface Message {
   role: "user" | "assistant";
   content: string;
   finished: boolean;
+  tools?: Tool[];
 }
 
 const route = useRoute();
 const messages = ref<Message[]>([]);
 const input = ref("");
+const chatContainer = ref<HTMLElement | null>(null);
+const isAtBottom = ref(true);
 
 let ws: WebSocket;
 const send = (data: ServerBoundWebSocketMessage) => ws.send(JSON.stringify(data));
+
+const scrollToBottom = () => {
+  if(chatContainer.value) {
+    chatContainer.value.scrollTop = chatContainer.value.scrollHeight;
+  }
+};
+
+const checkIfAtBottom = () => {
+  if(chatContainer.value) {
+    const { scrollTop, scrollHeight, clientHeight } = chatContainer.value;
+    isAtBottom.value = scrollTop + clientHeight >= scrollHeight - 10;
+  }
+};
+
+const getToolIcon = (toolName: string) => {
+  switch(toolName.toLowerCase()) {
+    case "eval":
+      return BracesIcon;
+    case "weather":
+      return CloudLightningIcon;
+    default:
+      return HammerIcon;
+  }
+};
+
 onMounted(async() => {
   ws = new WebSocket(`ws://${window.location.host}/api/chat/${route.params.id}`);
   ws.onmessage = (event: MessageEvent<string>) => {
@@ -88,47 +138,62 @@ onMounted(async() => {
     const msg = JSON.parse(event.data) as ClientBoundWebSocketMessage;
 
     if(msg.role === "chunk") {
+      if(messages.value[messages.value.length - 1]?.finished) {
+        messages.value.push({
+          role: "assistant",
+          content: "",
+          finished: false,
+        });
+      }
+
       if(msg.type === "text-delta") {
-        if(messages.value[messages.value.length - 1].finished) {
-          messages.value.push({
-            role: "assistant",
-            content: msg.textDelta,
-            finished: false,
-          });
-        } else {
-          messages.value[messages.value.length - 1].content += msg.textDelta;
-        }
+        messages.value[messages.value.length - 1].content += msg.textDelta;
       }
 
       if(msg.type === "tool-call") {
-        // TODO
+        const lastMessage = messages.value[messages.value.length - 1];
+        if(!lastMessage.tools) {
+          lastMessage.tools = [];
+        }
+        lastMessage.tools.push({
+          name: msg.toolName,
+          description: `${JSON.stringify(msg.args, null, 2)}`,
+        });
       }
 
       if(msg.type === "tool-result") {
-        // TODO
+        // const lastMessage = messages.value[messages.value.length - 1];
+        // if(!lastMessage.tools) {
+        //   lastMessage.tools = [];
+        // }
+        // const toolIndex = lastMessage.tools.findIndex(tool => tool.name === msg.toolName);
+        // if(toolIndex !== -1) {
+        //   lastMessage.tools[toolIndex].description += `\nResult: ${JSON.stringify(msg.result, null, 2)}`;
+        // }
       }
     }
 
     if(msg.role === "finish") {
       messages.value[messages.value.length - 1].finished = true;
-      console.log(messages.value);
     }
 
-    console.log(msg);
+    nextTick(() => {
+      highlightCode();
+      if(isAtBottom.value) {
+        scrollToBottom();
+      }
+    });
   };
 
   ws.onclose = (event) => {
     const isError = event.code !== 1000;
     const reason = event.reason || "Unknown";
-
     console.log(event);
   };
 
-  // const res = await fetch(`/api/chat/${route.params.id}/msgs`);
-  // if(res.ok) {
-  //   const data = await res.json();
-  //   messages.value = [...messages.value, ...data];
-  // }
+  if(chatContainer.value) {
+    chatContainer.value.addEventListener("scroll", checkIfAtBottom);
+  }
 });
 
 const sendMessage = () => {
@@ -146,6 +211,7 @@ const sendMessage = () => {
     input.value = "";
     nextTick(() => {
       highlightCode();
+      scrollToBottom();
     });
   }
 };
@@ -159,22 +225,35 @@ const handleKeyDown = (e: KeyboardEvent) => {
 
 const parseMarkdown = (text: string) => {
   marked.setOptions({
+    highlight: function(code: string, lang: string) {
+      const language = hljs.getLanguage(lang) ? lang : "plaintext";
+      return hljs.highlight(code, { language }).value;
+    },
     breaks: true,
     gfm: true,
-  });
+  } as MarkedOptions);
   return DOMPurify.sanitize(marked(text.replace(/^[\u200B\u200C\u200D\u200E\u200F\uFEFF]/, "")) as string);
 };
 
 const highlightCode = () => {
   nextTick(() => {
     document.querySelectorAll("pre code").forEach((block) => {
-      hljs.highlightBlock(block as HTMLElement);
+      hljs.highlightElement(block as HTMLElement);
     });
   });
 };
 
+watch(messages, () => {
+  nextTick(() => {
+    if(isAtBottom.value) {
+      scrollToBottom();
+    }
+  });
+}, { deep: true });
+
 onMounted(() => {
   highlightCode();
+  scrollToBottom();
 });
 </script>
 

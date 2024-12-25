@@ -12,17 +12,19 @@ export const tools = {
       result: eval(expression),
     }),
   }),
-  temperature: tool({
-    description: "Get the temperature in a location (in Celsius)",
+  weather: tool({
+    description: "Get the weather for a location",
     parameters: z.object({
       location: z
       .string()
-      .describe("The location to get the temperature for"),
+      .describe("The location to get the weather for"),
     }),
-    execute: async({ location }) => ({
-      location,
-      temperature: Math.round((Math.random() * 30 + 5) * 10) / 10, // Random temp between 5°C and 35°C
-    }),
+    execute: async({ location }) => {
+      const res = await fetch(`https://api.weatherapi.com/v1/current.json?key=${process.env.WEATHER_API_KEY}&q=${location}`);
+      const data = await res.json();
+      
+      return data;
+    },
   }),
 } as const satisfies Record<string, CoreTool>;
 
