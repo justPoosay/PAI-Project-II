@@ -1,6 +1,6 @@
 import { serve, FileSystemRouter, type ServerWebSocket } from "bun";
 import * as path from "node:path";
-import type { AppRequest, WSData } from "./lib/types";
+import type { WSData } from "./lib/types";
 import type { ServerBoundWebSocketMessage } from "../../shared";
 import { isValidJSON } from "./lib/utils.ts";
 import Conversation from "./core/Conversation.ts";
@@ -15,29 +15,11 @@ export const server = serve({
   static: {
     "/alive": new Response("OK"),
   },
-  async fetch(req, server) {
+  async fetch(req) {
     const url = new URL(req.url);
     const match = router.match(url.pathname);
     
     console.log(req.method, url.pathname);
-    
-    {
-      const match = url.pathname.match(/^\/chat\/([a-z0-9-]+)$/);
-      if(match) {
-        const success = server.upgrade<WSData>(req, {
-          data: {
-            type: "chat",
-            id: match[1],
-          }
-        });
-        if(success) console.log("Upgraded to WebSocket");
-        else console.log("Failed to upgrade to WebSocket");
-        return success ? undefined : Response.json({
-          success: false,
-          error: "Upgrade failed",
-        }, { status: 500 });
-      }
-    }
     
     if(!match) return Response.json({ success: false, error: "Not Found" }, { status: 404 });
     
@@ -45,7 +27,7 @@ export const server = serve({
     const method = module[req.method];
     if(method && typeof method === "function") {
       const result = await method(Object.assign(req, { route: match }));
-      if(result instanceof Response) return result;
+      if(result instanceof Response || result === undefined) return result;
     }
     
     return Response.json({ success: false, error: "Not Found" }, { status: 404 });

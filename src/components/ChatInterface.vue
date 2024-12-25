@@ -95,7 +95,7 @@ import { isValidJSON } from "@/lib/utils.ts";
 import type { ClientBoundWebSocketMessage, ClientMessage as Message, ServerBoundWebSocketMessage } from "../../shared";
 import { useRoute } from "vue-router";
 import "floating-vue/dist/style.css";
-import { MsgEndpointSchema } from "../../shared/schemas.ts";
+import { routes } from "../../shared/schemas.ts";
 
 const route = useRoute();
 const messages = ref<Message[]>([]);
@@ -131,7 +131,7 @@ const getToolIcon = (toolName: string) => {
 };
 
 onMounted(async() => {
-  ws = new WebSocket(`ws://${window.location.host}/api/chat/${route.params.id}`);
+  ws = new WebSocket(`ws://${window.location.host}/api/${route.params.id}`);
   ws.onmessage = (event: MessageEvent<string>) => {
     if(!isValidJSON(event.data)) return;
     const msg = JSON.parse(event.data) as ClientBoundWebSocketMessage;
@@ -162,7 +162,7 @@ onMounted(async() => {
       }
 
       if(msg.type === "tool-result") {
-        // Handle tool result if needed
+        // TODO
       }
     }
 
@@ -179,15 +179,20 @@ onMounted(async() => {
   };
 
   ws.onclose = (event) => {
-    console.log(event);
+    if(!event.wasClean) {
+      // TODO
+    }
   };
 
-  const res = await fetch(`/api/chat/${route.params.id}/msgs`);
-  if (res.ok) {
-    const result = MsgEndpointSchema.safeParse(await res.json());
-    if (result.success) messages.value = result.data.map((msg) => ({ ...msg, finished: true }));
-  } else {
-    // TODO
+  try {
+    const res = await fetch(`/api/${route.params.id}/messages.json`);
+    if(!res.ok) throw new Error("Failed to fetch messages");
+    const result = routes["[id]"]["messages.json"].safeParse(await res.json());
+    if(result.success) messages.value = result.data.map((msg) => ({ ...msg, finished: true }));
+  } catch(e) {
+    if(e instanceof Error) {
+      // TODO
+    }
   }
 
   if(chatContainer.value) {

@@ -26,7 +26,7 @@
       <ul>
         <li v-for="chat in chats" :key="chat.id" class="mb-2">
           <RouterLink
-              :to="`/chat/${chat.id}`"
+              :to="`/c/${chat.id}`"
               :class="[
               'block py-1 px-2 rounded transition text-vue-white-soft',
               isExpanded ? 'hover:bg-vue-black-mute' : 'text-center hover:bg-vue-black-mute'

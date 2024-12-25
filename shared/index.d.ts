@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { MsgEndpointSchema } from "./schemas.ts";
+import { ChatSchema, ToolCallSchema } from "./schemas.ts";
 
 export type WebSocketMessage =
   | { role: "finish" }
@@ -25,12 +25,6 @@ export type ServerBoundWebSocketMessage =
   | { role: "action", action: "abort" }
   | WebSocketMessage
 
-export interface ToolCall {
-  id: string;
-  name: string;
-  args: Record<string, unknown>;
-}
-
 /** @description conversation message as held by the client */
 export interface ClientMessage {
   role: "user" | "assistant";
@@ -39,6 +33,5 @@ export interface ClientMessage {
   toolCalls?: ToolCall[];
 }
 
-export namespace Endpoint {
-  export type Msgs = z.infer<typeof MsgEndpointSchema>
-}
+export type ToolCall = z.infer<typeof ToolCallSchema>
+export type Chat = z.infer<typeof ChatSchema>

@@ -74,12 +74,3 @@
 //
 // main().catch(console.error);
 
-import { db } from "./lib/db.ts";
-
-await db.message.create({
-  data: {
-    role: "assistant", chatId: "", toolCalls: {
-      create: [{ id: "", name: "", args: JSON.stringify({}) }]
-    }, content: ""
-  }
-});
