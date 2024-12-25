@@ -25,8 +25,8 @@
       <h2 v-if="isExpanded" class="text-xl font-semibold mb-4 text-vue-white">Chats</h2>
       <ul>
         <li v-for="chat in chats" :key="chat.id" class="mb-2">
-          <a
-              :href="chat.link"
+          <RouterLink
+              :to="`/chat/${chat.id}`"
               :class="[
               'block p-2 rounded transition text-vue-white-soft',
               isExpanded ? 'hover:bg-vue-black-mute' : 'text-center hover:bg-vue-black-mute'
@@ -35,7 +35,7 @@
           >
             <span v-if="isExpanded">{{ chat.name ?? "Untitled" }}</span>
             <span v-else>{{ (chat.name ?? "Untitled").charAt(0) }}</span>
-          </a>
+          </RouterLink>
         </li>
       </ul>
     </div>

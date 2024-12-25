@@ -3,7 +3,7 @@ export interface Chat {
   name: string;
 }
 
-type Role = "user" | "assistant" | "tool" | "function" | "system"
+type Role = "user" | "assistant"
 
 export interface Message {
   id: number;

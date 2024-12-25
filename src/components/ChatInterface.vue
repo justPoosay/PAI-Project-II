@@ -23,7 +23,14 @@
                     : 'bg-vue-black-mute text-vue-white-soft rounded-tl-2xl rounded-tr-2xl rounded-br-2xl',
                 ]"
               >
-                <div v-html="parseMarkdown(message.content)" class="markdown-content"></div>
+                <div v-if="message.content" v-html="parseMarkdown(message.content)" class="markdown-content"></div>
+                <div v-else class="flex items-center justify-center">
+                  <div class="loader">
+                    <span class="dot"></span>
+                    <span class="dot"></span>
+                    <span class="dot"></span>
+                  </div>
+                </div>
               </div>
             </div>
             <div v-if="message.tools && message.tools.length > 0" class="absolute top-0 left-0 flex">
@@ -54,7 +61,7 @@
               v-model="input"
               @keydown="handleKeyDown"
               placeholder="Type a message..."
-              class="flex-1 bg-vue-black-soft text-vue-white border-vue-black-mute rounded-lg px-4 py-2 mx-2 focus:outline-none focus:ring-2 focus:ring-indigo resize-none"
+              class="flex-1 bg-transparent text-vue-white border-vue-black-mute rounded-lg px-4 py-2 mx-2 focus:outline-none focus:ring-2 focus:ring-indigo resize-none"
               rows="3"
           ></textarea>
           <button
@@ -162,14 +169,7 @@ onMounted(async() => {
       }
 
       if(msg.type === "tool-result") {
-        // const lastMessage = messages.value[messages.value.length - 1];
-        // if(!lastMessage.tools) {
-        //   lastMessage.tools = [];
-        // }
-        // const toolIndex = lastMessage.tools.findIndex(tool => tool.name === msg.toolName);
-        // if(toolIndex !== -1) {
-        //   lastMessage.tools[toolIndex].description += `\nResult: ${JSON.stringify(msg.result, null, 2)}`;
-        // }
+        // Handle tool result if needed
       }
     }
 
@@ -231,6 +231,8 @@ const parseMarkdown = (text: string) => {
     },
     breaks: true,
     gfm: true,
+    headerIds: true,
+    headerPrefix: "header-"
   } as MarkedOptions);
   return DOMPurify.sanitize(marked(text.replace(/^[\u200B\u200C\u200D\u200E\u200F\uFEFF]/, "")) as string);
 };
@@ -259,47 +261,116 @@ onMounted(() => {
 
 <style>
 /* Add some basic styling for Markdown elements */
-.markdown-content
-{
-  word-break : break-word;
+.markdown-content {
+  word-break: break-word;
 }
 
-.markdown-content .hljs
-{
-  background    : #1e1e1e;
-  color         : #d4d4d4;
-  border-radius : 0.5rem;
-  padding       : 1rem;
-  margin        : 0.5rem 0;
+.markdown-content .hljs {
+  background: #1e1e1e;
+  color: #d4d4d4;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin: 0.5rem 0;
 }
 
-.markdown-content strong
-{
-  font-weight : bold;
+.markdown-content strong {
+  font-weight: bold;
 }
 
-.markdown-content em
-{
-  font-style : italic;
+.markdown-content em {
+  font-style: italic;
 }
 
-.markdown-content code:not(.hljs)
-{
-  background-color : rgba(255, 255, 255, 0.1);
-  border-radius    : 0.25rem;
-  padding          : 0.1rem 0.25rem;
-  font-family      : monospace;
+.markdown-content code:not(.hljs) {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 0.25rem;
+  padding: 0.1rem 0.25rem;
+  font-family: monospace;
 }
 
-.markdown-content pre
-{
-  margin-top    : 0.5rem;
-  margin-bottom : 0.5rem;
+.markdown-content pre {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 
-.markdown-content pre code
-{
-  background-color : transparent;
-  padding          : 0;
+.markdown-content pre code {
+  background-color: transparent;
+  padding: 0;
+}
+
+.markdown-content h1 {
+  font-size: 2em;
+  font-weight: bold;
+  margin-top: 0.67em;
+  margin-bottom: 0.67em;
+}
+
+.markdown-content h2 {
+  font-size: 1.5em;
+  font-weight: bold;
+  margin-top: 0.83em;
+  margin-bottom: 0.83em;
+}
+
+.markdown-content h3 {
+  font-size: 1.17em;
+  font-weight: bold;
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+
+.markdown-content h4 {
+  font-size: 1em;
+  font-weight: bold;
+  margin-top: 1.33em;
+  margin-bottom: 1.33em;
+}
+
+.markdown-content h5 {
+  font-size: 0.83em;
+  font-weight: bold;
+  margin-top: 1.67em;
+  margin-bottom: 1.67em;
+}
+
+.markdown-content h6 {
+  font-size: 0.67em;
+  font-weight: bold;
+  margin-top: 2.33em;
+  margin-bottom: 2.33em;
+}
+
+.loader {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  background-color: #fff;
+  border-radius: 50%;
+  margin: 0 4px;
+  opacity: 0.3;
+  animation: pulse 1.4s infinite ease-in-out;
+}
+
+.dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 </style>
+
