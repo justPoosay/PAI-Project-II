@@ -88,6 +88,7 @@ class ConversationClass {
     
     if (this.messages.length === 2) {
       const name = await nameChat(this.messages);
+      await db.chat.update({ where: { id: this.id }, data: { name } });
       this.publish({ role: "rename", name });
     }
     

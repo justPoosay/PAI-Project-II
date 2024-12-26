@@ -53,7 +53,7 @@
 
       <!-- Input Area -->
       <div class="p-4">
-        <div class="flex flex-col items-start max-w-2xl mx-auto bg-vue-black-soft rounded-lg p-2 shadow-md">
+        <div class="flex flex-col items-start max-w-2xl mx-auto bg-vue-black-soft rounded-xl p-2 shadow-lg">
           <textarea
               v-model="input"
               @keydown="handleKeyDown"
@@ -92,7 +92,7 @@ import hljs from "highlight.js";
 import "highlight.js/styles/github-dark.css";
 import DOMPurify from "dompurify";
 import { isValidJSON } from "@/lib/utils.ts";
-import type { ClientBoundWebSocketMessage, ClientMessage as Message, ServerBoundWebSocketMessage } from "../../shared";
+import type { ClientMessage as Message, ServerBoundWebSocketMessage } from "../../shared";
 import { onBeforeRouteUpdate, useRoute } from "vue-router";
 import "floating-vue/dist/style.css";
 import { ClientBoundWebSocketMessageSchema, routes } from "../../shared/schemas.ts";
