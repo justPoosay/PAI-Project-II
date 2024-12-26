@@ -77,7 +77,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, nextTick, watch } from "vue";
+import { ref, onMounted, nextTick } from "vue";
 import {
   SendIcon,
   PaperclipIcon,
@@ -106,13 +106,6 @@ const isAtBottom = ref(true);
 function scrollToBottom() {
   if(chatContainer.value) {
     chatContainer.value.scrollTop = chatContainer.value.scrollHeight;
-  }
-}
-
-function checkIfAtBottom() {
-  if(chatContainer.value) {
-    const { scrollTop, scrollHeight, clientHeight } = chatContainer.value;
-    isAtBottom.value = scrollTop + clientHeight >= scrollHeight - 10;
   }
 }
 
@@ -181,13 +174,6 @@ async function init(id: typeof route.params.id) {
         return chat;
       });
     }
-
-    nextTick(() => {
-      highlightCode();
-      if(isAtBottom.value) {
-        scrollToBottom();
-      }
-    });
   };
 
   ws.value.onopen = function() {
@@ -226,9 +212,6 @@ onBeforeRouteUpdate(async(to, from, next) => {
 
 onMounted(async() => {
   await init(route.params.id);
-  if(chatContainer.value) {
-    chatContainer.value.addEventListener("scroll", checkIfAtBottom);
-  }
 });
 
 function sendMessage() {
@@ -245,7 +228,6 @@ function sendMessage() {
     });
     input.value = "";
     nextTick(() => {
-      highlightCode();
       scrollToBottom();
     });
   }
@@ -282,24 +264,7 @@ function parseMarkdown(text: string) {
   );
 }
 
-function highlightCode() {
-  nextTick(() => {
-    document.querySelectorAll("pre code").forEach((block) => {
-      hljs.highlightElement(block as HTMLElement);
-    });
-  });
-}
-
-watch(messages, () => {
-  nextTick(() => {
-    if(isAtBottom.value) {
-      scrollToBottom();
-    }
-  });
-}, { deep: true });
-
 onMounted(() => {
-  highlightCode();
   scrollToBottom();
 });
 </script>
