@@ -5,9 +5,35 @@
     <Sidebar/>
 
     <!-- Chat Area -->
-    <div class="flex-1 flex flex-col">
+    <div class="flex-1 flex flex-col relative">
+      <!-- Input Area -->
+      <div class="absolute bottom-4 left-4 right-4 z-10">
+        <div
+          class="flex flex-col items-start max-w-2xl mx-auto bg-gradient-to-br from-vue-black/25 to-vue-black-soft/35 backdrop-blur-sm rounded-xl p-2 shadow-lg"
+        >
+          <textarea
+            v-model="input"
+            @keydown="handleKeyDown"
+            placeholder="Type a message..."
+            class="bg-transparent p-2 focus:outline-none resize-none w-full"
+          />
+          <div class="flex justify-between w-full text-white/75">
+            <button class="p-2 rounded-full hover:bg-white/5 transition mt-1">
+              <PaperclipIcon class="w-6 h-6 "/>
+            </button>
+            <button
+              @click="sendMessage"
+              class="p-2 bg-indigo rounded-full hover:bg-white/5 transition mt-1"
+              :data-empty="!input.trim()"
+            >
+              <SendIcon class="w-6 h-6"/>
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- Chat Messages -->
-      <div class="flex-1 overflow-y-auto p-4" ref="chatContainer">
+      <div class="flex-1 overflow-y-auto p-4 pb-36" ref="chatContainer">
         <div class="max-w-5xl mx-auto">
           <div v-for="(message, i) in messages" :key="i" class="mb-2 relative">
             <div
@@ -42,32 +68,6 @@
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Input Area -->
-      <div class="p-4">
-        <div
-          class="flex flex-col items-start max-w-2xl mx-auto bg-gradient-to-br from-vue-black/25 to-vue-black-soft/35 backdrop-blur-sm rounded-xl p-2 shadow-lg"
-        >
-          <textarea
-            v-model="input"
-            @keydown="handleKeyDown"
-            placeholder="Type a message..."
-            class="bg-transparent p-2 focus:outline-none resize-none w-full"
-          />
-          <div class="flex justify-between w-full text-white/75">
-            <button class="p-2 rounded-full hover:bg-white/5 transition mt-1">
-              <PaperclipIcon class="w-6 h-6 "/>
-            </button>
-            <button
-              @click="sendMessage"
-              class="p-2 bg-indigo rounded-full hover:bg-white/5 transition mt-1"
-              :data-empty="!input.trim()"
-            >
-              <SendIcon class="w-6 h-6"/>
-            </button>
           </div>
         </div>
       </div>
