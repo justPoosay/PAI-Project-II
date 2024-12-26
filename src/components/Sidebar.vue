@@ -1,37 +1,32 @@
 <template>
   <div
-      :class="[
-      'bg-vue-black-soft border-r border-vue-black-mute transition-all duration-300 ease-in-out',
-      isExpanded ? 'w-64' : 'w-16'
-    ]"
+    :data-expanded="isExpanded"
+    class="bg-vue-black border-r border-vue-black-mute transition-all duration-300 ease-in-out w-16 data-[expanded=true]:w-64"
   >
-    <div class="p-4">
+    <div class="p-2">
       <div class="flex justify-between items-center mb-4">
         <button
-            @click="createNewChat"
-            class="p-2 bg-indigo text-vue-white rounded-full hover:bg-opacity-80 transition"
-            :title="isExpanded ? 'New Chat' : ''"
+          @click="createNewChat"
+          class="p-2 bg-indigo text-vue-white rounded-full hover:bg-opacity-80 transition"
+          :title="isExpanded ? 'New Chat' : ''"
         >
           <PlusIcon class="w-5 h-5"/>
         </button>
         <button
-            @click="toggleSidebar"
-            class="p-2 w-full flex justify-end text-vue-white-soft hover:bg-vue-black-mute transition"
+          @click="toggleSidebar"
+          class="p-2 w-full flex justify-end text-vue-white-soft hover:bg-vue-black-mute transition"
         >
           <ChevronLeftIcon v-if="isExpanded" class="w-5 h-5"/>
           <ChevronRightIcon v-else class="w-5 h-5"/>
         </button>
       </div>
-      <h2 v-if="isExpanded" class="text-xl font-semibold mb-4 text-vue-white">Chats</h2>
       <ul>
         <li v-for="chat in chats" :key="chat.id" class="mb-2">
           <RouterLink
-              :to="`/c/${chat.id}`"
-              :class="[
-              'block py-1 px-2 rounded transition text-vue-white-soft',
-              isExpanded ? 'hover:bg-vue-black-mute' : 'text-center hover:bg-vue-black-mute'
-            ]"
-              :title="!isExpanded ? chat.name : ''"
+            :to="`/c/${chat.id}`"
+            :data-expanded="isExpanded"
+            class="block py-2 px-2 rounded transition text-vue-white-soft hover:bg-vue-black-mute data-[expanded=false]:text-center"
+            :title="!isExpanded ? chat.name : ''"
           >
             <span v-if="isExpanded">{{ chat.name ?? "Untitled" }}</span>
             <span v-else>{{ (chat.name ?? "Untitled").charAt(0) }}</span>

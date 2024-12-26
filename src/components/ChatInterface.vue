@@ -10,13 +10,13 @@
         <div class="max-w-5xl mx-auto">
           <div v-for="(message, i) in messages" :key="i" class="mb-2 relative">
             <div
-                :class="[
+              :class="[
                 'flex',
                 message.role === 'user' ? 'justify-end' : 'justify-start'
               ]"
             >
               <div
-                  :class="[
+                :class="[
                   'max-w-[80%] p-3 relative',
                   message.role === 'user'
                     ? 'bg-teal-600 text-vue-white rounded-tl-2xl rounded-tr-2xl rounded-bl-2xl'
@@ -36,12 +36,12 @@
             <div v-if="message.toolCalls && message.toolCalls.length > 0" class="absolute top-0 left-0 flex">
               <div v-for="(tool, index) in message.toolCalls" :key="index" class="relative">
                 <div
-                    v-tooltip="{ content: DOMPurify.sanitize(`
+                  v-tooltip="{ content: DOMPurify.sanitize(`
                     <b>${tool.name}</b>
                     <pre>${Object.entries(tool.args).map(([k,v]) => ` <b>${k}:</b> ${v}`).join('<br />')}</pre>
                     `.trim()), html: true }"
-                    class="w-6 h-6 bg-indigo text-vue-white rounded-full flex items-center justify-center -mt-2 -ml-2"
-                    :style="{ zIndex: 10 - index }"
+                  class="w-6 h-6 bg-indigo text-vue-white rounded-full flex items-center justify-center -mt-2 -ml-2"
+                  :style="{ zIndex: 10 - index }"
                 >
                   <component :is="getToolIcon(tool.name)" class="w-4 h-4"/>
                 </div>
@@ -55,19 +55,19 @@
       <div class="p-4">
         <div class="flex flex-col items-start max-w-2xl mx-auto bg-vue-black-soft rounded-xl p-2 shadow-lg">
           <textarea
-              v-model="input"
-              @keydown="handleKeyDown"
-              placeholder="Type a message..."
-              class="bg-transparent text-vue-white border-vue-black-mute p-2 focus:outline-none resize-none w-full"
+            v-model="input"
+            @keydown="handleKeyDown"
+            placeholder="Type a message..."
+            class="bg-transparent text-vue-white border-vue-black-mute p-2 focus:outline-none resize-none w-full"
           />
           <div class="flex justify-between w-full">
             <button class="p-2 rounded-full hover:bg-vue-black-mute transition mt-1">
               <PaperclipIcon class="w-6 h-6 text-vue-white-soft"/>
             </button>
             <button
-                @click="sendMessage"
-                class="p-2 bg-indigo text-vue-white rounded-full hover:bg-vue-black-mute transition mt-1"
-                :data-empty="!input.trim()"
+              @click="sendMessage"
+              class="p-2 bg-indigo text-vue-white rounded-full hover:bg-vue-black-mute transition mt-1"
+              :data-empty="!input.trim()"
             >
               <SendIcon class="w-6 h-6"/>
             </button>

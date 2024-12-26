@@ -3,5 +3,15 @@
 @tailwind utilities;
 
 :root, html, body, #app {
-  @apply h-full;
+  @apply h-full font-['SF_Pro_Rounded'];
+}
+
+@layer base {
+  @font-face {
+    font-family: "SF Pro Rounded";
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url("/fonts/SF-Pro/SF-Pro-Rounded-Regular.woff2") format("woff2");
+  }
 }
