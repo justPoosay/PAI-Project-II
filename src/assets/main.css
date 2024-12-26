@@ -16,6 +16,30 @@
   }
 
   @font-face {
+    font-family: "SF Pro Rounded";
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url("/fonts/SF-Pro/SF-Pro-Rounded-Medium.woff2") format("woff2");
+  }
+
+  @font-face {
+    font-family: "SF Pro Rounded";
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url("/fonts/SF-Pro/SF-Pro-Rounded-Semibold.woff2") format("woff2");
+  }
+
+  @font-face {
+    font-family: "SF Pro Rounded";
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url("/fonts/SF-Pro/SF-Pro-Rounded-Bold.woff2") format("woff2");
+  }
+
+  @font-face {
     font-family: "Monaspace Neon";
     font-style: normal;
     font-weight: 400;

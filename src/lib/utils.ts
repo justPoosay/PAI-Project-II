@@ -14,3 +14,7 @@ export function omit<T extends Record<string, unknown>, K extends keyof T>(obj: 
   }
   return copy;
 }
+
+export function capitalize(str: string): string {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}

@@ -85,12 +85,12 @@ import {
   CloudLightningIcon, BracesIcon
 } from "lucide-vue-next";
 import Sidebar from "@/components/Sidebar.vue";
-import { Marked } from "marked";
+import { Marked, Renderer } from "marked";
 import { markedHighlight } from "marked-highlight";
 import hljs from "highlight.js";
 import "highlight.js/styles/github-dark.css";
 import DOMPurify from "dompurify";
-import { isValidJSON } from "@/lib/utils.ts";
+import { capitalize, isValidJSON } from "@/lib/utils.ts";
 import type { ClientMessage as Message, ServerBoundWebSocketMessage } from "../../shared";
 import { onBeforeRouteUpdate, useRoute } from "vue-router";
 import "floating-vue/dist/style.css";
@@ -101,7 +101,7 @@ const route = useRoute();
 const messages = ref<Message[]>([]);
 const input = ref("");
 const chatContainer = ref<HTMLElement | null>(null);
-const isAtBottom = ref(true);
+const wasAtTheBottom = ref(false);
 
 function scrollToBottom() {
   if(chatContainer.value) {
@@ -252,6 +252,32 @@ function parseMarkdown(text: string) {
     })
   );
 
+  const renderer = new Renderer();
+  renderer.blockquote = (quote) => {
+    const match = quote.text.match(/^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]/);
+    if(match) {
+      const type = match[1].toLowerCase();
+      const title = capitalize(type);
+      return `<blockquote data-type="${type}">${
+        quote.text
+        .replace(match[0], title)
+        .split("\n")
+        .filter(Boolean)
+        .map(v => `<p${v === title ? " class=\"callout-title\"" : ""}>${v}</p>`)
+        .join("\n")
+      }</blockquote>`;
+    }
+    return `<blockquote>${
+      quote.text
+      .split("\n")
+      .filter(Boolean)
+      .map(v => `<p>${v}</p>`)
+      .join("\n")
+    }</blockquote>`;
+  };
+
+  marked.use({ renderer });
+
   return DOMPurify.sanitize(
     marked.parse(
       text.replace(/^[\u200B\u200C\u200D\u200E\u200F\uFEFF]/, ""),
@@ -329,6 +355,41 @@ onMounted(() => {
 // Blockquote
 .markdown-content blockquote
   @apply border-l-4 border-white/30 pl-4 py-1 my-4 italic bg-white/5 rounded
+
+  &[data-type="note"],
+  &[data-type="tip"],
+  &[data-type="important"],
+  &[data-type="warning"],
+  &[data-type="caution"]
+    @apply not-italic
+
+    .callout-title
+      @apply font-bold
+
+  &[data-type="note"],
+  &[data-type="tip"]
+    @apply border-blue-500
+
+    .callout-title
+      @apply text-blue-500
+
+  &[data-type="important"]
+    @apply border-violet-700
+
+    .callout-title
+      @apply text-violet-500
+
+  &[data-type="warning"]
+    @apply border-yellow-500
+
+    .callout-title
+      @apply text-yellow-500
+
+  &[data-type="caution"]
+    @apply border-red-500
+
+    .callout-title
+      @apply text-red-500
 
 // Table
 .markdown-content table
