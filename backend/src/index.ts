@@ -34,14 +34,13 @@ export const server = serve({
   },
   websocket: {
     async open(ws: ServerWebSocket<WSData>) {
+      console.log("WebSocket opened");
       if(ws.data.type === "chat") {
-        if(!ws.data.id) return ws.close(4000, "No chat ID provided");
-        if(!/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/.test(ws.data.id))
-          return ws.close(400, "Invalid chat ID");
         ws.data.instance = Conversation(ws);
       }
     },
     async close(ws: ServerWebSocket<WSData>) {
+      console.log("WebSocket closed");
       await ws.data.instance?.close();
     },
     async message(ws: ServerWebSocket<WSData>, message) {

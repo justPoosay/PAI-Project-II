@@ -12,12 +12,11 @@ class ConversationClass {
   private readonly ws: ServerWebSocket<WSData>;
   private messages: CoreMessage[] = [];
   
-  private async init() {
-    const existing = await db.chat.findUnique({ where: { id: this.id } });
-    if(!existing) return db.chat.create({ data: { id: this.id } });
+  private async open() {
+    this.ws.subscribe(this.id);
     
-    const msgs = await db.message.findMany({ where: { chatId: this.id } });
-    this.messages = msgs.map(({ role, content }) => ({ role, content }));
+    const result = await db.message.findMany({ where: { chatId: this.id } });
+    this.messages = result.map(({ role, content }) => ({ role, content }));
   }
   
   async close() {
@@ -32,9 +31,7 @@ class ConversationClass {
     this.id = ws.data.id;
     this.ws = ws;
     
-    ws.subscribe(this.id);
-    
-    this.init().then();
+    this.open().then();
   }
   
   async onMessage(data: ServerBoundWebSocketMessage) {

@@ -12,14 +12,14 @@
             class="p-2 bg-indigo text-vue-white rounded-full hover:bg-opacity-80 transition"
             :title="isExpanded ? 'New Chat' : ''"
         >
-          <PlusIcon class="w-5 h-5" />
+          <PlusIcon class="w-5 h-5"/>
         </button>
         <button
             @click="toggleSidebar"
             class="p-2 w-full flex justify-end text-vue-white-soft hover:bg-vue-black-mute transition"
         >
-          <ChevronLeftIcon v-if="isExpanded" class="w-5 h-5" />
-          <ChevronRightIcon v-else class="w-5 h-5" />
+          <ChevronLeftIcon v-if="isExpanded" class="w-5 h-5"/>
+          <ChevronRightIcon v-else class="w-5 h-5"/>
         </button>
       </div>
       <h2 v-if="isExpanded" class="text-xl font-semibold mb-4 text-vue-white">Chats</h2>
@@ -47,6 +47,7 @@ import { ref, onMounted } from "vue";
 import { PlusIcon, ChevronLeftIcon, ChevronRightIcon } from "lucide-vue-next";
 import { useChatStore } from "@/stores/chats.ts";
 import { storeToRefs } from "pinia";
+import { routes } from "../../shared/schemas.ts";
 
 const isExpanded = ref(true);
 
@@ -61,9 +62,16 @@ const toggleSidebar = () => {
   isExpanded.value = !isExpanded.value;
 };
 
-const createNewChat = () => {
-  // Implement new chat creation logic here
-  console.log("Creating new chat");
+const createNewChat = async() => {
+  try {
+    const res = await fetch("/api/create");
+    if(!res.ok) throw new Error("Failed to create a new chat");
+    const result = routes["create"].safeParse(await res.json());
+    if(!result.success) throw new Error("Backend provided bogus data");
+    chatStore.chats.push(result.data);
+  } catch(e) {
+    console.error(e);
+  }
 };
 </script>
 

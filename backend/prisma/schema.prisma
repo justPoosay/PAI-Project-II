@@ -18,7 +18,7 @@ model Message {
   role      Role
   toolCalls ToolCall[]
 
-  Chat   Chat   @relation(fields: [chatId], references: [id])
+  Chat   Chat   @relation(fields: [chatId], references: [id], onDelete: Cascade)
   chatId String
 
   created_at DateTime @default(now())
@@ -29,7 +29,7 @@ model ToolCall {
   name String
   args String // JSON
 
-  Message   Message? @relation(fields: [messageId], references: [id])
+  Message   Message? @relation(fields: [messageId], references: [id], onDelete: SetNull)
   messageId Int?
 }
 

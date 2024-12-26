@@ -93,7 +93,7 @@ import "highlight.js/styles/github-dark.css";
 import DOMPurify from "dompurify";
 import { isValidJSON } from "@/lib/utils.ts";
 import type { ClientBoundWebSocketMessage, ClientMessage as Message, ServerBoundWebSocketMessage } from "../../shared";
-import { useRoute } from "vue-router";
+import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute } from "vue-router";
 import "floating-vue/dist/style.css";
 import { routes } from "../../shared/schemas.ts";
 
@@ -103,7 +103,6 @@ const input = ref("");
 const chatContainer = ref<HTMLElement | null>(null);
 const isAtBottom = ref(true);
 
-let ws: WebSocket;
 const send = (data: ServerBoundWebSocketMessage) => ws.send(JSON.stringify(data));
 
 const scrollToBottom = () => {
@@ -130,7 +129,9 @@ const getToolIcon = (toolName: string) => {
   }
 };
 
-onMounted(async() => {
+let ws: WebSocket;
+
+async function initWS(id: string) {
   ws = new WebSocket(`ws://${window.location.host}/api/${route.params.id}`);
   ws.onmessage = (event: MessageEvent<string>) => {
     if(!isValidJSON(event.data)) return;
@@ -180,7 +181,7 @@ onMounted(async() => {
 
   ws.onclose = (event) => {
     if(!event.wasClean) {
-      // TODO
+      console.error(event);
     }
   };
 
@@ -190,11 +191,23 @@ onMounted(async() => {
     const result = routes["[id]"]["messages.json"].safeParse(await res.json());
     if(result.success) messages.value = result.data.map((msg) => ({ ...msg, finished: true }));
   } catch(e) {
-    if(e instanceof Error) {
-      // TODO
-    }
+    console.error(e);
   }
+}
 
+onBeforeRouteUpdate(async(to, from, next) => {
+  if(to.params.id !== from.params.id) {
+    await initWS(to.params.id as string);
+  }
+  next();
+});
+
+onBeforeRouteLeave(() => {
+  ws.close();
+});
+
+onMounted(async() => {
+  await initWS(route.params.id as string);
   if(chatContainer.value) {
     chatContainer.value.addEventListener("scroll", checkIfAtBottom);
   }

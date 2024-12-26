@@ -21,4 +21,5 @@ export const routes = {
     "messages.json": z.array(MessageSchema.extend({ toolCalls: z.array(ToolCallSchema).optional() }))
   },
   "chats.json": z.array(ChatSchema),
+  "create": ChatSchema
 } as const;
