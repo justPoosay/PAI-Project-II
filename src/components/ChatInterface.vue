@@ -17,7 +17,7 @@
             >
               <div
                 :data-self="message.role === 'user'"
-                class="max-w-[80%] p-3 relative backdrop-blur-sm rounded-tl-2xl rounded-tr-2xl shadow-sm bg-gradient-to-tr from-white/15 to-white/10 data-[self=true]:bg-gradient-to-tl data-[self=true]:from-white/25 data-[self=true]:to-white/20 data-[self=true]:rounded-bl-2xl data-[self=false]:rounded-br-2xl"
+                class="max-w-[80%] p-3 relative backdrop-blur-md rounded-tl-2xl rounded-tr-2xl shadow-sm bg-gradient-to-tr from-white/15 to-white/10 data-[self=true]:bg-gradient-to-tl data-[self=true]:from-white/25 data-[self=true]:to-white/20 data-[self=true]:rounded-bl-2xl data-[self=false]:rounded-br-2xl"
               >
                 <div v-if="message.content" v-html="parseMarkdown(message.content)" class="markdown-content"></div>
                 <div v-else class="flex items-center justify-center">
@@ -104,6 +104,13 @@ const input = ref("");
 const chatContainer = ref<HTMLElement | null>(null);
 const wasAtTheBottom = ref(false);
 
+function checkIfAtBottom() {
+  if(chatContainer.value) {
+    const { scrollTop, scrollHeight, clientHeight } = chatContainer.value;
+    wasAtTheBottom.value = scrollTop + clientHeight >= scrollHeight;
+  }
+}
+
 function scrollToBottom() {
   if(chatContainer.value) {
     chatContainer.value.scrollTop = chatContainer.value.scrollHeight;
@@ -144,6 +151,12 @@ async function init(id: typeof route.params.id) {
 
       if(msg.type === "text-delta") {
         messages.value[messages.value.length - 1].content += msg.textDelta;
+
+        if (wasAtTheBottom.value) {
+          nextTick(() => {
+            scrollToBottom();
+          });
+        }
       }
 
       if(msg.type === "tool-call") {
@@ -213,6 +226,14 @@ onBeforeRouteUpdate(async(to, from, next) => {
 
 onMounted(async() => {
   await init(route.params.id);
+
+  scrollToBottom();
+  chatContainer.value?.addEventListener("scroll", checkIfAtBottom);
+  chatContainer.value?.addEventListener("wheel", function(event) {
+    if (event.deltaY < 0 && !wasAtTheBottom.value) {
+      wasAtTheBottom.value = false;
+    }
+  });
 });
 
 function sendMessage() {
@@ -290,10 +311,6 @@ function parseMarkdown(text: string) {
     )
   );
 }
-
-onMounted(() => {
-  scrollToBottom();
-});
 </script>
 
 <style lang="sass">
@@ -405,7 +422,7 @@ onMounted(() => {
     @apply bg-white/5
 
 .hljs-comment
-  @apply font-['Monaspace_Radon']
+  @apply font-['Monaspace_Radon'] text-gray-300/75 italic
 
 .loader
   display: flex
