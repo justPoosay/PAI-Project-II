@@ -204,9 +204,9 @@ async function init(id: typeof route.params.id) {
 
 async function fetchMessages(id: typeof route.params.id) {
   try {
-    const res = await fetch(`/api/${id}/messages.json`);
+    const res = await fetch(`/api/${id}/messages`);
     if(!res.ok) throw new Error("Failed to fetch messages");
-    const result = routes["[id]"]["messages.json"].safeParse(await res.json());
+    const result = routes["[id]"]["messages"].safeParse(await res.json());
     if(result.success) messages.value = result.data.map((msg) => ({ ...msg, finished: true }));
   } catch(e) {
     // TODO

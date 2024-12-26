@@ -4,13 +4,13 @@ import { routes } from "../../shared/schemas.ts";
 import { z } from "zod";
 
 export const useChatStore = defineStore("chat", () => {
-  const chats = ref<z.infer<typeof routes["chats.json"]>>([]);
+  const chats = ref<z.infer<typeof routes["conversations"]>>([]);
   
   async function $fetch() {
     try {
-      const res = await fetch("/api/chats.json");
+      const res = await fetch("/api/conversations");
       if(!res.ok) throw new Error("Failed to fetch chats");
-      const result = routes["chats.json"].safeParse(await res.json());
+      const result = routes["conversations"].safeParse(await res.json());
       if(!result.success) throw new Error("Backend provided bogus data");
       chats.value = result.data;
     } catch(e) {

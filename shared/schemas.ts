@@ -18,9 +18,9 @@ export const ChatSchema = z.object({
 
 export const routes = {
   "[id]": {
-    "messages.json": z.array(MessageSchema.extend({ toolCalls: z.array(ToolCallSchema).optional() }))
+    "messages": z.array(MessageSchema.extend({ toolCalls: z.array(ToolCallSchema).optional() }))
   },
-  "chats.json": z.array(ChatSchema),
+  "conversations": z.array(ChatSchema),
   "create": ChatSchema
 } as const;
 
