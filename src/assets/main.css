@@ -2,10 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-:root, html, body, #app {
-  @apply h-full font-['SF_Pro_Rounded'];
-}
-
 @layer base {
   @font-face {
     font-family: "SF Pro Rounded";
@@ -46,4 +42,8 @@
     font-display: swap;
     src: url("/fonts/Monaspace/MonaspaceNeon-Regular.woff2") format("woff2");
   }
+}
+
+:root, html, body, #app {
+  @apply h-full font-['SF_Pro_Rounded'];
 }
