@@ -1,37 +1,12 @@
 <template>
+  <!--bg-gradient-to-tr-->
   <div
-    class="flex h-screen bg-gradient-to-tr from-fuchsia-700 via-purple-700 to-pink-700 selection:bg-white/10 text-white bg-[url('/DarkestHour.webp')]">
+    class="flex h-screen from-fuchsia-700 via-purple-700 to-pink-700 selection:bg-white/10 text-white bg-[url('/DarkestHour.webp')]">
     <!-- Sidebar -->
     <Sidebar/>
 
     <!-- Chat Area -->
     <div class="flex-1 flex flex-col relative">
-      <!-- Input Area -->
-      <div class="absolute bottom-4 left-4 right-4 z-10">
-        <div
-          class="flex flex-col items-start max-w-2xl mx-auto bg-gradient-to-br from-vue-black/25 to-vue-black-soft/35 backdrop-blur-sm rounded-xl p-2 shadow-lg"
-        >
-          <textarea
-            v-model="input"
-            @keydown="handleKeyDown"
-            placeholder="Type a message..."
-            class="bg-transparent p-2 focus:outline-none resize-none w-full"
-          />
-          <div class="flex justify-between w-full text-white/75">
-            <button class="p-2 rounded-full hover:bg-white/5 transition mt-1">
-              <PaperclipIcon class="w-6 h-6 "/>
-            </button>
-            <button
-              @click="sendMessage"
-              class="p-2 bg-indigo rounded-full hover:bg-white/5 transition mt-1"
-              :data-empty="!input.trim()"
-            >
-              <SendIcon class="w-6 h-6"/>
-            </button>
-          </div>
-        </div>
-      </div>
-
       <!-- Chat Messages -->
       <div class="flex-1 overflow-y-auto p-4 pb-36" ref="chatContainer">
         <div class="max-w-5xl mx-auto">
@@ -71,6 +46,32 @@
           </div>
         </div>
       </div>
+
+      <!-- Input Area -->
+      <div class="absolute bottom-4 left-4 right-4 z-10">
+        <div
+          class="flex flex-col items-start max-w-2xl mx-auto bg-gradient-to-br from-vue-black/25 to-vue-black-soft/35 backdrop-blur-sm rounded-xl p-2 shadow-lg"
+        >
+          <textarea
+            v-model="input"
+            @keydown="handleKeyDown"
+            placeholder="Type a message..."
+            class="bg-transparent p-2 focus:outline-none resize-none w-full"
+          />
+          <div class="flex justify-between w-full text-white/75">
+            <button class="p-2 rounded-full hover:bg-white/5 transition mt-1">
+              <PaperclipIcon class="w-6 h-6 "/>
+            </button>
+            <button
+              @click="sendMessage"
+              class="p-2 bg-indigo rounded-full hover:bg-white/5 transition mt-1"
+              :data-empty="!input.trim()"
+            >
+              <SendIcon class="w-6 h-6"/>
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -84,7 +85,8 @@ import {
   CloudLightningIcon, BracesIcon
 } from "lucide-vue-next";
 import Sidebar from "@/components/Sidebar.vue";
-import { marked, type MarkedOptions } from "marked";
+import { Marked } from "marked";
+import { markedHighlight } from "marked-highlight";
 import hljs from "highlight.js";
 import "highlight.js/styles/github-dark.css";
 import DOMPurify from "dompurify";
@@ -257,18 +259,27 @@ function handleKeyDown(e: KeyboardEvent) {
 }
 
 function parseMarkdown(text: string) {
-  marked.setOptions({
-    highlight: function(code: string, lang: string) {
-      const language = hljs.getLanguage(lang) ? lang : "plaintext";
-      return hljs.highlight(code, { language }).value;
-    },
-    breaks: true,
-    gfm: true,
-    headerIds: true,
-    headerPrefix: "header-"
-  } as MarkedOptions);
+  const marked = new Marked(
+    markedHighlight({
+      emptyLangClass: "hljs",
+      langPrefix: "hljs language-",
+      highlight(code, lang) {
+        const language = hljs.getLanguage(lang) ? lang : "plaintext";
+        return hljs.highlight(code, { language }).value;
+      },
+    })
+  );
 
-  return DOMPurify.sanitize(marked(text.replace(/^[\u200B\u200C\u200D\u200E\u200F\uFEFF]/, "")) as string);
+  return DOMPurify.sanitize(
+    marked.parse(
+      text.replace(/^[\u200B\u200C\u200D\u200E\u200F\uFEFF]/, ""),
+      {
+        async: false,
+        breaks: true,
+        gfm: true,
+      }
+    )
+  );
 }
 
 function highlightCode() {
@@ -293,113 +304,102 @@ onMounted(() => {
 });
 </script>
 
-<style>
-/* Add some basic styling for Markdown elements */
-.markdown-content {
-  word-break: break-word;
-}
+<style lang="sass">
+.markdown-content
+  @apply break-words
 
-.markdown-content .hljs {
-  @apply bg-white/5 backdrop-blur-sm text-white/80 p-1 rounded;
-}
+.markdown-content pre
+  @apply rounded overflow-x-auto
 
-.markdown-content strong {
-  font-weight: bold;
-}
+// \`\`\`\n<content>\n\`\`\`
+.markdown-content pre code.hljs
+  @apply block bg-white/5 backdrop-blur-sm text-white/80 p-1 rounded font-['Monaspace_Neon'] text-sm
 
-.markdown-content em {
-  font-style: italic;
-}
+// **<content>**
+.markdown-content strong
+  @apply font-bold
 
-.markdown-content code:not(.hljs) {
-  background-color: rgba(255, 255, 255, 0.1);
-  border-radius: 0.25rem;
-  padding: 0.1rem 0.25rem;
-  font-family: monospace;
-}
+// *<content>*
+.markdown-content em
+  @apply italic
 
-.markdown-content pre {
-  margin-top: 0.5rem;
-  margin-bottom: 0.5rem;
-}
+// `<content>`
+.markdown-content code:not(.hljs)
+  @apply bg-white/5 backdrop-blur-sm rounded p-1 font-['Monaspace_Neon'] text-sm
 
-.markdown-content pre code {
-  background-color: transparent;
-  padding: 0;
-}
+// # <content>
+.markdown-content h1
+  @apply text-3xl font-bold mt-4 mb-4
 
-.markdown-content h1 {
-  font-size: 2em;
-  font-weight: bold;
-  margin-top: 0.67em;
-  margin-bottom: 0.67em;
-}
+// ## <content>
+.markdown-content h2
+  @apply text-2xl font-bold mt-4 mb-4
 
-.markdown-content h2 {
-  font-size: 1.5em;
-  font-weight: bold;
-  margin-top: 0.83em;
-  margin-bottom: 0.83em;
-}
+// ### <content>
+.markdown-content h3
+  @apply text-xl font-bold mt-4 mb-4
 
-.markdown-content h3 {
-  font-size: 1.17em;
-  font-weight: bold;
-  margin-top: 1em;
-  margin-bottom: 1em;
-}
+// #### <content>
+.markdown-content h4
+  @apply text-lg font-bold mt-4 mb-4
 
-.markdown-content h4 {
-  font-size: 1em;
-  font-weight: bold;
-  margin-top: 1.33em;
-  margin-bottom: 1.33em;
-}
+// <i>. <content>
+.markdown-content ol
+  @apply list-decimal list-outside ml-6 mb-4
+  & ol, & ul
+    @apply mt-2 mb-2
 
-.markdown-content h5 {
-  font-size: 0.83em;
-  font-weight: bold;
-  margin-top: 1.67em;
-  margin-bottom: 1.67em;
-}
+// - <content>
+.markdown-content ul
+  @apply list-disc list-outside ml-6 mb-4
+  & ul, & ol
+    @apply mt-2 mb-2
 
-.markdown-content h6 {
-  font-size: 0.67em;
-  font-weight: bold;
-  margin-top: 2.33em;
-  margin-bottom: 2.33em;
-}
+// Nested list items
+.markdown-content li
+  @apply mb-1
+  & > ul, & > ol
+    @apply ml-4
 
-.loader {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
+// Blockquote
+.markdown-content blockquote
+  @apply border-l-4 border-white/30 pl-4 py-1 my-4 italic bg-white/5 rounded
 
-.dot {
-  width: 8px;
-  height: 8px;
-  background-color: #fff;
-  border-radius: 50%;
-  margin: 0 4px;
-  opacity: 0.3;
-  animation: pulse 1.4s infinite ease-in-out;
-}
+// Table
+.markdown-content table
+  @apply w-full border-collapse my-4
+  th, td
+    @apply border border-white/30 p-2
 
-.dot:nth-child(2) {
-  animation-delay: 0.2s;
-}
+  th
+    @apply bg-white/10 font-bold
 
-.dot:nth-child(3) {
-  animation-delay: 0.4s;
-}
+  tr:nth-child(even)
+    @apply bg-white/5
 
-@keyframes pulse {
-  0%, 100% {
-    opacity: 0.3;
-  }
-  50% {
-    opacity: 1;
-  }
-}
+.loader
+  display: flex
+  justify-content: center
+  align-items: center
+
+.dot
+  width: 8px
+  height: 8px
+  background-color: #fff
+  border-radius: 50%
+  margin: 0 4px
+  opacity: 0.3
+  animation: pulse 1.4s infinite ease-in-out
+
+.dot:nth-child(2)
+  animation-delay: 0.2s
+
+.dot:nth-child(3)
+  animation-delay: 0.4s
+
+@keyframes pulse
+  0%, 100%
+    opacity: 0.3
+  50%
+    opacity: 1
 </style>
