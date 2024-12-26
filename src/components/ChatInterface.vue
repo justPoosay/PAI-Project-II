@@ -88,14 +88,15 @@ import Sidebar from "@/components/Sidebar.vue";
 import { Marked, Renderer } from "marked";
 import { markedHighlight } from "marked-highlight";
 import hljs from "highlight.js";
-import "highlight.js/styles/github-dark.css";
 import DOMPurify from "dompurify";
 import { capitalize, isValidJSON } from "@/lib/utils.ts";
 import type { ClientMessage as Message, ServerBoundWebSocketMessage } from "../../shared";
 import { onBeforeRouteUpdate, useRoute } from "vue-router";
-import "floating-vue/dist/style.css";
 import { ClientBoundWebSocketMessageSchema, routes } from "../../shared/schemas.ts";
 import { useChatStore } from "@/stores/chats.ts";
+
+import "floating-vue/dist/style.css";
+import "highlight.js/styles/github-dark.css";
 
 const route = useRoute();
 const messages = ref<Message[]>([]);
@@ -402,6 +403,9 @@ onMounted(() => {
 
   tr:nth-child(even)
     @apply bg-white/5
+
+.hljs-comment
+  @apply font-['Monaspace_Radon']
 
 .loader
   display: flex

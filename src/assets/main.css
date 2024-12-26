@@ -42,6 +42,14 @@
     font-display: swap;
     src: url("/fonts/Monaspace/MonaspaceNeon-Regular.woff2") format("woff2");
   }
+
+  @font-face {
+    font-family: "Monaspace Radon";
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url("/fonts/Monaspace/MonaspaceRadon-Regular.woff2") format("woff2");
+  }
 }
 
 :root, html, body, #app {
