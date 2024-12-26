@@ -4,7 +4,7 @@ import { openai } from "@ai-sdk/openai";
 export async function nameChat(context: CoreMessage[]) {
   const { text } = await generateText({
     model: openai("gpt-4o-mini"),
-    system: "Based on the messages provided, create a name up to 20 characters long describing the chat.",
+    system: "Based on the messages provided, create a name up to 20 characters long describing the chat. Don't wrap your response in quotes.",
     prompt: JSON.stringify(context),
   });
   return text;
