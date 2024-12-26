@@ -1,23 +1,33 @@
 import { db } from "../lib/db.ts";
 import type { ServerWebSocket } from "bun";
 import type { WSData } from "../lib/types.ts";
-import type { ClientBoundWebSocketMessage, ServerBoundWebSocketMessage, ToolCall } from "../../../shared";
+import type { ClientBoundWebSocketMessage, ServerBoundWebSocketMessage, ToolCall, Model } from "../../../shared";
 import { server } from "../index.ts";
 import { type CoreAssistantMessage, type CoreMessage, type CoreUserMessage, streamText } from "ai";
-import { openai } from "@ai-sdk/openai";
 import { tools } from "./tools";
 import { nameChat } from "./utils.ts";
+import { models } from "./constants.ts";
+import { ModelSchema } from "../../../shared/schemas.ts";
+import { defaultModel } from "../../../shared/constants.ts";
 
 class ConversationClass {
   private readonly id: string;
   private readonly ws: ServerWebSocket<WSData>;
   private messages: CoreMessage[] = [];
+  private model: Model = defaultModel;
   
   private async open() {
     this.ws.subscribe(this.id);
     
-    const result = await db.message.findMany({ where: { chatId: this.id } });
-    this.messages = result.sort((a, b) => a.id - b.id).map(({ role, content }) => ({ role, content }));
+    const messages = await db.message.findMany({ where: { chatId: this.id } });
+    this.messages = messages.sort((a, b) => a.id - b.id).map(({ role, content }) => ({ role, content }));
+    const chat = await db.chat.findUnique({ where: { id: this.id } });
+    const result = ModelSchema.safeParse(chat?.model);
+    if(result.success) {
+      this.model = result.data;
+    }
+    
+    this.publish({ role: "setup", model: this.model });
   }
   
   async close() {
@@ -39,6 +49,11 @@ class ConversationClass {
     if(data.role === "message" && data.action === "create") {
       await this.createCompletion(data.content);
     }
+    
+    if(data.role === "modify" && data.action === "model") {
+      this.model = data.model;
+      await db.chat.update({ where: { id: this.id }, data: { model: data.model } });
+    }
   }
   
   private async createCompletion(userInput: string): Promise<CoreAssistantMessage> {
@@ -49,10 +64,9 @@ class ConversationClass {
     
     const toolCalls: (Omit<ToolCall, "args"> & { args: string })[] = [];
     const result = streamText({
-      model: openai("gpt-4o"),
+      model: models[this.model].model,
       messages: this.messages,
-      tools,
-      maxSteps: 16,
+      ...(models[this.model].supportsTools && { tools, maxSteps: 16 }),
       onChunk: ({ chunk }) => {
         if(["tool-call", "tool-result", "text-delta"].includes(chunk.type)) {
           this.publish({ role: "chunk", ...chunk } as ClientBoundWebSocketMessage);

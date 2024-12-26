@@ -90,19 +90,22 @@ import { markedHighlight } from "marked-highlight";
 import hljs from "highlight.js";
 import DOMPurify from "dompurify";
 import { capitalize, isValidJSON } from "@/lib/utils.ts";
-import type { ClientMessage as Message, ServerBoundWebSocketMessage } from "../../shared";
+import type { ClientMessage as Message, Model, ServerBoundWebSocketMessage } from "../../shared";
 import { onBeforeRouteUpdate, useRoute } from "vue-router";
 import { ClientBoundWebSocketMessageSchema, routes } from "../../shared/schemas.ts";
 import { useChatStore } from "@/stores/chats.ts";
 
 import "floating-vue/dist/style.css";
 import "highlight.js/styles/github-dark.css";
+import { defaultModel } from "../../shared/constants.ts";
 
 const route = useRoute();
-const messages = ref<Message[]>([]);
 const input = ref("");
 const chatContainer = ref<HTMLElement | null>(null);
 const wasAtTheBottom = ref(false);
+
+const messages = ref<Message[]>([]);
+const model = ref<Model>(defaultModel);
 
 function checkIfAtBottom() {
   if(chatContainer.value) {
@@ -188,6 +191,10 @@ async function init(id: typeof route.params.id) {
         return chat;
       });
     }
+
+    if(msg.role === "setup") {
+      model.value = msg.model;
+    }
   };
 
   ws.value.onopen = function() {
@@ -227,7 +234,6 @@ onBeforeRouteUpdate(async(to, from, next) => {
 onMounted(async() => {
   await init(route.params.id);
 
-  scrollToBottom();
   chatContainer.value?.addEventListener("scroll", checkIfAtBottom);
   chatContainer.value?.addEventListener("wheel", function(event) {
     if (event.deltaY < 0 && !wasAtTheBottom.value) {

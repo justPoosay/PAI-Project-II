@@ -3,7 +3,7 @@ import {
   ChatSchema,
   ToolCallSchema,
   ClientBoundWebSocketMessageSchema,
-  ServerBoundWebSocketMessageSchema
+  ServerBoundWebSocketMessageSchema, ModelSchema
 } from "./schemas.ts";
 
 /** @description conversation message as held by the client */
@@ -18,4 +18,4 @@ export type ClientBoundWebSocketMessage = z.infer<typeof ClientBoundWebSocketMes
 export type ServerBoundWebSocketMessage = z.infer<typeof ServerBoundWebSocketMessageSchema>
 
 export type ToolCall = z.infer<typeof ToolCallSchema>
-export type Chat = z.infer<typeof ChatSchema>
+export type Model = z.infer<typeof ModelSchema>

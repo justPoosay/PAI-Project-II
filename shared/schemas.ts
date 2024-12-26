@@ -24,6 +24,12 @@ export const routes = {
   "create": ChatSchema
 } as const;
 
+export const ModelSchema = z.union([
+  z.literal("gpt-4o"),
+  z.literal("gpt-4o-mini"),
+  z.literal("claude-3-5-sonnet")
+]);
+
 /** @description message sent from the server to the client */
 export const ClientBoundWebSocketMessageSchema = z.union([
   z.object({
@@ -52,6 +58,10 @@ export const ClientBoundWebSocketMessageSchema = z.union([
   z.object({
     role: z.literal("rename"),
     name: z.string(),
+  }),
+  z.object({
+    role: z.literal("setup"),
+    model: ModelSchema
   })
 ]);
 
@@ -66,4 +76,9 @@ export const ServerBoundWebSocketMessageSchema = z.union([
     role: z.literal("action"),
     action: z.literal("abort"),
   }),
+  z.object({
+    role: z.literal("modify"),
+    action: z.literal("model"),
+    model: ModelSchema
+  })
 ]);
