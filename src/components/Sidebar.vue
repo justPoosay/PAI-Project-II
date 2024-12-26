@@ -64,7 +64,7 @@ const toggleSidebar = () => {
 
 const createNewChat = async() => {
   try {
-    const res = await fetch("/api/create");
+    const res = await fetch("/api/create", { method: "POST" });
     if(!res.ok) throw new Error("Failed to create a new chat");
     const result = routes["create"].safeParse(await res.json());
     if(!result.success) throw new Error("Backend provided bogus data");

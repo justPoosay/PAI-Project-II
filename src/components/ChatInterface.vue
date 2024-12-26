@@ -96,6 +96,7 @@ import type { ClientBoundWebSocketMessage, ClientMessage as Message, ServerBound
 import { onBeforeRouteUpdate, useRoute } from "vue-router";
 import "floating-vue/dist/style.css";
 import { ClientBoundWebSocketMessageSchema, routes } from "../../shared/schemas.ts";
+import { useChatStore } from "@/stores/chats.ts";
 
 const route = useRoute();
 const messages = ref<Message[]>([]);
@@ -171,6 +172,15 @@ async function init(id: typeof route.params.id) {
 
     if(msg.role === "finish") {
       messages.value[messages.value.length - 1].finished = true;
+    }
+
+    if(msg.role === "rename") {
+      useChatStore().chats.map((chat) => {
+        if(chat.id === id) {
+          chat.name = msg.name;
+        }
+        return chat;
+      });
     }
 
     nextTick(() => {

@@ -37,6 +37,7 @@ model Chat {
   id       String    @id @default(uuid())
   name     String?
   messages Message[]
+  active   Boolean   @default(true) // to not delete the chat
 
   created_at DateTime  @default(now())
   updated_at DateTime? @updatedAt

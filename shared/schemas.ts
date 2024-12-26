@@ -49,6 +49,10 @@ export const ClientBoundWebSocketMessageSchema = z.union([
   z.object({
     role: z.literal("finish"),
   }),
+  z.object({
+    role: z.literal("rename"),
+    name: z.string(),
+  })
 ]);
 
 /** @description message sent from the client to the server */

@@ -6,6 +6,7 @@ import { server } from "../index.ts";
 import { type CoreAssistantMessage, type CoreMessage, type CoreUserMessage, streamText } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { tools } from "./tools";
+import { nameChat } from "./utils.ts";
 
 class ConversationClass {
   private readonly id: string;
@@ -84,6 +85,11 @@ class ConversationClass {
     });
     this.publish({ role: "finish" });
     // ---
+    
+    if (this.messages.length === 2) {
+      const name = await nameChat(this.messages);
+      this.publish({ role: "rename", name });
+    }
     
     return message;
   }
