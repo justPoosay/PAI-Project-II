@@ -48,6 +48,7 @@ import { PlusIcon, ChevronLeftIcon, ChevronRightIcon } from "lucide-vue-next";
 import { useChatStore } from "@/stores/chats.ts";
 import { storeToRefs } from "pinia";
 import { routes } from "../../shared/schemas.ts";
+import router from "@/router";
 
 const isExpanded = ref(true);
 
@@ -58,20 +59,22 @@ onMounted(() => {
   chatStore.$fetch();
 });
 
-const toggleSidebar = () => {
+function toggleSidebar() {
   isExpanded.value = !isExpanded.value;
-};
+}
 
-const createNewChat = async() => {
+async function createNewChat() {
   try {
     const res = await fetch("/api/create", { method: "POST" });
     if(!res.ok) throw new Error("Failed to create a new chat");
     const result = routes["create"].safeParse(await res.json());
     if(!result.success) throw new Error("Backend provided bogus data");
-    chatStore.chats.push(result.data);
+    const chat = result.data;
+    chatStore.chats.push(chat);
+    await router.push({ name: "c", params: { id: chat.id } });
   } catch(e) {
     console.error(e);
   }
-};
+}
 </script>
 
