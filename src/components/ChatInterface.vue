@@ -53,7 +53,7 @@
 
       <!-- Input Area -->
       <div class="p-4">
-        <div class="flex flex-col items-start max-w-2xl mx-auto bg-vue-black-soft rounded-lg p-2">
+        <div class="flex flex-col items-start max-w-2xl mx-auto bg-vue-black-soft rounded-lg p-2 shadow-md">
           <textarea
               v-model="input"
               @keydown="handleKeyDown"
@@ -93,9 +93,9 @@ import "highlight.js/styles/github-dark.css";
 import DOMPurify from "dompurify";
 import { isValidJSON } from "@/lib/utils.ts";
 import type { ClientBoundWebSocketMessage, ClientMessage as Message, ServerBoundWebSocketMessage } from "../../shared";
-import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute } from "vue-router";
+import { onBeforeRouteUpdate, useRoute } from "vue-router";
 import "floating-vue/dist/style.css";
-import { routes } from "../../shared/schemas.ts";
+import { ClientBoundWebSocketMessageSchema, routes } from "../../shared/schemas.ts";
 
 const route = useRoute();
 const messages = ref<Message[]>([]);
@@ -134,8 +134,10 @@ async function init(id: typeof route.params.id) {
   const url = "ws://" + window.location.host + "/api/" + id;
   ws.value = new WebSocket(url);
   ws.value.onmessage = function(ev) {
-    if(!isValidJSON(ev.data)) return;
-    const msg = JSON.parse(ev.data) as ClientBoundWebSocketMessage;
+    if(typeof ev.data !== "string" || !isValidJSON(ev.data)) return;
+    const result = ClientBoundWebSocketMessageSchema.safeParse(JSON.parse(ev.data));
+    if(!result.success) return;
+    const msg = result.data;
 
     if(msg.role === "chunk") {
       if(messages.value[messages.value.length - 1]?.finished) {

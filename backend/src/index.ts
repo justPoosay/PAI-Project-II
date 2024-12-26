@@ -1,9 +1,9 @@
 import { serve, FileSystemRouter, type ServerWebSocket } from "bun";
 import * as path from "node:path";
 import type { WSData } from "./lib/types";
-import type { ServerBoundWebSocketMessage } from "../../shared";
-import { isValidJSON } from "./lib/utils.ts";
+import { ServerBoundWebSocketMessageSchema } from "../../shared/schemas.ts";
 import Conversation from "./core/Conversation.ts";
+import { isValidJSON } from "./lib/utils.ts";
 
 const router = new FileSystemRouter({
   style: "nextjs",
@@ -44,9 +44,10 @@ export const server = serve({
       await ws.data.instance?.close();
     },
     async message(ws: ServerWebSocket<WSData>, message) {
-      if(typeof message !== "string" || !isValidJSON(message)) return;
-      const msg = JSON.parse(message) as ServerBoundWebSocketMessage;
-      await ws.data.instance?.onMessage(msg);
+      if (typeof message !== "string" || !isValidJSON(message)) return;
+      const result = ServerBoundWebSocketMessageSchema.safeParse(JSON.parse(message));
+      if (!result.success) return;
+      await ws.data.instance?.onMessage(result.data);
     },
   },
 });
