@@ -103,22 +103,20 @@ const input = ref("");
 const chatContainer = ref<HTMLElement | null>(null);
 const isAtBottom = ref(true);
 
-const send = (data: ServerBoundWebSocketMessage) => ws.send(JSON.stringify(data));
-
-const scrollToBottom = () => {
+function scrollToBottom() {
   if(chatContainer.value) {
     chatContainer.value.scrollTop = chatContainer.value.scrollHeight;
   }
-};
+}
 
-const checkIfAtBottom = () => {
+function checkIfAtBottom() {
   if(chatContainer.value) {
     const { scrollTop, scrollHeight, clientHeight } = chatContainer.value;
     isAtBottom.value = scrollTop + clientHeight >= scrollHeight - 10;
   }
-};
+}
 
-const getToolIcon = (toolName: string) => {
+function getToolIcon(toolName: string) {
   switch(toolName.toLowerCase()) {
     case "eval":
       return BracesIcon;
@@ -127,15 +125,17 @@ const getToolIcon = (toolName: string) => {
     default:
       return HammerIcon;
   }
-};
+}
 
-let ws: WebSocket;
+const ws = ref<WebSocket | null>(null);
 
-async function initWS(id: string) {
-  ws = new WebSocket(`ws://${window.location.host}/api/${route.params.id}`);
-  ws.onmessage = (event: MessageEvent<string>) => {
-    if(!isValidJSON(event.data)) return;
-    const msg = JSON.parse(event.data) as ClientBoundWebSocketMessage;
+async function init(id: typeof route.params.id) {
+  ws.value?.close(); // to unsubscribe from the previous WebSocket connection server-side
+  const url = "ws://" + window.location.host + "/api/" + id;
+  ws.value = new WebSocket(url);
+  ws.value.onmessage = function(ev) {
+    if(!isValidJSON(ev.data)) return;
+    const msg = JSON.parse(ev.data) as ClientBoundWebSocketMessage;
 
     if(msg.role === "chunk") {
       if(messages.value[messages.value.length - 1]?.finished) {
@@ -179,41 +179,48 @@ async function initWS(id: string) {
     });
   };
 
-  ws.onclose = (event) => {
-    if(!event.wasClean) {
-      console.error(event);
-    }
+  ws.value.onopen = function() {
+    console.log("Connected to WebSocket");
   };
 
+  ws.value.onclose = function(ev) {
+    console.log("Disconnected from WebSocket");
+  };
+
+  await fetchMessages(id);
+}
+
+async function fetchMessages(id: typeof route.params.id) {
   try {
-    const res = await fetch(`/api/${route.params.id}/messages.json`);
+    const res = await fetch(`/api/${id}/messages.json`);
     if(!res.ok) throw new Error("Failed to fetch messages");
     const result = routes["[id]"]["messages.json"].safeParse(await res.json());
     if(result.success) messages.value = result.data.map((msg) => ({ ...msg, finished: true }));
   } catch(e) {
+    // TODO
     console.error(e);
   }
 }
 
+function send(data: ServerBoundWebSocketMessage) {
+  ws.value?.send(JSON.stringify(data));
+}
+
 onBeforeRouteUpdate(async(to, from, next) => {
   if(to.params.id !== from.params.id) {
-    await initWS(to.params.id as string);
+    await init(to.params.id);
   }
   next();
 });
 
-onBeforeRouteLeave(() => {
-  ws.close();
-});
-
 onMounted(async() => {
-  await initWS(route.params.id as string);
+  await init(route.params.id);
   if(chatContainer.value) {
     chatContainer.value.addEventListener("scroll", checkIfAtBottom);
   }
 });
 
-const sendMessage = () => {
+function sendMessage() {
   if(input.value.trim()) {
     messages.value.push({
       role: "user",
@@ -231,16 +238,16 @@ const sendMessage = () => {
       scrollToBottom();
     });
   }
-};
+}
 
-const handleKeyDown = (e: KeyboardEvent) => {
+function handleKeyDown(e: KeyboardEvent) {
   if(e.key === "Enter" && !e.shiftKey) {
     e.preventDefault();
     sendMessage();
   }
-};
+}
 
-const parseMarkdown = (text: string) => {
+function parseMarkdown(text: string) {
   marked.setOptions({
     highlight: function(code: string, lang: string) {
       const language = hljs.getLanguage(lang) ? lang : "plaintext";
@@ -251,16 +258,17 @@ const parseMarkdown = (text: string) => {
     headerIds: true,
     headerPrefix: "header-"
   } as MarkedOptions);
-  return DOMPurify.sanitize(marked(text.replace(/^[\u200B\u200C\u200D\u200E\u200F\uFEFF]/, "")) as string);
-};
 
-const highlightCode = () => {
+  return DOMPurify.sanitize(marked(text.replace(/^[\u200B\u200C\u200D\u200E\u200F\uFEFF]/, "")) as string);
+}
+
+function highlightCode() {
   nextTick(() => {
     document.querySelectorAll("pre code").forEach((block) => {
       hljs.highlightElement(block as HTMLElement);
     });
   });
-};
+}
 
 watch(messages, () => {
   nextTick(() => {
