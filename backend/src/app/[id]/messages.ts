@@ -15,7 +15,7 @@ export async function GET(req: AppRequest): Promise<Response> {
           ? calls.map(({ args, ...rest }) => ({ args: JSON.parse(args), ...rest }))
           : undefined;
         return { ...message, ...(toolCalls && { toolCalls }) };
-      })
+      }).sort((a, b) => a.id - b.id)
     )
   );
 }

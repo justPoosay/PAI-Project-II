@@ -47,3 +47,38 @@
 :root, html, body, #app {
   @apply h-full font-['SF_Pro_Rounded'];
 }
+
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #888;
+  border-radius: 10px;
+  border: 3px solid transparent;
+}
+
+* {
+  scrollbar-width: auto;
+  scrollbar-color: #888 transparent;
+}
+
+*::-moz-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+*::-moz-scrollbar-track {
+  background: transparent;
+}
+
+*::-moz-scrollbar-thumb {
+  background-color: #888;
+  border-radius: 10px;
+  border: 3px solid transparent;
+}

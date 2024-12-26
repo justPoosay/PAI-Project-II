@@ -17,7 +17,7 @@ class ConversationClass {
     this.ws.subscribe(this.id);
     
     const result = await db.message.findMany({ where: { chatId: this.id } });
-    this.messages = result.map(({ role, content }) => ({ role, content }));
+    this.messages = result.sort((a, b) => a.id - b.id).map(({ role, content }) => ({ role, content }));
   }
   
   async close() {
@@ -86,7 +86,7 @@ class ConversationClass {
     this.publish({ role: "finish" });
     // ---
     
-    if (this.messages.length === 2) {
+    if(this.messages.length === 2) {
       const name = await nameChat(this.messages);
       await db.chat.update({ where: { id: this.id }, data: { name } });
       this.publish({ role: "rename", name });
