@@ -1,5 +1,6 @@
 <template>
-  <div class="flex h-screen bg-gradient-to-tr from-fuchsia-700 via-purple-700 to-pink-700 selection:bg-white/10">
+  <div
+    class="flex h-screen bg-gradient-to-tr from-fuchsia-700 via-purple-700 to-pink-700 selection:bg-white/10 text-white bg-[url('/DarkestHour.webp')]">
     <!-- Sidebar -->
     <Sidebar/>
 
@@ -10,25 +11,19 @@
         <div class="max-w-5xl mx-auto">
           <div v-for="(message, i) in messages" :key="i" class="mb-2 relative">
             <div
-              :class="[
-                'flex',
-                message.role === 'user' ? 'justify-end' : 'justify-start'
-              ]"
+              :data-self="message.role === 'user'"
+              class="flex justify-start data-[self=true]:justify-end"
             >
               <div
-                :class="[
-                  'max-w-[80%] p-3 relative text-white backdrop-blur-sm rounded-tl-2xl rounded-tr-2xl shadow-sm',
-                  message.role === 'user'
-                    ? 'bg-gradient-to-tl from-white/25 to-white/20 rounded-bl-2xl'
-                    : 'bg-gradient-to-tr from-white/15 to-white/10 rounded-br-2xl',
-                  ]"
+                :data-self="message.role === 'user'"
+                class="max-w-[80%] p-3 relative backdrop-blur-sm rounded-tl-2xl rounded-tr-2xl shadow-sm bg-gradient-to-tr from-white/15 to-white/10 data-[self=true]:bg-gradient-to-tl data-[self=true]:from-white/25 data-[self=true]:to-white/20 data-[self=true]:rounded-bl-2xl data-[self=false]:rounded-br-2xl"
               >
                 <div v-if="message.content" v-html="parseMarkdown(message.content)" class="markdown-content"></div>
                 <div v-else class="flex items-center justify-center">
                   <div class="loader">
-                    <span class="dot" />
-                    <span class="dot" />
-                    <span class="dot" />
+                    <span class="dot"/>
+                    <span class="dot"/>
+                    <span class="dot"/>
                   </div>
                 </div>
               </div>
@@ -40,7 +35,7 @@
                     <b>${tool.name}</b>
                     <pre>${Object.entries(tool.args).map(([k,v]) => ` <b>${k}:</b> ${v}`).join('<br />')}</pre>
                     `.trim()), html: true }"
-                  class="w-6 h-6 bg-indigo text-white rounded-full flex items-center justify-center -mt-2 -ml-2"
+                  class="w-6 h-6 bg-indigo rounded-full flex items-center justify-center -mt-2 -ml-2"
                   :style="{ zIndex: 10 - index }"
                 >
                   <component :is="getToolIcon(tool.name)" class="w-4 h-4"/>
@@ -54,15 +49,15 @@
       <!-- Input Area -->
       <div class="p-4">
         <div
-          class="flex flex-col items-start max-w-2xl mx-auto bg-gradient-to-br from-vue-black/40 to-vue-black-soft/55 backdrop-blur-sm rounded-xl p-2 shadow-lg"
+          class="flex flex-col items-start max-w-2xl mx-auto bg-gradient-to-br from-vue-black/25 to-vue-black-soft/35 backdrop-blur-sm rounded-xl p-2 shadow-lg"
         >
           <textarea
             v-model="input"
             @keydown="handleKeyDown"
             placeholder="Type a message..."
-            class="bg-transparent text-white p-2 focus:outline-none resize-none w-full"
+            class="bg-transparent p-2 focus:outline-none resize-none w-full"
           />
-          <div class="flex justify-between w-full text-white">
+          <div class="flex justify-between w-full text-white/75">
             <button class="p-2 rounded-full hover:bg-white/5 transition mt-1">
               <PaperclipIcon class="w-6 h-6 "/>
             </button>
@@ -305,11 +300,7 @@ onMounted(() => {
 }
 
 .markdown-content .hljs {
-  background: #1e1e1e;
-  color: #d4d4d4;
-  border-radius: 0.5rem;
-  padding: 1rem;
-  margin: 0.5rem 0;
+  @apply bg-white/5 backdrop-blur-sm text-white/80 p-1 rounded;
 }
 
 .markdown-content strong {

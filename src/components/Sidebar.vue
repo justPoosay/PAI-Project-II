@@ -1,20 +1,20 @@
 <template>
   <div
     :data-expanded="isExpanded"
-    class="bg-vue-black border-r border-vue-black-mute transition-all duration-300 ease-in-out w-16 data-[expanded=true]:w-64"
+    class="bg-gradient-to-b from-white/10 via-white/5 to-white/10 backdrop-blur-sm transition-all duration-300 ease-in-out w-16 shadow-sm data-[expanded=true]:w-64 rounded-r-xl text-white/75"
   >
     <div class="p-2">
       <div class="flex justify-between items-center mb-4">
         <button
           @click="createNewChat"
-          class="p-2 bg-indigo text-vue-white rounded-full hover:bg-opacity-80 transition"
+          class="p-2 bg-indigo rounded-full hover:bg-opacity-80 transition"
           :title="isExpanded ? 'New Chat' : ''"
         >
           <PlusIcon class="w-5 h-5"/>
         </button>
         <button
           @click="toggleSidebar"
-          class="p-2 w-full flex justify-end text-vue-white-soft hover:bg-vue-black-mute transition"
+          class="p-2 w-full flex justify-end hover:bg-vue-black-mute transition"
         >
           <ChevronLeftIcon v-if="isExpanded" class="w-5 h-5"/>
           <ChevronRightIcon v-else class="w-5 h-5"/>
@@ -25,7 +25,7 @@
           <RouterLink
             :to="`/c/${chat.id}`"
             :data-expanded="isExpanded"
-            class="block py-2 px-2 rounded transition text-vue-white-soft hover:bg-vue-black-mute data-[expanded=false]:text-center"
+            class="block py-2 px-2 rounded transition from-white/10 from-75% to-white/15 hover:bg-gradient-to-br data-[expanded=false]:text-center"
             :title="!isExpanded ? chat.name : ''"
           >
             <span v-if="isExpanded">{{ chat.name ?? "Untitled" }}</span>
