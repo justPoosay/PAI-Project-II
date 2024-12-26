@@ -1,5 +1,5 @@
 <template>
-  <div class="flex h-screen bg-vue-black">
+  <div class="flex h-screen bg-gradient-to-tr from-fuchsia-700 via-purple-700 to-pink-700 selection:bg-white/10">
     <!-- Sidebar -->
     <Sidebar/>
 
@@ -17,18 +17,18 @@
             >
               <div
                 :class="[
-                  'max-w-[80%] p-3 relative',
+                  'max-w-[80%] p-3 relative text-white backdrop-blur-sm rounded-tl-2xl rounded-tr-2xl shadow-sm',
                   message.role === 'user'
-                    ? 'bg-teal-600 text-vue-white rounded-tl-2xl rounded-tr-2xl rounded-bl-2xl'
-                    : 'bg-vue-black-mute text-vue-white-soft rounded-tl-2xl rounded-tr-2xl rounded-br-2xl',
-                ]"
+                    ? 'bg-gradient-to-tl from-white/25 to-white/20 rounded-bl-2xl'
+                    : 'bg-gradient-to-tr from-white/15 to-white/10 rounded-br-2xl',
+                  ]"
               >
                 <div v-if="message.content" v-html="parseMarkdown(message.content)" class="markdown-content"></div>
                 <div v-else class="flex items-center justify-center">
                   <div class="loader">
-                    <span class="dot"></span>
-                    <span class="dot"></span>
-                    <span class="dot"></span>
+                    <span class="dot" />
+                    <span class="dot" />
+                    <span class="dot" />
                   </div>
                 </div>
               </div>
@@ -40,7 +40,7 @@
                     <b>${tool.name}</b>
                     <pre>${Object.entries(tool.args).map(([k,v]) => ` <b>${k}:</b> ${v}`).join('<br />')}</pre>
                     `.trim()), html: true }"
-                  class="w-6 h-6 bg-indigo text-vue-white rounded-full flex items-center justify-center -mt-2 -ml-2"
+                  class="w-6 h-6 bg-indigo text-white rounded-full flex items-center justify-center -mt-2 -ml-2"
                   :style="{ zIndex: 10 - index }"
                 >
                   <component :is="getToolIcon(tool.name)" class="w-4 h-4"/>
@@ -53,20 +53,22 @@
 
       <!-- Input Area -->
       <div class="p-4">
-        <div class="flex flex-col items-start max-w-2xl mx-auto bg-vue-black-soft rounded-xl p-2 shadow-lg">
+        <div
+          class="flex flex-col items-start max-w-2xl mx-auto bg-gradient-to-br from-vue-black/40 to-vue-black-soft/55 backdrop-blur-sm rounded-xl p-2 shadow-lg"
+        >
           <textarea
             v-model="input"
             @keydown="handleKeyDown"
             placeholder="Type a message..."
-            class="bg-transparent text-vue-white border-vue-black-mute p-2 focus:outline-none resize-none w-full"
+            class="bg-transparent text-white p-2 focus:outline-none resize-none w-full"
           />
-          <div class="flex justify-between w-full">
-            <button class="p-2 rounded-full hover:bg-vue-black-mute transition mt-1">
-              <PaperclipIcon class="w-6 h-6 text-vue-white-soft"/>
+          <div class="flex justify-between w-full text-white">
+            <button class="p-2 rounded-full hover:bg-white/5 transition mt-1">
+              <PaperclipIcon class="w-6 h-6 "/>
             </button>
             <button
               @click="sendMessage"
-              class="p-2 bg-indigo text-vue-white rounded-full hover:bg-vue-black-mute transition mt-1"
+              class="p-2 bg-indigo rounded-full hover:bg-white/5 transition mt-1"
               :data-empty="!input.trim()"
             >
               <SendIcon class="w-6 h-6"/>
