@@ -1,6 +1,6 @@
 import { serve, FileSystemRouter, type ServerWebSocket } from "bun";
 import * as path from "node:path";
-import type { WSData } from "./lib/types";
+import type { AppRequest, WSData } from "./lib/types";
 import { ServerBoundWebSocketMessageSchema } from "../../shared/schemas.ts";
 import Conversation from "./core/Conversation.ts";
 import { isValidJSON } from "./lib/utils.ts";
@@ -23,11 +23,21 @@ export const server = serve({
     
     if(!match) return Response.json({ success: false, error: "Not Found" }, { status: 404 });
     
-    const module = await import(match.filePath);
-    const method = module[req.method];
-    if(method && typeof method === "function") {
-      const result = await method(Object.assign(req, { route: match }));
-      if(result instanceof Response || result === undefined) return result;
+    try {
+      const module = await import(match.filePath);
+      const preMethod = module.pre;
+      if(preMethod && typeof preMethod === "function") {
+        const result: (req: AppRequest) => Response | null = await preMethod(Object.assign(req, { route: match }));
+        if(result instanceof Response) return result;
+      }
+      const method = module[req.method];
+      if(method && typeof method === "function") {
+        const result: (req: AppRequest) => Response | undefined = await method(Object.assign(req, { route: match }));
+        if(result instanceof Response || result === undefined) return result;
+      }
+    } catch(e) {
+      console.error(e);
+      return Response.json({ success: false, error: "Internal Server Error" }, { status: 500 });
     }
     
     return Response.json({ success: false, error: "Not Found" }, { status: 404 });
@@ -44,9 +54,9 @@ export const server = serve({
       await ws.data.instance?.close();
     },
     async message(ws: ServerWebSocket<WSData>, message) {
-      if (typeof message !== "string" || !isValidJSON(message)) return;
+      if(typeof message !== "string" || !isValidJSON(message)) return;
       const result = ServerBoundWebSocketMessageSchema.safeParse(JSON.parse(message));
-      if (!result.success) return;
+      if(!result.success) return;
       await ws.data.instance?.onMessage(result.data);
     },
   },

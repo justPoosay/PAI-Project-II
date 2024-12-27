@@ -3,7 +3,7 @@
     <!-- Sidebar -->
     <Sidebar/>
 
-    <div class="absolute top-4 right-4 z-10">
+    <div class="absolute top-2 right-2 z-10">
       <ModelSelector
         v-model="model"
       />
@@ -48,10 +48,13 @@
                  class="absolute top-0 left-0 flex">
               <div v-for="(tool, index) in message.toolCalls" :key="index" class="relative">
                 <div
-                  v-tooltip="{ content: DOMPurify.sanitize(`
-                    <b>${tool.name}</b>
-                    <pre>${Object.entries(tool.args).map(([k,v]) => ` <b>${k}:</b> ${v}`).join('<br />')}</pre>
-                    `.trim()), html: true, placement: 'top' }"
+                  v-tooltip="{
+                    content: DOMPurify.sanitize(`<b>${tool.name}</b><pre>${
+                      Object.entries(tool.args).map(([k,v]) => ` <b>${k}:</b> ${v}`).join('<br />')
+                    }</pre>`),
+                    html: true,
+                    placement: 'right'
+                  }"
                   class="w-6 h-6 bg-indigo rounded-full flex items-center justify-center -mt-2 -ml-2"
                   :style="{ zIndex: 10 - index }"
                 >
