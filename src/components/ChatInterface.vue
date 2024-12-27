@@ -1,12 +1,12 @@
 <template>
-  <div class="absolute top-2 right-2 z-10">
-    <ModelSelector
-      v-model="model"
-    />
-  </div>
-
   <!-- Chat Area -->
   <div class="flex-1 flex flex-col relative">
+    <div class="absolute top-2 left-1/2 transform -translate-x-1/2 z-10">
+      <ModelSelector
+        v-model="model"
+      />
+    </div>
+
     <!-- Chat Messages -->
     <div class="flex-1 overflow-y-auto p-4 pb-36" ref="chatContainer">
       <div class="max-w-5xl mx-auto">
@@ -21,10 +21,10 @@
             >
               <img
                 v-if="message.role === 'assistant'"
-                class="absolute -bottom-0 -left-10 w-8 h-8"
+                class="absolute -bottom-0 -left-8 w-6 h-6"
                 :alt="message.author"
                 :src="modelInfo[message.author].logoSrc"
-                width="32"
+                width="24"
                 v-tooltip="{ content: modelInfo[message.author].name, placement: 'left' }"
               />
               <div v-if="message.content" v-html="parseMarkdown(message.content)" class="markdown-content"></div>
@@ -108,14 +108,15 @@ import {
   PaperclipIcon,
   HammerIcon,
   CloudLightningIcon,
-  BracesIcon,
+  BracesIcon, GlobeIcon,
+  SearchIcon,
 } from "lucide-vue-next";
 import { Marked, Renderer } from "marked";
 import { markedHighlight } from "marked-highlight";
 import hljs from "highlight.js";
 import DOMPurify from "dompurify";
 import { capitalize, isValidJSON } from "@/lib/utils.ts";
-import type { ClientMessage as Message, Model, ServerBoundWebSocketMessage } from "../../shared";
+import type { ClientMessage as Message, ServerBoundWebSocketMessage } from "../../shared";
 import { onBeforeRouteUpdate, useRoute } from "vue-router";
 import { ClientBoundWebSocketMessageSchema, routes } from "../../shared/schemas.ts";
 import { useConversationStore } from "@/stores/conversations.ts";
@@ -167,6 +168,10 @@ function getToolIcon(toolName: string) {
       return BracesIcon;
     case "weather":
       return CloudLightningIcon;
+    case "search":
+      return SearchIcon;
+    case "scrape":
+      return GlobeIcon;
     default:
       return HammerIcon;
   }
@@ -179,10 +184,12 @@ async function init(id: typeof route.params.id) {
   ws.value?.close(); // to unsubscribe from the previous WebSocket connection server-side
   messages.value = [];
   if(id === "new") {
+    console.log("Creating new conversation");
     model.value = defaultModel;
     return;
   }
   const url = "ws://" + window.location.host + "/api/" + id;
+  console.log("Connecting to WebSocket @" + url);
   ws.value = new WebSocket(url);
   ws.value.onmessage = function(ev) {
     if(typeof ev.data !== "string" || !isValidJSON(ev.data)) return;
@@ -240,6 +247,8 @@ async function init(id: typeof route.params.id) {
       if(!acknowledged.value) {
         acknowledged.value = true;
         if(msgBuffer.value.length > 0) {
+          console.log("Server acknowledged");
+          console.log("Releasing " + msgBuffer.value.length + " queued messages");
           msgBuffer.value.forEach(send);
           msgBuffer.value = [];
         }
@@ -281,10 +290,8 @@ async function fetchMessages(id: typeof route.params.id) {
   }
 }
 
-onBeforeRouteUpdate(async(to, from, next) => {
-  if(to.params.id !== from.params.id) {
-    await init(to.params.id);
-  }
+onBeforeRouteUpdate(async(to, _, next) => {
+  await init(to.params.id);
   next();
 });
 

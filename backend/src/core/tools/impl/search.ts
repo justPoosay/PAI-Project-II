@@ -2,6 +2,7 @@ import type { Tool } from "../index.ts";
 import { env } from "../../../lib/utils.ts";
 import { tool } from "ai";
 import { z } from "zod";
+import logger from "../../../lib/logger.ts";
 
 const baseUrl = "https://www.searchapi.io/api/v1";
 
@@ -30,7 +31,9 @@ export default {
         ...(page && { page: page.toString() }),
       });
       const res = await fetch(`${baseUrl}/search?${params}`);
-      return await res.json();
+      const json = await res.json();
+      if (!res.ok) logger.error("Encountered an error during execution of the tool", json);
+      return json;
     }
   })
 } satisfies Tool;

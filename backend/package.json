@@ -16,6 +16,7 @@
   "dependencies": {
     "@ai-sdk/anthropic": "^1.0.6",
     "@ai-sdk/openai": "^1.0.11",
+    "@ai-sdk/xai": "^1.0.14",
     "@mendable/firecrawl-js": "^1.10.0",
     "@prisma/client": "6.1.0",
     "ai": "^4.0.22",

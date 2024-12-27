@@ -3,6 +3,7 @@ import { tool } from "ai";
 import { z } from "zod";
 import FirecrawlApp from "@mendable/firecrawl-js";
 import { env } from "../../../lib/utils.ts";
+import logger from "../../../lib/logger.ts";
 
 export default {
   dependency(): boolean {
@@ -21,6 +22,7 @@ export default {
       try {
         return app.scrapeUrl(url, { formats: [format] });
       } catch(e: any) {
+        logger.error("Encountered an error during execution of the tool", e);
         return e.message;
       }
     }

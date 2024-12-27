@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const ModelSchema = z.enum(["gpt-4o", "gpt-4o-mini", "claude-3-5-sonnet"]);
+export const ModelSchema = z.enum(["gpt-4o", "gpt-4o-mini", "claude-3-5-sonnet", "grok-beta", "grok-2"]);
 
 export const ToolCallSchema = z.object({
   id: z.string(),

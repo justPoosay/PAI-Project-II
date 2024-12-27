@@ -3,6 +3,7 @@ import { openai } from "@ai-sdk/openai";
 import { anthropic } from "@ai-sdk/anthropic";
 import type { Model as TModel } from "../../../shared";
 import { type ModelInfo, modelInfo } from "../../../shared/constants.ts";
+import { xai } from "@ai-sdk/xai";
 
 type Model = ModelInfo & {
   model: LanguageModelV1;
@@ -22,4 +23,12 @@ export const models = {
     ...modelInfo["claude-3-5-sonnet"],
     model: anthropic("claude-3-5-sonnet-latest"),
   },
+  "grok-beta": {
+    ...modelInfo["grok-beta"],
+    model: xai("grok-beta"),
+  },
+  "grok-2": {
+    ...modelInfo["grok-2"],
+    model: xai("grok-2"),
+  }
 } as const satisfies Record<TModel, Model>;

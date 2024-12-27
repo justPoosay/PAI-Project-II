@@ -2,6 +2,7 @@ import type { Tool } from "../index.ts";
 import { tool } from "ai";
 import { z } from "zod";
 import { env } from "../../../lib/utils.ts";
+import logger from "../../../lib/logger.ts";
 
 const baseUrl = "https://api.weatherapi.com/v1";
 
@@ -20,7 +21,9 @@ export default {
     }),
     async execute({ location }) {
       const res = await fetch(`${baseUrl}/current.json?key=${env.WEATHER_API_KEY!}&q=${location}`);
-      return await res.json();
+      const json = await res.json();
+      if(!res.ok) logger.error("Encountered an error during execution of the tool", json);
+      return json;
     },
   })
 } satisfies Tool;
