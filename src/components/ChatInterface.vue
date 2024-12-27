@@ -65,7 +65,7 @@
     <!-- Input Area -->
     <div class="absolute bottom-4 left-4 right-4 z-10">
       <div
-        class="flex flex-col items-start max-w-2xl mx-auto bg-gradient-to-br from-vue-black/25 to-vue-black-soft/35 backdrop-blur-sm rounded-xl p-2 shadow-lg"
+        class="flex flex-col items-start max-w-2xl mx-auto bg-gradient-to-br from-vue-black/35 via-vue-black-soft/25 to-vue-black/35 backdrop-blur-sm rounded-xl p-2 shadow-lg"
       >
           <textarea
             v-model="input"
@@ -219,7 +219,7 @@ async function init(id: typeof route.params.id) {
     }
 
     if(msg.role === "rename") {
-      conversationStore.rename(id, msg.name);
+      conversationStore.$rename(id, msg.name);
     }
 
     if(msg.role === "setup") {

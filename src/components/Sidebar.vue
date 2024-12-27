@@ -3,7 +3,7 @@
     :data-expanded="isExpanded"
     class="flex flex-col bg-gradient-to-b from-white/10 via-white/5 to-white/10 backdrop-blur-sm transition-all duration-300 ease-out w-16 shadow-sm data-[expanded=true]:w-64 data-[expanded=true]:rounded-r-xl text-white/75 h-screen"
   >
-    <div class="p-2 flex flex-col h-full">
+    <div class="p-1 flex flex-col h-full">
       <div class="flex justify-between items-center mb-4">
         <RouterLink
           to="/c/new"
@@ -22,26 +22,40 @@
           />
         </button>
       </div>
-      <ul class="space-y-1 px-1 h-[calc(100vh-4rem)] overflow-y-auto">
+      <ul class="space-y-1 h-[calc(100vh-4rem)] overflow-y-auto pt-1">
         <li v-for="c in conversations" :key="c.id">
           <VMenu
+            v-if="editingId !== c.id"
             placement="right"
           >
             <RouterLink
+              :data-current="router.currentRoute.value.params.id === c.id"
               :to="`/c/${c.id}`"
-              class="block py-2 px-2 rounded transition from-white/10 from-75% to-white/15 hover:bg-gradient-to-br overflow-hidden"
+              class="flex-grow block py-2 px-2 rounded transition from-white/15 to-white/15 data-[current=true]:shadow-md hover:bg-gradient-to-r overflow-hidden"
             >
               <span class="block truncate" :title="c.name ?? undefined">{{ c.name ?? "Untitled" }}</span>
             </RouterLink>
 
             <template #popper>
-              <div class="flex p-2 text-white/75">
+              <div class="flex p-2 text-white/75 space-x-2">
                 <button title="delete" @click="deleteConversation(c.id)">
                   <Trash2Icon class="w-5 h-5"/>
+                </button>
+                <button title="rename" @click="startEdit(c)">
+                  <Pencil class="w-5 h-5"/>
                 </button>
               </div>
             </template>
           </VMenu>
+          <input
+            v-else
+            v-model="editedName"
+            @keydown.enter="saveEdit(c.id)"
+            @keydown.esc="cancelEdit"
+            @blur="cancelEdit"
+            class="flex-grow block py-2 px-2 rounded bg-white/10 text-white focus:outline-none focus:ring-1 focus:ring-white/30 w-full"
+            :ref="el => { if (el) (el as HTMLInputElement).focus() }"
+          >
         </li>
       </ul>
     </div>
@@ -50,12 +64,15 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
-import { PlusIcon, ChevronLeftIcon, Trash2Icon } from "lucide-vue-next";
+import { PlusIcon, ChevronLeftIcon, Trash2Icon, Pencil } from "lucide-vue-next";
 import { useConversationStore } from "@/stores/conversations.ts";
 import { storeToRefs } from "pinia";
-import router from "@/router";
+import { useRouter } from "vue-router";
 
+const router = useRouter();
 const isExpanded = ref(true);
+const editingId = ref<string | null>(null);
+const editedName = ref("");
 
 const conversationStore = useConversationStore();
 const { conversations } = storeToRefs(conversationStore);
@@ -66,6 +83,22 @@ onMounted(() => {
 
 function toggleSidebar() {
   isExpanded.value = !isExpanded.value;
+}
+
+function startEdit(conversation: { id: string; name: string | null }) {
+  editingId.value = conversation.id;
+  editedName.value = conversation.name ?? "";
+}
+
+async function saveEdit(id: string) {
+  if(editedName.value.trim() !== "") {
+    await conversationStore.$rename(id, editedName.value.trim());
+    editingId.value = null;
+  }
+}
+
+function cancelEdit() {
+  editingId.value = null;
 }
 
 async function deleteConversation(id: string) {

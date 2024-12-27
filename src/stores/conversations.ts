@@ -28,7 +28,13 @@ export const useConversationStore = defineStore("conversations", () => {
     return c;
   }
   
-  function rename(id: string, name: string) {
+  async function $rename(id: string, name: string) {
+    const res = await fetch(`/api/${id}/modify`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name })
+    });
+    if (!res.ok) return;
     const conversation = conversations.value.find(c => c.id === id);
     if(conversation) conversation.name = name;
   }
@@ -37,6 +43,6 @@ export const useConversationStore = defineStore("conversations", () => {
     conversations,
     $fetch,
     $create,
-    rename
+    $rename
   };
 });
