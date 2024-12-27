@@ -31,8 +31,9 @@ export const server = serve({
     "/alive": new Response("OK"),
   },
   async fetch(req) {
+    const url = new URL(req.url);
+    
     async function get(): Promise<Response | undefined> {
-      const url = new URL(req.url);
       const match = router.match(url.pathname);
       
       logger.info(req.method, url.pathname);
@@ -60,7 +61,8 @@ export const server = serve({
     }
     
     const res = await get();
-    logger.info(req.method, req.url, res?.status ? res.status : 200);
+    const ip = server.requestIP(req);
+    logger.info(ip?.address ?? "", req.method, url.pathname, res?.status ?? 200);
     return res;
   },
   websocket: {
