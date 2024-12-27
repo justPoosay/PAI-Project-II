@@ -9,6 +9,7 @@ import { models } from "./constants.ts";
 import { ModelSchema } from "../../../shared/schemas.ts";
 import { defaultModel } from "../../../shared/constants.ts";
 import { openai } from "@ai-sdk/openai";
+import logger from "../lib/logger.ts";
 
 class ConversationClass {
   private readonly id: string;
@@ -25,6 +26,8 @@ class ConversationClass {
     const result = ModelSchema.safeParse(chat?.model);
     if(result.success) {
       this.model = result.data;
+    } else {
+      logger.warn("Invalid model in DB for chat", this.id);
     }
     
     this.publish({ role: "setup", model: this.model });
@@ -35,7 +38,7 @@ class ConversationClass {
   }
   
   private publish(message: ClientBoundWebSocketMessage) {
-    console.log("publish", message);
+    logger.trace("publish@" + this.id, message);
     server.publish(this.id, JSON.stringify(message));
   }
   
@@ -47,8 +50,6 @@ class ConversationClass {
   }
   
   async onMessage(data: ServerBoundWebSocketMessage) {
-    console.log("onMessage", data);
-    
     if(data.role === "modify" && data.action === "model") {
       this.model = data.model;
       await db.chat.update({ where: { id: this.id }, data: { model: data.model } });

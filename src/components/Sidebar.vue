@@ -16,8 +16,10 @@
           @click="toggleSidebar"
           class="p-2 rounded-full hover:bg-white/5 transition"
         >
-          <ChevronLeftIcon :data-expanded="isExpanded"
-                           class="w-5 h-5 data-[expanded=true]: data-[expanded=false]:rotate-180 transition-all duration-300 ease-out"/>
+          <ChevronLeftIcon
+            :data-expanded="isExpanded"
+            class="w-5 h-5 data-[expanded=true]: data-[expanded=false]:rotate-180 transition-all duration-300 ease-out"
+          />
         </button>
       </div>
       <ul class="space-y-1 px-1 h-[calc(100vh-4rem)] overflow-y-auto">
@@ -28,9 +30,8 @@
             <RouterLink
               :to="`/c/${c.id}`"
               class="block py-2 px-2 rounded transition from-white/10 from-75% to-white/15 hover:bg-gradient-to-br overflow-hidden"
-              :title="!isExpanded ? c.name : ''"
             >
-              <span class="block truncate">{{ c.name ?? "Untitled" }}</span>
+              <span class="block truncate" :title="c.name ?? undefined">{{ c.name ?? "Untitled" }}</span>
             </RouterLink>
 
             <template #popper>
@@ -72,7 +73,7 @@ async function deleteConversation(id: string) {
     const res = await fetch(`/api/${id}/modify`, { method: "DELETE" });
     if(!res.ok) throw new Error("Failed to delete conversation");
     conversationStore.conversations = conversationStore.conversations.filter(c => c.id !== id);
-    if (router.currentRoute.value.params.id === id) {
+    if(router.currentRoute.value.params.id === id) {
       await router.push({ name: "c", params: { id: "new" } });
     }
   } catch(e) {

@@ -19,6 +19,7 @@
     "@mendable/firecrawl-js": "^1.10.0",
     "@prisma/client": "6.1.0",
     "ai": "^4.0.22",
+    "dayjs": "^1.11.13",
     "openai": "^4.77.0",
     "zod": "^3.24.1"
   }

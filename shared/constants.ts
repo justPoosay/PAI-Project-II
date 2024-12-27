@@ -28,4 +28,4 @@ export const modelInfo = {
   },
 } as const satisfies Record<Model, ModelInfo>;
 
-export const modelArray = ModelSchema.options.map((option) => option.value);
+export const modelArray = ModelSchema.options;

@@ -1,10 +1,6 @@
 import { z } from "zod";
 
-export const ModelSchema = z.union([
-  z.literal("gpt-4o"),
-  z.literal("gpt-4o-mini"),
-  z.literal("claude-3-5-sonnet")
-]);
+export const ModelSchema = z.enum(["gpt-4o", "gpt-4o-mini", "claude-3-5-sonnet"]);
 
 export const ToolCallSchema = z.object({
   id: z.string(),

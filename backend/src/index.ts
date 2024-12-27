@@ -4,6 +4,21 @@ import type { AppRequest, WSData } from "./lib/types";
 import { ServerBoundWebSocketMessageSchema } from "../../shared/schemas.ts";
 import Conversation from "./core/Conversation.ts";
 import { isValidJSON } from "./lib/utils.ts";
+import { z } from "zod";
+import logger, { LogLevelSchema } from "./lib/logger.ts";
+
+export const env = z.object({
+  DATABASE_URL: z.string(),
+  OPENAI_API_KEY: z.string(),
+  ANTHROPIC_API_KEY: z.string(),
+  
+  FIRECRAWL_API_KEY: z.string().optional(),
+  FIRECRAWL_API_URL: z.string().optional(),
+  
+  WEATHER_API_KEY: z.string().optional(),
+  
+  LOG_LEVEL: LogLevelSchema.default("info"),
+}).parse(process.env);
 
 const router = new FileSystemRouter({
   style: "nextjs",
@@ -16,50 +31,63 @@ export const server = serve({
     "/alive": new Response("OK"),
   },
   async fetch(req) {
-    const url = new URL(req.url);
-    const match = router.match(url.pathname);
-    
-    console.log(req.method, url.pathname);
-    
-    if(!match) return Response.json({ success: false, error: "Not Found" }, { status: 404 });
-    
-    try {
-      const module = await import(match.filePath);
-      const preMethod = module.pre;
-      if(preMethod && typeof preMethod === "function") {
-        const result: (req: AppRequest) => Response | null = await preMethod(Object.assign(req, { route: match }));
-        if(result instanceof Response) return result;
+    async function get(): Promise<Response | undefined> {
+      const url = new URL(req.url);
+      const match = router.match(url.pathname);
+      
+      logger.info(req.method, url.pathname);
+      
+      if(!match) return Response.json({ success: false, error: "Not Found" }, { status: 404 });
+      
+      try {
+        const module = await import(match.filePath);
+        const preMethod = module.pre;
+        if(preMethod && typeof preMethod === "function") {
+          const result: (req: AppRequest) => Response | null = await preMethod(Object.assign(req, { route: match }));
+          if(result instanceof Response) return result;
+        }
+        const method = module[req.method];
+        if(method && typeof method === "function") {
+          const result: (req: AppRequest) => Response | undefined = await method(Object.assign(req, { route: match }));
+          if(result instanceof Response || result === undefined) return result;
+        }
+      } catch(e) {
+        console.error(e);
+        return Response.json({ success: false, error: "Internal Server Error" }, { status: 500 });
       }
-      const method = module[req.method];
-      if(method && typeof method === "function") {
-        const result: (req: AppRequest) => Response | undefined = await method(Object.assign(req, { route: match }));
-        if(result instanceof Response || result === undefined) return result;
-      }
-    } catch(e) {
-      console.error(e);
-      return Response.json({ success: false, error: "Internal Server Error" }, { status: 500 });
+      
+      return Response.json({ success: false, error: "Not Found" }, { status: 404 });
     }
     
-    return Response.json({ success: false, error: "Not Found" }, { status: 404 });
+    const res = await get();
+    logger.info(req.method, req.url, res?.status ? res.status : 200);
+    return res;
   },
   websocket: {
     async open(ws: ServerWebSocket<WSData>) {
-      console.log("WebSocket opened");
+      logger.debug("WebSocket opened");
       if(ws.data.type === "chat") {
         ws.data.instance = Conversation(ws);
       }
     },
     async close(ws: ServerWebSocket<WSData>) {
-      console.log("WebSocket closed");
+      logger.debug("WebSocket closed");
       await ws.data.instance?.close();
     },
     async message(ws: ServerWebSocket<WSData>, message) {
-      if(typeof message !== "string" || !isValidJSON(message)) return;
+      if(typeof message !== "string" || !isValidJSON(message)) {
+        logger.trace("Received invalid data", message);
+        return;
+      }
       const result = ServerBoundWebSocketMessageSchema.safeParse(JSON.parse(message));
-      if(!result.success) return;
+      if(!result.success) {
+        logger.trace("Received invalid message", message);
+        return;
+      }
+      logger.trace("Received message", result.data);
       await ws.data.instance?.onMessage(result.data);
     },
   },
 });
 
-console.log(`Server running at http://localhost:${server.port}`);
+logger.info(`Server running at http://localhost:${server.port}`);
