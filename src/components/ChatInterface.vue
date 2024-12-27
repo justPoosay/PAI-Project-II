@@ -36,7 +36,7 @@
                 </div>
               </div>
             </div>
-            <div v-if="message.toolCalls && message.toolCalls.length > 0" class="absolute top-0 left-0 flex">
+            <div v-if="message.role === 'assistant' && message.toolCalls && message.toolCalls.length > 0" class="absolute top-0 left-0 flex">
               <div v-for="(tool, index) in message.toolCalls" :key="index" class="relative">
                 <div
                   v-tooltip="{ content: DOMPurify.sanitize(`
@@ -104,7 +104,7 @@ import { capitalize, isValidJSON } from "@/lib/utils.ts";
 import type { ClientMessage as Message, Model, ServerBoundWebSocketMessage } from "../../shared";
 import { onBeforeRouteUpdate, useRoute } from "vue-router";
 import { ClientBoundWebSocketMessageSchema, routes } from "../../shared/schemas.ts";
-import { useChatStore } from "@/stores/chats.ts";
+import { useConversationStore } from "@/stores/conversations.ts";
 import { defaultModel } from "../../shared/constants.ts";
 import ModelSelector from "@/components/ModelSelector.vue";
 
@@ -168,6 +168,7 @@ async function init(id: typeof route.params.id) {
           role: "assistant",
           content: "",
           finished: false,
+          author: model.value
         });
       }
 
@@ -183,6 +184,7 @@ async function init(id: typeof route.params.id) {
 
       if(msg.type === "tool-call") {
         const lastMessage = messages.value[messages.value.length - 1];
+        if (lastMessage.role === "user") return; // this should never happen
         if(!lastMessage.toolCalls) {
           lastMessage.toolCalls = [];
         }
@@ -203,7 +205,7 @@ async function init(id: typeof route.params.id) {
     }
 
     if(msg.role === "rename") {
-      useChatStore().chats.map((chat) => {
+      useConversationStore().chats.map((chat) => {
         if(chat.id === id) {
           chat.name = msg.name;
         }

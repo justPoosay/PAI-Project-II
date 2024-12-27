@@ -16,6 +16,7 @@ model Message {
   id        Int        @id @default(autoincrement())
   content   String
   role      Role
+  author    String? // the model name, always null for the user
   toolCalls ToolCall[]
 
   Chat   Chat   @relation(fields: [chatId], references: [id], onDelete: Cascade)

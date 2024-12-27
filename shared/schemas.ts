@@ -1,9 +1,10 @@
 import { z } from "zod";
 
-export const MessageSchema = z.object({
-  role: z.union([z.literal("user"), z.literal("assistant")]),
-  content: z.string(),
-});
+export const ModelSchema = z.union([
+  z.literal("gpt-4o"),
+  z.literal("gpt-4o-mini"),
+  z.literal("claude-3-5-sonnet")
+]);
 
 export const ToolCallSchema = z.object({
   id: z.string(),
@@ -11,24 +12,31 @@ export const ToolCallSchema = z.object({
   args: z.record(z.unknown()),
 });
 
-export const ChatSchema = z.object({
+export const MessageSchema = z.union([
+  z.object({
+    role: z.literal("user"),
+    content: z.string(),
+  }),
+  z.object({
+    role: z.literal("assistant"),
+    content: z.string(),
+    author: ModelSchema,
+    toolCalls: z.array(ToolCallSchema).optional()
+  }),
+]);
+
+export const ConversationSchema = z.object({
   id: z.string(),
   name: z.string().nullable(),
 });
 
 export const routes = {
   "[id]": {
-    "messages": z.array(MessageSchema.extend({ toolCalls: z.array(ToolCallSchema).optional() }))
+    "messages": z.array(MessageSchema),
   },
-  "conversations": z.array(ChatSchema),
-  "create": ChatSchema
+  "conversations": z.array(ConversationSchema),
+  "create": ConversationSchema
 } as const;
-
-export const ModelSchema = z.union([
-  z.literal("gpt-4o"),
-  z.literal("gpt-4o-mini"),
-  z.literal("claude-3-5-sonnet")
-]);
 
 /** @description message sent from the server to the client */
 export const ClientBoundWebSocketMessageSchema = z.union([

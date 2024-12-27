@@ -94,7 +94,8 @@ class ConversationClass {
           toolCalls: {
             create: toolCalls
           }
-        })
+        }),
+        author: this.model
       }
     });
     this.publish({ role: "finish" });

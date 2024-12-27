@@ -3,7 +3,7 @@ import { ref } from "vue";
 import { routes } from "../../shared/schemas.ts";
 import { z } from "zod";
 
-export const useChatStore = defineStore("chat", () => {
+export const useConversationStore = defineStore("conversations", () => {
   const chats = ref<z.infer<typeof routes["conversations"]>>([]);
   
   async function $fetch() {

@@ -40,18 +40,18 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { PlusIcon, ChevronLeftIcon, ChevronRightIcon } from "lucide-vue-next";
-import { useChatStore } from "@/stores/chats.ts";
+import { useConversationStore } from "@/stores/conversations.ts";
 import { storeToRefs } from "pinia";
 import { routes } from "../../shared/schemas.ts";
 import router from "@/router";
 
 const isExpanded = ref(true);
 
-const chatStore = useChatStore();
-const { chats } = storeToRefs(chatStore);
+const conversationStore = useConversationStore();
+const { chats } = storeToRefs(conversationStore);
 
 onMounted(() => {
-  chatStore.$fetch();
+  conversationStore.$fetch();
 });
 
 function toggleSidebar() {
@@ -65,7 +65,7 @@ async function createNewChat() {
     const result = routes["create"].safeParse(await res.json());
     if(!result.success) throw new Error("Backend provided bogus data");
     const chat = result.data;
-    chatStore.chats.push(chat);
+    conversationStore.chats.push(chat);
     await router.push({ name: "c", params: { id: chat.id } });
   } catch(e) {
     console.error(e);

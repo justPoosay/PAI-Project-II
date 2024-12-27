@@ -1,17 +1,15 @@
 import { z } from "zod";
 import {
-  ChatSchema,
   ToolCallSchema,
   ClientBoundWebSocketMessageSchema,
-  ServerBoundWebSocketMessageSchema, ModelSchema
+  ServerBoundWebSocketMessageSchema,
+  ModelSchema,
+  MessageSchema
 } from "./schemas.ts";
 
 /** @description conversation message as held by the client */
-export interface ClientMessage {
-  role: "user" | "assistant";
-  content: string;
+export type ClientMessage = z.infer<typeof MessageSchema> & {
   finished: boolean;
-  toolCalls?: ToolCall[];
 }
 
 export type ClientBoundWebSocketMessage = z.infer<typeof ClientBoundWebSocketMessageSchema>
