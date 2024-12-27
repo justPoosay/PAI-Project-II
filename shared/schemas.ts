@@ -1,6 +1,8 @@
 import { z } from "zod";
 
-export const ModelSchema = z.enum(["gpt-4o", "gpt-4o-mini", "claude-3-5-sonnet", "grok-beta", "grok-2"]);
+export const ModelSchema = z.enum([
+  "gpt-4o", "gpt-4o-mini", "claude-3-5-sonnet", "grok-beta", "grok-2", "llama-3.3-70b-versatile", "mixtral-8x7b-32768"
+]);
 
 export const ToolCallSchema = z.object({
   id: z.string(),
@@ -32,7 +34,8 @@ export const routes = {
     "messages": z.array(MessageSchema),
   },
   "conversations": z.array(ConversationSchema),
-  "create": ConversationSchema
+  "create": ConversationSchema,
+  "models": z.array(ModelSchema)
 } as const;
 
 /** @description message sent from the server to the client */

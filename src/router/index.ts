@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
-import ChatView from "@/views/ChatView.vue";
+import ConversationView from "@/views/ConversationView.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -7,12 +7,12 @@ const router = createRouter({
     {
       path: "/",
       name: "home",
-      redirect: "/c/new",
+      redirect: "/c/new"
     },
     {
       path: "/c/:id",
       name: "c",
-      component: ChatView,
+      component: ConversationView
     }
   ],
 });

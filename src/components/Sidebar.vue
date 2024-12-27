@@ -64,7 +64,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref } from "vue";
 import { PlusIcon, ChevronLeftIcon, Trash2Icon, Pencil } from "lucide-vue-next";
 import { useConversationStore } from "@/stores/conversations.ts";
 import { storeToRefs } from "pinia";
@@ -77,10 +77,6 @@ const editedName = ref("");
 
 const conversationStore = useConversationStore();
 const { conversations } = storeToRefs(conversationStore);
-
-onMounted(() => {
-  conversationStore.$fetch();
-});
 
 function toggleSidebar() {
   isExpanded.value = !isExpanded.value;

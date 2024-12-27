@@ -1,8 +1,6 @@
 import type { Model } from "./index";
 import { ModelSchema } from "./schemas.ts";
 
-export const defaultModel: Model = "gpt-4o";
-
 export interface ModelInfo {
   supportsTools: boolean;
   name: string;
@@ -35,6 +33,16 @@ export const modelInfo = {
     supportsTools: true,
     name: "Grok 2",
     logoSrc: "/img/xai.svg",
+  },
+  "llama-3.3-70b-versatile": {
+    supportsTools: true,
+    name: "Llama 3.3 70b Versatile",
+    logoSrc: "/img/meta.svg",
+  },
+  "mixtral-8x7b-32768": {
+    supportsTools: true,
+    name: "Mixtral 8x7b 32768",
+    logoSrc: "/img/mistral-ai.svg",
   }
 } as const satisfies Record<Model, ModelInfo>;
 

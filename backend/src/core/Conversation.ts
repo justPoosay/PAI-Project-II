@@ -5,9 +5,8 @@ import type { ClientBoundWebSocketMessage, ServerBoundWebSocketMessage, ToolCall
 import { server } from "../index.ts";
 import { type CoreAssistantMessage, type CoreMessage, type CoreUserMessage, streamText } from "ai";
 import tools from "./tools";
-import { models } from "./constants.ts";
+import { availableModels, models } from "./constants.ts";
 import { ModelSchema } from "../../../shared/schemas.ts";
-import { defaultModel } from "../../../shared/constants.ts";
 import { openai } from "@ai-sdk/openai";
 import logger from "../lib/logger.ts";
 
@@ -15,7 +14,7 @@ class ConversationClass {
   private readonly id: string;
   private readonly ws: ServerWebSocket<WSData>;
   private messages: CoreMessage[] = [];
-  private model: Model = defaultModel;
+  private model: Model = availableModels[0];
   
   private async open() {
     this.ws.subscribe(this.id);

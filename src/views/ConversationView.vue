@@ -6,6 +6,6 @@
 </template>
 
 <script setup lang="ts">
-import ChatInterface from "@/components/ChatInterface.vue";
+import ChatInterface from "@/components/ConversationInterface.vue";
 import Sidebar from "@/components/Sidebar.vue";
 </script>

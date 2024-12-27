@@ -120,17 +120,19 @@ import type { ClientMessage as Message, ServerBoundWebSocketMessage } from "../.
 import { onBeforeRouteUpdate, useRoute } from "vue-router";
 import { ClientBoundWebSocketMessageSchema, routes } from "../../shared/schemas.ts";
 import { useConversationStore } from "@/stores/conversations.ts";
-import { defaultModel, modelInfo } from "../../shared/constants.ts";
+import { modelInfo } from "../../shared/constants.ts";
 import ModelSelector from "@/components/ModelSelector.vue";
 import router from "@/router";
+import { useModelStore } from "@/stores/models.ts";
 
 const conversationStore = useConversationStore();
+const modelStore = useModelStore();
 const route = useRoute();
 const input = ref("");
 
 const messages = ref<Message[]>([]);
 
-const model = ref(defaultModel);
+const model = ref(modelStore.models[0]);
 const acknowledged = ref(true);
 watch(model, function(newValue, oldValue) {
   if(newValue !== oldValue) {
@@ -185,7 +187,7 @@ async function init(id: typeof route.params.id) {
   messages.value = [];
   if(id === "new") {
     console.log("Creating new conversation");
-    model.value = defaultModel;
+    model.value = modelStore.models[0];
     return;
   }
   const url = "ws://" + window.location.host + "/api/" + id;
@@ -297,6 +299,9 @@ onBeforeRouteUpdate(async(to, _, next) => {
 
 onMounted(async() => {
   await init(route.params.id);
+
+  await conversationStore.$fetch();
+  await modelStore.$fetch();
 });
 
 async function sendMessage() {

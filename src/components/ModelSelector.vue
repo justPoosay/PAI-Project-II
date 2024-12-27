@@ -21,7 +21,7 @@
       <div class="h-[1px] bg-white/15 w-full mb-1"/>
       <ul class="space-y-1">
         <li
-          v-for="model in modelArray"
+          v-for="model in models"
           :key="model"
           @click="selectOption(model)"
           :data-current="selected === model"
@@ -43,8 +43,13 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
-import { modelArray, modelInfo } from "../../shared/constants.ts";
+import { modelInfo } from "../../shared/constants.ts";
 import type { Model } from "../../shared";
+import { useModelStore } from "@/stores/models.ts";
+import { storeToRefs } from "pinia";
+
+const modelStore = useModelStore();
+const { models } = storeToRefs(modelStore);
 
 const expanded = ref<boolean>(false);
 const selected = defineModel<Model>();
