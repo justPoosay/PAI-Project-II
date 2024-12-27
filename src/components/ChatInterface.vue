@@ -1,94 +1,89 @@
 <template>
-  <div class="flex h-screen selection:bg-white/10 text-white bg-[url('/img/DarkestHour.webp')]">
-    <!-- Sidebar -->
-    <Sidebar/>
+  <div class="absolute top-2 right-2 z-10">
+    <ModelSelector
+      v-model="model"
+    />
+  </div>
 
-    <div class="absolute top-2 right-2 z-10">
-      <ModelSelector
-        v-model="model"
-      />
-    </div>
-
-    <!-- Chat Area -->
-    <div class="flex-1 flex flex-col relative">
-      <!-- Chat Messages -->
-      <div class="flex-1 overflow-y-auto p-4 pb-36" ref="chatContainer">
-        <div class="max-w-5xl mx-auto">
-          <div v-for="(message, i) in messages" :key="i" class="mb-2 relative">
+  <!-- Chat Area -->
+  <div class="flex-1 flex flex-col relative">
+    <!-- Chat Messages -->
+    <div class="flex-1 overflow-y-auto p-4 pb-36" ref="chatContainer">
+      <div class="max-w-5xl mx-auto">
+        <div v-for="(message, i) in messages" :key="i" class="mb-2 relative">
+          <div
+            :data-self="message.role === 'user'"
+            class="flex justify-start data-[self=true]:justify-end"
+          >
             <div
               :data-self="message.role === 'user'"
-              class="flex justify-start data-[self=true]:justify-end"
+              class="max-w-[80%] p-3 relative backdrop-blur-md rounded-tl-2xl rounded-tr-2xl shadow-sm bg-gradient-to-tr from-white/15 via-white/10 to-white/15 data-[self=true]:bg-gradient-to-tl data-[self=true]:from-white/25 data-[self=true]:via-white/20 data-[self=true]:to-white/25 data-[self=true]:rounded-bl-2xl data-[self=false]:rounded-br-2xl"
             >
-              <div
-                :data-self="message.role === 'user'"
-                class="max-w-[80%] p-3 relative backdrop-blur-md rounded-tl-2xl rounded-tr-2xl shadow-sm bg-gradient-to-tr from-white/15 via-white/10 to-white/15 data-[self=true]:bg-gradient-to-tl data-[self=true]:from-white/25 data-[self=true]:via-white/20 data-[self=true]:to-white/25 data-[self=true]:rounded-bl-2xl data-[self=false]:rounded-br-2xl"
-              >
-                <img
-                  v-if="message.role === 'assistant'"
-                  class="absolute -bottom-0 -left-10 w-8 h-8"
-                  :alt="message.author"
-                  :src="modelInfo[message.author].logoSrc"
-                  width="32"
-                  v-tooltip="{ content: modelInfo[message.author].name, placement: 'left' }"
-                />
-                <div v-if="message.content" v-html="parseMarkdown(message.content)" class="markdown-content"></div>
-                <div v-else class="flex items-center justify-center">
-                  <div class="flex justify-center items-center">
+              <img
+                v-if="message.role === 'assistant'"
+                class="absolute -bottom-0 -left-10 w-8 h-8"
+                :alt="message.author"
+                :src="modelInfo[message.author].logoSrc"
+                width="32"
+                v-tooltip="{ content: modelInfo[message.author].name, placement: 'left' }"
+              />
+              <div v-if="message.content" v-html="parseMarkdown(message.content)" class="markdown-content"></div>
+              <div v-else class="flex items-center justify-center">
+                <div class="flex justify-center items-center">
                     <span class="w-2 h-2 bg-white rounded-full mx-1 opacity-30"
                           style="animation: pulse 1.4s infinite ease-in-out;"/>
-                    <span class="w-2 h-2 bg-white rounded-full mx-1 opacity-30"
-                          style="animation: pulse 1.4s infinite ease-in-out; animation-delay: 0.2s;"/>
-                    <span class="w-2 h-2 bg-white rounded-full mx-1 opacity-30"
-                          style="animation: pulse 1.4s infinite ease-in-out; animation-delay: 0.4s;"/>
-                  </div>
+                  <span class="w-2 h-2 bg-white rounded-full mx-1 opacity-30"
+                        style="animation: pulse 1.4s infinite ease-in-out; animation-delay: 0.2s;"/>
+                  <span class="w-2 h-2 bg-white rounded-full mx-1 opacity-30"
+                        style="animation: pulse 1.4s infinite ease-in-out; animation-delay: 0.4s;"/>
                 </div>
               </div>
             </div>
-            <div v-if="message.role === 'assistant' && message.toolCalls && message.toolCalls.length > 0"
-                 class="absolute top-0 left-0 flex">
-              <div v-for="(tool, index) in message.toolCalls" :key="index" class="relative">
-                <div
-                  v-tooltip="{
+          </div>
+          <div v-if="message.role === 'assistant' && message.toolCalls && message.toolCalls.length > 0"
+               class="absolute top-0 left-0 flex">
+            <div v-for="(tool, index) in message.toolCalls" :key="index" class="relative">
+              <div
+                v-tooltip="{
                     content: DOMPurify.sanitize(`<b>${tool.name}</b><pre>${
                       Object.entries(tool.args).map(([k,v]) => ` <b>${k}:</b> ${v}`).join('<br />')
                     }</pre>`),
                     html: true,
                     placement: 'right'
                   }"
-                  class="w-6 h-6 bg-indigo rounded-full flex items-center justify-center -mt-2 -ml-2"
-                  :style="{ zIndex: 10 - index }"
-                >
-                  <component :is="getToolIcon(tool.name)" class="w-4 h-4"/>
-                </div>
+                class="w-6 h-6 bg-indigo rounded-full flex items-center justify-center -mt-2 -ml-2"
+                :style="{ zIndex: 10 - index }"
+              >
+                <component :is="getToolIcon(tool.name)" class="w-4 h-4"/>
               </div>
             </div>
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Input Area -->
-      <div class="absolute bottom-4 left-4 right-4 z-10">
-        <div
-          class="flex flex-col items-start max-w-2xl mx-auto bg-gradient-to-br from-vue-black/25 to-vue-black-soft/35 backdrop-blur-sm rounded-xl p-2 shadow-lg"
-        >
+    <!-- Input Area -->
+    <div class="absolute bottom-4 left-4 right-4 z-10">
+      <div
+        class="flex flex-col items-start max-w-2xl mx-auto bg-gradient-to-br from-vue-black/25 to-vue-black-soft/35 backdrop-blur-sm rounded-xl p-2 shadow-lg"
+      >
           <textarea
             v-model="input"
             @keydown="handleKeyDown"
             placeholder="Type a message..."
             class="bg-transparent p-2 focus:outline-none resize-none w-full"
           />
-          <div class="flex justify-between w-full text-white/75">
-            <button class="p-2 rounded-full hover:bg-white/5 transition mt-1">
-              <PaperclipIcon class="w-6 h-6 "/>
-            </button>
-            <button
-              @click="sendMessage"
-              class="p-2 bg-indigo rounded-full hover:bg-white/5 transition mt-1"
-              :data-empty="!input.trim()"
-            >
-              <SendIcon class="w-6 h-6"/>
-            </button>
-          </div>
+        <div class="flex justify-between w-full text-white/75">
+          <button class="p-2 rounded-full hover:bg-white/5 transition mt-1">
+            <PaperclipIcon class="w-6 h-6 "/>
+          </button>
+          <button
+            @click="sendMessage"
+            class="p-2 bg-indigo rounded-full hover:bg-white/5 transition mt-1"
+            :data-empty="!input.trim()"
+          >
+            <SendIcon class="w-6 h-6"/>
+          </button>
         </div>
       </div>
     </div>
@@ -99,7 +94,7 @@
 import "floating-vue/dist/style.css";
 import "highlight.js/styles/github-dark.css";
 
-import { ref, onMounted, nextTick, watch } from "vue";
+import { ref, onMounted, watch } from "vue";
 import {
   SendIcon,
   PaperclipIcon,
@@ -107,7 +102,6 @@ import {
   CloudLightningIcon,
   BracesIcon,
 } from "lucide-vue-next";
-import Sidebar from "@/components/Sidebar.vue";
 import { Marked, Renderer } from "marked";
 import { markedHighlight } from "marked-highlight";
 import hljs from "highlight.js";
@@ -119,22 +113,45 @@ import { ClientBoundWebSocketMessageSchema, routes } from "../../shared/schemas.
 import { useConversationStore } from "@/stores/conversations.ts";
 import { defaultModel, modelInfo } from "../../shared/constants.ts";
 import ModelSelector from "@/components/ModelSelector.vue";
+import router from "@/router";
 
+const conversationStore = useConversationStore();
 const route = useRoute();
 const input = ref("");
 
 const messages = ref<Message[]>([]);
-const model = ref<Model>(defaultModel);
 
+const model = ref(defaultModel);
+const acknowledged = ref(true);
 watch(model, function(newValue, oldValue) {
   if(newValue !== oldValue) {
+    if(!acknowledged.value) {
+      msgBuffer.value = msgBuffer.value.filter((msg) => msg.role !== "modify" || msg.action !== "model"); // Remove any previous model change messages
+    }
     send({
       role: "modify",
       action: "model",
       model: newValue,
     });
+    acknowledged.value = false;
   }
 });
+
+const msgBuffer = ref<ServerBoundWebSocketMessage[]>([]);
+
+function send(data: ServerBoundWebSocketMessage) {
+  if(ws.value?.readyState !== WebSocket.OPEN) {
+    msgBuffer.value.push(data);
+    console.log({ message: "WebSocket not open, queueing message", data, queued: msgBuffer.value });
+    return;
+  }
+  if(!acknowledged.value && (data.role !== "modify" || data.action !== "model")) { // Don't queue model change messages
+    msgBuffer.value.push(data);
+    console.log({ message: "Server didn't acknowledge, queueing message", data, queued: msgBuffer.value });
+    return;
+  }
+  ws.value?.send(JSON.stringify(data));
+}
 
 function getToolIcon(toolName: string) {
   switch(toolName.toLowerCase()) {
@@ -150,7 +167,13 @@ function getToolIcon(toolName: string) {
 const ws = ref<WebSocket | null>(null);
 
 async function init(id: typeof route.params.id) {
+  id = id as string;
   ws.value?.close(); // to unsubscribe from the previous WebSocket connection server-side
+  messages.value = [];
+  if(id === "new") {
+    model.value = defaultModel;
+    return;
+  }
   const url = "ws://" + window.location.host + "/api/" + id;
   ws.value = new WebSocket(url);
   ws.value.onmessage = function(ev) {
@@ -196,25 +219,43 @@ async function init(id: typeof route.params.id) {
     }
 
     if(msg.role === "rename") {
-      useConversationStore().conversations.map(c => {
-        if(c.id === id) {
-          c.name = msg.name;
-        }
-        return c;
-      });
+      conversationStore.rename(id, msg.name);
     }
 
     if(msg.role === "setup") {
-      model.value = msg.model;
+      if(acknowledged.value) { // Don't overwrite the model if it got changed locally
+        model.value = msg.model;
+      }
+    }
+
+    if(msg.role === "ack") {
+      if(!acknowledged.value) {
+        acknowledged.value = true;
+        if(msgBuffer.value.length > 0) {
+          msgBuffer.value.forEach(send);
+          msgBuffer.value = [];
+        }
+      }
     }
   };
 
   ws.value.onopen = function() {
     console.log("Connected to WebSocket");
+    if(acknowledged.value) {
+      msgBuffer.value.forEach(send);
+      msgBuffer.value = [];
+    } else {
+      const modelChangeMessage = msgBuffer.value.find((msg) => msg.role === "modify" && msg.action === "model");
+      if(modelChangeMessage) {
+        send(modelChangeMessage);
+      }
+      msgBuffer.value = msgBuffer.value.filter((msg) => msg.role !== "modify" || msg.action !== "model");
+    }
   };
 
   ws.value.onclose = function(ev) {
     console.log("Disconnected from WebSocket");
+    msgBuffer.value = [];
   };
 
   await fetchMessages(id);
@@ -232,10 +273,6 @@ async function fetchMessages(id: typeof route.params.id) {
   }
 }
 
-function send(data: ServerBoundWebSocketMessage) {
-  ws.value?.send(JSON.stringify(data));
-}
-
 onBeforeRouteUpdate(async(to, from, next) => {
   if(to.params.id !== from.params.id) {
     await init(to.params.id);
@@ -247,8 +284,17 @@ onMounted(async() => {
   await init(route.params.id);
 });
 
-function sendMessage() {
+async function sendMessage() {
+  if(messages.value[messages.value.length - 1]?.role === "user") {
+    return;
+  }
+
   if(input.value.trim()) {
+    if(route.params.id === "new") {
+      const { id } = await conversationStore.$create();
+      await router.push({ name: "c", params: { id } });
+    }
+
     messages.value.push({
       role: "user",
       content: input.value,
@@ -259,6 +305,7 @@ function sendMessage() {
       action: "create",
       content: input.value,
     });
+
     input.value = "";
   }
 }

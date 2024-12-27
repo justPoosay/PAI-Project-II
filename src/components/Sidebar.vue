@@ -5,13 +5,13 @@
   >
     <div class="p-2 flex flex-col h-full">
       <div class="flex justify-between items-center mb-4">
-        <button
-          @click="createNewConversation"
+        <RouterLink
+          to="/c/new"
           class="p-2 rounded-full hover:bg-white/5 transition"
           :title="isExpanded ? 'New Chat' : ''"
         >
           <PlusIcon class="w-5 h-5"/>
-        </button>
+        </RouterLink>
         <button
           @click="toggleSidebar"
           class="p-2 rounded-full hover:bg-white/5 transition"
@@ -35,7 +35,7 @@
 
             <template #popper>
               <div class="flex p-2 text-white/75">
-                <button title="delete">
+                <button title="delete" @click="deleteConversation(c.id)">
                   <Trash2Icon class="w-5 h-5"/>
                 </button>
               </div>
@@ -52,7 +52,6 @@ import { ref, onMounted } from "vue";
 import { PlusIcon, ChevronLeftIcon, Trash2Icon } from "lucide-vue-next";
 import { useConversationStore } from "@/stores/conversations.ts";
 import { storeToRefs } from "pinia";
-import { routes } from "../../shared/schemas.ts";
 import router from "@/router";
 
 const isExpanded = ref(true);
@@ -73,21 +72,9 @@ async function deleteConversation(id: string) {
     const res = await fetch(`/api/${id}/modify`, { method: "DELETE" });
     if(!res.ok) throw new Error("Failed to delete conversation");
     conversationStore.conversations = conversationStore.conversations.filter(c => c.id !== id);
-  } catch(e) {
-    // TODO
-    console.error(e);
-  }
-}
-
-async function createNewConversation() {
-  try {
-    const res = await fetch("/api/create", { method: "POST" });
-    if(!res.ok) throw new Error("Failed to create a new conversation");
-    const result = routes["create"].safeParse(await res.json());
-    if(!result.success) throw new Error("Backend provided bogus data");
-    const c = result.data;
-    conversationStore.conversations.unshift({ ...c, updated_at: new Date(c.updated_at) });
-    await router.push({ name: "c", params: { id: c.id } });
+    if (router.currentRoute.value.params.id === id) {
+      await router.push({ name: "c", params: { id: "new" } });
+    }
   } catch(e) {
     // TODO
     console.error(e);

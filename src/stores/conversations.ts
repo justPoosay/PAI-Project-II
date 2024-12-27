@@ -1,10 +1,9 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { routes } from "../../shared/schemas.ts";
-import { z } from "zod";
+import type { Conversation } from "@/lib/types.ts";
 
 export const useConversationStore = defineStore("conversations", () => {
-  type Conversation = Omit<z.infer<typeof routes["conversations"]>[0], "updated_at"> & { updated_at: Date };
   const conversations = ref<Conversation[]>([]);
   
   async function $fetch() {
@@ -19,8 +18,25 @@ export const useConversationStore = defineStore("conversations", () => {
     }
   }
   
+  async function $create(): Promise<Conversation> {
+    const res = await fetch("/api/create", { method: "POST" });
+    if(!res.ok) throw new Error("Failed to create a new conversation");
+    const result = routes["create"].safeParse(await res.json());
+    if(!result.success) throw new Error("Backend provided bogus data");
+    const c = { ...result.data, updated_at: new Date(result.data.updated_at) } satisfies Conversation;
+    conversations.value.unshift(c);
+    return c;
+  }
+  
+  function rename(id: string, name: string) {
+    const conversation = conversations.value.find(c => c.id === id);
+    if(conversation) conversation.name = name;
+  }
+  
   return {
     conversations,
     $fetch,
+    $create,
+    rename
   };
 });

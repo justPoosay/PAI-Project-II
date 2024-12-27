@@ -71,6 +71,9 @@ export const ClientBoundWebSocketMessageSchema = z.union([
   z.object({
     role: z.literal("setup"),
     model: ModelSchema
+  }),
+  z.object({
+    role: z.literal("ack")
   })
 ]);
 

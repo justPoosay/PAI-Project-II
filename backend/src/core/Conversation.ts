@@ -5,10 +5,10 @@ import type { ClientBoundWebSocketMessage, ServerBoundWebSocketMessage, ToolCall
 import { server } from "../index.ts";
 import { type CoreAssistantMessage, type CoreMessage, type CoreUserMessage, streamText } from "ai";
 import { tools } from "./tools";
-import { nameChat } from "./utils.ts";
 import { models } from "./constants.ts";
 import { ModelSchema } from "../../../shared/schemas.ts";
 import { defaultModel } from "../../../shared/constants.ts";
+import { openai } from "@ai-sdk/openai";
 
 class ConversationClass {
   private readonly id: string;
@@ -35,6 +35,7 @@ class ConversationClass {
   }
   
   private publish(message: ClientBoundWebSocketMessage) {
+    console.log("publish", message);
     server.publish(this.id, JSON.stringify(message));
   }
   
@@ -46,13 +47,16 @@ class ConversationClass {
   }
   
   async onMessage(data: ServerBoundWebSocketMessage) {
-    if(data.role === "message" && data.action === "create") {
-      await this.createCompletion(data.content);
-    }
+    console.log("onMessage", data);
     
     if(data.role === "modify" && data.action === "model") {
       this.model = data.model;
       await db.chat.update({ where: { id: this.id }, data: { model: data.model } });
+      this.publish({ role: "ack" });
+    }
+    
+    if(data.role === "message" && data.action === "create") {
+      await this.createCompletion(data.content);
     }
   }
   
@@ -102,9 +106,20 @@ class ConversationClass {
     // ---
     
     if(this.messages.length === 2) {
-      const name = await nameChat(this.messages);
-      await db.chat.update({ where: { id: this.id }, data: { name } });
-      this.publish({ role: "rename", name });
+      const chat = await db.chat.findUnique({ where: { id: this.id } });
+      if(!chat?.name) { // Don't rename if the chat already has a name
+        const result = streamText({
+          model: openai("gpt-4o-mini"),
+          system: "Based on the messages provided, create a name up to 20 characters long describing the chat. Don't wrap your response in quotes.",
+          prompt: JSON.stringify(this.messages),
+        });
+        let name = "";
+        for await (const delta of result.textStream) {
+          name += delta;
+          this.publish({ role: "rename", name });
+        }
+        await db.chat.update({ where: { id: this.id }, data: { name } });
+      }
     }
     
     return message;

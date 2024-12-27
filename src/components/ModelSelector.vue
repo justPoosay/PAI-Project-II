@@ -16,7 +16,7 @@
     </div>
     <div
       :data-expanded="expanded"
-      class="bg-gradient-to-r from-white/15 via-white/10 to-white/15 backdrop-blur-sm rounded-b-lg shadow-lg p-1 data-[expanded=false]:opacity-0 duration-100 ease-out"
+      class="bg-gradient-to-r from-white/15 via-white/10 to-white/15 backdrop-blur-sm rounded-b-lg shadow-lg p-1 data-[expanded=false]:opacity-0 data-[expanded=false]:pointer-events-none duration-100 ease-out"
     >
       <div class="h-[1px] bg-white/15 w-full mb-1"/>
       <ul class="space-y-1">
