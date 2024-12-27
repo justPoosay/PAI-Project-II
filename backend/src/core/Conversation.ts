@@ -67,6 +67,7 @@ class ConversationClass {
     // ---
     
     const toolCalls: (Omit<ToolCall, "args"> & { args: string })[] = [];
+    logger.trace("Creating completion for chat", this.id, this.messages);
     const result = streamText({
       model: models[this.model].model,
       messages: this.messages,
