@@ -26,6 +26,7 @@ export const MessageSchema = z.union([
 export const ConversationSchema = z.object({
   id: z.string(),
   name: z.string().nullable(),
+  model: ModelSchema,
   updated_at: z.string()
 });
 
@@ -70,9 +71,6 @@ export const ClientBoundWebSocketMessageSchema = z.union([
   z.object({
     role: z.literal("setup"),
     model: ModelSchema
-  }),
-  z.object({
-    role: z.literal("ack")
   })
 ]);
 

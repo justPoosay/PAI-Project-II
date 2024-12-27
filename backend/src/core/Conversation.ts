@@ -52,7 +52,6 @@ class ConversationClass {
     if(data.role === "modify" && data.action === "model") {
       this.model = data.model;
       await db.chat.update({ where: { id: this.id }, data: { model: data.model } });
-      this.publish({ role: "ack" });
     }
     
     if(data.role === "message" && data.action === "create") {

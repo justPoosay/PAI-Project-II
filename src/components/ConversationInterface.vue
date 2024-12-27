@@ -133,34 +133,17 @@ const input = ref("");
 const messages = ref<Message[]>([]);
 
 const model = ref(modelStore.models[0]);
-const acknowledged = ref(true);
 watch(model, function(newValue, oldValue) {
   if(newValue !== oldValue) {
-    if(!acknowledged.value) {
-      msgBuffer.value = msgBuffer.value.filter((msg) => msg.role !== "modify" || msg.action !== "model"); // Remove any previous model change messages
-    }
     send({
       role: "modify",
       action: "model",
       model: newValue,
     });
-    acknowledged.value = false;
   }
 });
 
-const msgBuffer = ref<ServerBoundWebSocketMessage[]>([]);
-
 function send(data: ServerBoundWebSocketMessage) {
-  if(ws.value?.readyState !== WebSocket.OPEN) {
-    msgBuffer.value.push(data);
-    console.log({ message: "WebSocket not open, queueing message", data, queued: msgBuffer.value });
-    return;
-  }
-  if(!acknowledged.value && (data.role !== "modify" || data.action !== "model")) { // Don't queue model change messages
-    msgBuffer.value.push(data);
-    console.log({ message: "Server didn't acknowledge, queueing message", data, queued: msgBuffer.value });
-    return;
-  }
   ws.value?.send(JSON.stringify(data));
 }
 
@@ -186,12 +169,10 @@ async function init(id: typeof route.params.id) {
   ws.value?.close(); // to unsubscribe from the previous WebSocket connection server-side
   messages.value = [];
   if(id === "new") {
-    console.log("Creating new conversation");
     model.value = modelStore.models[0];
     return;
   }
   const url = "ws://" + window.location.host + "/api/" + id;
-  console.log("Connecting to WebSocket @" + url);
   ws.value = new WebSocket(url);
   ws.value.onmessage = function(ev) {
     if(typeof ev.data !== "string" || !isValidJSON(ev.data)) return;
@@ -240,41 +221,16 @@ async function init(id: typeof route.params.id) {
     }
 
     if(msg.role === "setup") {
-      if(acknowledged.value) { // Don't overwrite the model if it got changed locally
-        model.value = msg.model;
-      }
-    }
-
-    if(msg.role === "ack") {
-      if(!acknowledged.value) {
-        acknowledged.value = true;
-        if(msgBuffer.value.length > 0) {
-          console.log("Server acknowledged");
-          console.log("Releasing " + msgBuffer.value.length + " queued messages");
-          msgBuffer.value.forEach(send);
-          msgBuffer.value = [];
-        }
-      }
+      model.value = msg.model;
     }
   };
 
   ws.value.onopen = function() {
     console.log("Connected to WebSocket");
-    if(acknowledged.value) {
-      msgBuffer.value.forEach(send);
-      msgBuffer.value = [];
-    } else {
-      const modelChangeMessage = msgBuffer.value.find((msg) => msg.role === "modify" && msg.action === "model");
-      if(modelChangeMessage) {
-        send(modelChangeMessage);
-      }
-      msgBuffer.value = msgBuffer.value.filter((msg) => msg.role !== "modify" || msg.action !== "model");
-    }
   };
 
   ws.value.onclose = function(ev) {
     console.log("Disconnected from WebSocket");
-    msgBuffer.value = [];
   };
 
   await fetchMessages(id);
@@ -311,7 +267,7 @@ async function sendMessage() {
 
   if(input.value.trim()) {
     if(route.params.id === "new") {
-      const { id } = await conversationStore.$create();
+      const { id } = await conversationStore.$create({ model: model.value });
       await router.push({ name: "c", params: { id } });
     }
 

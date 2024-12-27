@@ -2,6 +2,7 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 import { routes } from "../../shared/schemas.ts";
 import type { Conversation } from "@/lib/types.ts";
+import type { Model } from "../../shared";
 
 export const useConversationStore = defineStore("conversations", () => {
   const conversations = ref<Conversation[]>([]);
@@ -18,8 +19,12 @@ export const useConversationStore = defineStore("conversations", () => {
     }
   }
   
-  async function $create(): Promise<Conversation> {
-    const res = await fetch("/api/create", { method: "POST" });
+  async function $create(data: { model?: Model } = {}): Promise<Conversation> {
+    const res = await fetch("/api/create", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data)
+    });
     if(!res.ok) throw new Error("Failed to create a new conversation");
     const result = routes["create"].safeParse(await res.json());
     if(!result.success) throw new Error("Backend provided bogus data");
