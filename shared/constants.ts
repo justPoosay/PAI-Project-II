@@ -1,5 +1,5 @@
 import type { Model } from "./index";
-import { ModelSchema } from "./schemas.ts";
+import { ModelSchema } from "./schemas";
 
 export interface ModelInfo {
   supportsTools: boolean;

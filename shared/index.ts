@@ -4,8 +4,8 @@ import {
   ClientBoundWebSocketMessageSchema,
   ServerBoundWebSocketMessageSchema,
   ModelSchema,
-  MessageSchema, ConversationSchema
-} from "./schemas.ts";
+  MessageSchema
+} from "./schemas";
 
 /** @description conversation message as held by the client */
 export type ClientMessage = z.infer<typeof MessageSchema> & {
