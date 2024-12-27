@@ -122,8 +122,6 @@ import ModelSelector from "@/components/ModelSelector.vue";
 
 const route = useRoute();
 const input = ref("");
-const chatContainer = ref<HTMLElement | null>(null);
-const wasAtTheBottom = ref(false);
 
 const messages = ref<Message[]>([]);
 const model = ref<Model>(defaultModel);
@@ -137,19 +135,6 @@ watch(model, function(newValue, oldValue) {
     });
   }
 });
-
-function checkIfAtBottom() {
-  if(chatContainer.value) {
-    const { scrollTop, scrollHeight, clientHeight } = chatContainer.value;
-    wasAtTheBottom.value = scrollTop + clientHeight >= scrollHeight;
-  }
-}
-
-function scrollToBottom() {
-  if(chatContainer.value) {
-    chatContainer.value.scrollTop = chatContainer.value.scrollHeight;
-  }
-}
 
 function getToolIcon(toolName: string) {
   switch(toolName.toLowerCase()) {
@@ -186,12 +171,6 @@ async function init(id: typeof route.params.id) {
 
       if(msg.type === "text-delta") {
         messages.value[messages.value.length - 1].content += msg.textDelta;
-
-        if(wasAtTheBottom.value) {
-          nextTick(() => {
-            scrollToBottom();
-          });
-        }
       }
 
       if(msg.type === "tool-call") {
@@ -266,13 +245,6 @@ onBeforeRouteUpdate(async(to, from, next) => {
 
 onMounted(async() => {
   await init(route.params.id);
-
-  chatContainer.value?.addEventListener("scroll", checkIfAtBottom);
-  chatContainer.value?.addEventListener("wheel", function(event) {
-    if(event.deltaY < 0 && !wasAtTheBottom.value) {
-      wasAtTheBottom.value = false;
-    }
-  });
 });
 
 function sendMessage() {
@@ -288,9 +260,6 @@ function sendMessage() {
       content: input.value,
     });
     input.value = "";
-    nextTick(() => {
-      scrollToBottom();
-    });
   }
 }
 
