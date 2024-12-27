@@ -4,7 +4,7 @@ import type { WSData } from "../lib/types.ts";
 import type { ClientBoundWebSocketMessage, ServerBoundWebSocketMessage, ToolCall, Model } from "../../../shared";
 import { server } from "../index.ts";
 import { type CoreAssistantMessage, type CoreMessage, type CoreUserMessage, streamText } from "ai";
-import { tools } from "./tools";
+import tools from "./tools";
 import { models } from "./constants.ts";
 import { ModelSchema } from "../../../shared/schemas.ts";
 import { defaultModel } from "../../../shared/constants.ts";
@@ -71,7 +71,7 @@ class ConversationClass {
     const result = streamText({
       model: models[this.model].model,
       messages: this.messages,
-      ...(models[this.model].supportsTools && { tools, maxSteps: 16 }),
+      ...(models[this.model].supportsTools && { tools, maxSteps: 32 }),
       onChunk: ({ chunk }) => {
         if(["tool-call", "tool-result", "text-delta"].includes(chunk.type)) {
           this.publish({ role: "chunk", ...chunk } as ClientBoundWebSocketMessage);

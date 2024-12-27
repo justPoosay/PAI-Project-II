@@ -1,7 +1,7 @@
 import { color, type ColorInput } from "bun";
 import { z } from "zod";
-import { env } from "../index.ts";
 import dayjs from "dayjs";
+import { env } from "./utils.ts";
 
 function colorize(input: ColorInput, text: string) {
   return color(input, "ansi") + text + color("white", "ansi");

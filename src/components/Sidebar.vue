@@ -4,7 +4,7 @@
     class="flex flex-col bg-gradient-to-b from-white/10 via-white/5 to-white/10 backdrop-blur-sm transition-all duration-300 ease-out w-16 shadow-sm data-[expanded=true]:w-64 data-[expanded=true]:rounded-r-xl text-white/75 h-screen"
   >
     <div class="p-1 flex flex-col h-full">
-      <div class="flex justify-between items-center mb-4">
+      <div class="flex justify-between items-center">
         <RouterLink
           to="/c/new"
           class="p-2 rounded-full hover:bg-white/5 transition"
@@ -22,6 +22,7 @@
           />
         </button>
       </div>
+      <div class="w-full h-[2px] bg-white/15 mt-1" />
       <ul class="space-y-1 h-[calc(100vh-4rem)] overflow-y-auto pt-1">
         <li v-for="c in conversations" :key="c.id">
           <VMenu

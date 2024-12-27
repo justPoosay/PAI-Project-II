@@ -4,21 +4,7 @@ import type { AppRequest, WSData } from "./lib/types";
 import { ServerBoundWebSocketMessageSchema } from "../../shared/schemas.ts";
 import Conversation from "./core/Conversation.ts";
 import { isValidJSON } from "./lib/utils.ts";
-import { z } from "zod";
-import logger, { LogLevelSchema } from "./lib/logger.ts";
-
-export const env = z.object({
-  DATABASE_URL: z.string(),
-  OPENAI_API_KEY: z.string(),
-  ANTHROPIC_API_KEY: z.string(),
-  
-  FIRECRAWL_API_KEY: z.string().optional(),
-  FIRECRAWL_API_URL: z.string().optional(),
-  
-  WEATHER_API_KEY: z.string().optional(),
-  
-  LOG_LEVEL: LogLevelSchema.default("info"),
-}).parse(process.env);
+import logger from "./lib/logger.ts";
 
 const router = new FileSystemRouter({
   style: "nextjs",
