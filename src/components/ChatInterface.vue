@@ -1,8 +1,5 @@
 <template>
-  <!--bg-gradient-to-tr-->
-  <div
-    class="flex h-screen from-fuchsia-700 via-purple-700 to-pink-700 selection:bg-white/10 text-white bg-[url('/img/DarkestHour.webp')]"
-  >
+  <div class="flex h-screen selection:bg-white/10 text-white bg-[url('/img/DarkestHour.webp')]">
     <!-- Sidebar -->
     <Sidebar/>
 
@@ -24,25 +21,37 @@
             >
               <div
                 :data-self="message.role === 'user'"
-                class="max-w-[80%] p-3 relative backdrop-blur-md rounded-tl-2xl rounded-tr-2xl shadow-sm bg-gradient-to-tr from-white/15 to-white/10 data-[self=true]:bg-gradient-to-tl data-[self=true]:from-white/25 data-[self=true]:to-white/20 data-[self=true]:rounded-bl-2xl data-[self=false]:rounded-br-2xl"
+                class="max-w-[80%] p-3 relative backdrop-blur-md rounded-tl-2xl rounded-tr-2xl shadow-sm bg-gradient-to-tr from-white/15 via-white/10 to-white/15 data-[self=true]:bg-gradient-to-tl data-[self=true]:from-white/25 data-[self=true]:via-white/20 data-[self=true]:to-white/25 data-[self=true]:rounded-bl-2xl data-[self=false]:rounded-br-2xl"
               >
+                <img
+                  v-if="message.role === 'assistant'"
+                  class="absolute -bottom-0 -left-10 w-8 h-8"
+                  :alt="message.author"
+                  :src="modelInfo[message.author].logoSrc"
+                  width="32"
+                  v-tooltip="{ content: modelInfo[message.author].name, placement: 'left' }"
+                />
                 <div v-if="message.content" v-html="parseMarkdown(message.content)" class="markdown-content"></div>
                 <div v-else class="flex items-center justify-center">
-                  <div class="loader">
-                    <span class="dot"/>
-                    <span class="dot"/>
-                    <span class="dot"/>
+                  <div class="flex justify-center items-center">
+                    <span class="w-2 h-2 bg-white rounded-full mx-1 opacity-30"
+                          style="animation: pulse 1.4s infinite ease-in-out;"/>
+                    <span class="w-2 h-2 bg-white rounded-full mx-1 opacity-30"
+                          style="animation: pulse 1.4s infinite ease-in-out; animation-delay: 0.2s;"/>
+                    <span class="w-2 h-2 bg-white rounded-full mx-1 opacity-30"
+                          style="animation: pulse 1.4s infinite ease-in-out; animation-delay: 0.4s;"/>
                   </div>
                 </div>
               </div>
             </div>
-            <div v-if="message.role === 'assistant' && message.toolCalls && message.toolCalls.length > 0" class="absolute top-0 left-0 flex">
+            <div v-if="message.role === 'assistant' && message.toolCalls && message.toolCalls.length > 0"
+                 class="absolute top-0 left-0 flex">
               <div v-for="(tool, index) in message.toolCalls" :key="index" class="relative">
                 <div
                   v-tooltip="{ content: DOMPurify.sanitize(`
                     <b>${tool.name}</b>
                     <pre>${Object.entries(tool.args).map(([k,v]) => ` <b>${k}:</b> ${v}`).join('<br />')}</pre>
-                    `.trim()), html: true }"
+                    `.trim()), html: true, placement: 'top' }"
                   class="w-6 h-6 bg-indigo rounded-full flex items-center justify-center -mt-2 -ml-2"
                   :style="{ zIndex: 10 - index }"
                 >
@@ -93,7 +102,7 @@ import {
   PaperclipIcon,
   HammerIcon,
   CloudLightningIcon,
-  BracesIcon
+  BracesIcon,
 } from "lucide-vue-next";
 import Sidebar from "@/components/Sidebar.vue";
 import { Marked, Renderer } from "marked";
@@ -105,7 +114,7 @@ import type { ClientMessage as Message, Model, ServerBoundWebSocketMessage } fro
 import { onBeforeRouteUpdate, useRoute } from "vue-router";
 import { ClientBoundWebSocketMessageSchema, routes } from "../../shared/schemas.ts";
 import { useConversationStore } from "@/stores/conversations.ts";
-import { defaultModel } from "../../shared/constants.ts";
+import { defaultModel, modelInfo } from "../../shared/constants.ts";
 import ModelSelector from "@/components/ModelSelector.vue";
 
 const route = useRoute();
@@ -184,7 +193,7 @@ async function init(id: typeof route.params.id) {
 
       if(msg.type === "tool-call") {
         const lastMessage = messages.value[messages.value.length - 1];
-        if (lastMessage.role === "user") return; // this should never happen
+        if(lastMessage.role === "user") return; // this should never happen
         if(!lastMessage.toolCalls) {
           lastMessage.toolCalls = [];
         }
@@ -205,11 +214,11 @@ async function init(id: typeof route.params.id) {
     }
 
     if(msg.role === "rename") {
-      useConversationStore().chats.map((chat) => {
-        if(chat.id === id) {
-          chat.name = msg.name;
+      useConversationStore().conversations.map(c => {
+        if(c.id === id) {
+          c.name = msg.name;
         }
-        return chat;
+        return c;
       });
     }
 
@@ -349,7 +358,7 @@ function parseMarkdown(text: string) {
 
 // \`\`\`\n<content>\n\`\`\`
 .markdown-content pre code.hljs
-  @apply block bg-white/5 backdrop-blur-sm text-white/80 p-1 rounded font-['Monaspace_Neon'] text-sm
+  @apply block bg-white/5 backdrop-blur-sm text-white/80 p-1 rounded font-['Monaspace_Neon'] text-sm mb-2
 
 // **<content>**
 .markdown-content strong
@@ -451,29 +460,15 @@ function parseMarkdown(text: string) {
 .hljs-comment
   @apply font-['Monaspace_Radon'] text-gray-300/75 italic
 
-.loader
-  display: flex
-  justify-content: center
-  align-items: center
-
-.dot
-  width: 8px
-  height: 8px
-  background-color: #fff
-  border-radius: 50%
-  margin: 0 4px
-  opacity: 0.3
-  animation: pulse 1.4s infinite ease-in-out
-
-.dot:nth-child(2)
-  animation-delay: 0.2s
-
-.dot:nth-child(3)
-  animation-delay: 0.4s
-
 @keyframes pulse
   0%, 100%
-    opacity: 0.3
+    @apply opacity-30
   50%
-    opacity: 1
+    @apply opacity-100
+
+.v-popper--theme-tooltip .v-popper__inner
+  @apply bg-white/15 backdrop-blur-md
+
+.v-popper--theme-tooltip .v-popper__arrow-outer
+  @apply border-white/15
 </style>

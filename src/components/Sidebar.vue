@@ -1,12 +1,12 @@
 <template>
   <div
     :data-expanded="isExpanded"
-    class="bg-gradient-to-b from-white/10 via-white/5 to-white/10 backdrop-blur-sm transition-all duration-300 ease-in-out w-16 shadow-sm data-[expanded=true]:w-64 rounded-r-xl text-white/75"
+    class="flex flex-col bg-gradient-to-b from-white/10 via-white/5 to-white/10 backdrop-blur-sm transition-all duration-300 ease-in-out w-16 shadow-sm data-[expanded=true]:w-64 rounded-r-xl text-white/75 h-screen"
   >
-    <div class="p-2">
+    <div class="p-2 flex flex-col h-full">
       <div class="flex justify-between items-center mb-4">
         <button
-          @click="createNewChat"
+          @click="createNewConversation"
           class="p-2 bg-indigo rounded-full hover:bg-opacity-80 transition"
           :title="isExpanded ? 'New Chat' : ''"
         >
@@ -20,16 +20,16 @@
           <ChevronRightIcon v-else class="w-5 h-5"/>
         </button>
       </div>
-      <ul>
-        <li v-for="chat in chats" :key="chat.id" class="mb-2">
+      <ul class="space-y-1 px-1 h-[calc(100vh-4rem)] overflow-y-auto">
+        <li v-for="c in conversations" :key="c.id">
           <RouterLink
-            :to="`/c/${chat.id}`"
+            :to="`/c/${c.id}`"
             :data-expanded="isExpanded"
-            class="block py-2 px-2 rounded transition from-white/10 from-75% to-white/15 hover:bg-gradient-to-br data-[expanded=false]:text-center"
-            :title="!isExpanded ? chat.name : ''"
+            class="block py-2 px-2 rounded transition from-white/10 from-75% to-white/15 hover:bg-gradient-to-br data-[expanded=false]:text-center overflow-hidden"
+            :title="!isExpanded ? c.name : ''"
           >
-            <span v-if="isExpanded">{{ chat.name ?? "Untitled" }}</span>
-            <span v-else>{{ (chat.name ?? "Untitled").charAt(0) }}</span>
+            <span v-if="isExpanded" class="block truncate">{{ c.name ?? "Untitled" }}</span>
+            <span v-else>{{ (c.name ?? "Untitled").charAt(0) }}</span>
           </RouterLink>
         </li>
       </ul>
@@ -48,7 +48,7 @@ import router from "@/router";
 const isExpanded = ref(true);
 
 const conversationStore = useConversationStore();
-const { chats } = storeToRefs(conversationStore);
+const { conversations } = storeToRefs(conversationStore);
 
 onMounted(() => {
   conversationStore.$fetch();
@@ -58,15 +58,15 @@ function toggleSidebar() {
   isExpanded.value = !isExpanded.value;
 }
 
-async function createNewChat() {
+async function createNewConversation() {
   try {
     const res = await fetch("/api/create", { method: "POST" });
-    if(!res.ok) throw new Error("Failed to create a new chat");
+    if(!res.ok) throw new Error("Failed to create a new conversation");
     const result = routes["create"].safeParse(await res.json());
     if(!result.success) throw new Error("Backend provided bogus data");
-    const chat = result.data;
-    conversationStore.chats.push(chat);
-    await router.push({ name: "c", params: { id: chat.id } });
+    const c = result.data;
+    conversationStore.conversations.push({ ...c, updated_at: new Date(c.updated_at) });
+    await router.push({ name: "c", params: { id: c.id } });
   } catch(e) {
     console.error(e);
   }

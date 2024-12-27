@@ -28,6 +28,7 @@ export const MessageSchema = z.union([
 export const ConversationSchema = z.object({
   id: z.string(),
   name: z.string().nullable(),
+  updated_at: z.string()
 });
 
 export const routes = {

@@ -41,6 +41,6 @@ model Chat {
   active   Boolean   @default(true) // to not delete the chat
   model    String    @default("gpt-4o")
 
-  created_at DateTime  @default(now())
-  updated_at DateTime? @updatedAt
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
 }
