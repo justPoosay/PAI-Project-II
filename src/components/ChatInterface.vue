@@ -30,8 +30,8 @@
               <div v-if="message.content" v-html="parseMarkdown(message.content)" class="markdown-content"></div>
               <div v-else class="flex items-center justify-center">
                 <div class="flex justify-center items-center">
-                    <span class="w-2 h-2 bg-white rounded-full mx-1 opacity-30"
-                          style="animation: pulse 1.4s infinite ease-in-out;"/>
+                  <span class="w-2 h-2 bg-white rounded-full mx-1 opacity-30"
+                        style="animation: pulse 1.4s infinite ease-in-out;"/>
                   <span class="w-2 h-2 bg-white rounded-full mx-1 opacity-30"
                         style="animation: pulse 1.4s infinite ease-in-out; animation-delay: 0.2s;"/>
                   <span class="w-2 h-2 bg-white rounded-full mx-1 opacity-30"
@@ -40,22 +40,30 @@
               </div>
             </div>
           </div>
-          <div v-if="message.role === 'assistant' && message.toolCalls && message.toolCalls.length > 0"
-               class="absolute top-0 left-0 flex">
-            <div v-for="(tool, index) in message.toolCalls" :key="index" class="relative">
-              <div
-                v-tooltip="{
-                    content: DOMPurify.sanitize(`<b>${tool.name}</b><pre>${
-                      Object.entries(tool.args).map(([k,v]) => ` <b>${k}:</b> ${v}`).join('<br />')
-                    }</pre>`),
-                    html: true,
-                    placement: 'right'
-                  }"
-                class="w-6 h-6 bg-indigo rounded-full flex items-center justify-center -mt-2 -ml-2"
-                :style="{ zIndex: 10 - index }"
-              >
-                <component :is="getToolIcon(tool.name)" class="w-4 h-4"/>
-              </div>
+          <div
+            v-if="message.role === 'assistant' && message.toolCalls && message.toolCalls.length > 0"
+            class="absolute -top-5 -left-5 flex p-1 bg-gradient-to-r from-white/20 via-white/15 to-white/20 backdrop-blur-md rounded-full"
+          >
+            <div
+              v-for="(tool, index) in message.toolCalls" :key="index"
+              v-tooltip="{
+                content: `<div class='markdown-content'>${parseMarkdown(`
+### **${tool.name}**
+${Object.entries(tool.args).map(([key, value]) => {
+  if (typeof value === 'string') {
+    return `- **${key}**:\n\`\`\`\n${value.replace('```', '\`\`\`')}\n\`\`\``;
+  } else {
+    return `- **${key}**: \`${value}\``;
+  }
+}).join('\n')}
+                `)}</div>`,
+                html: true,
+                placement: 'bottom'
+              }"
+              class="w-6 h-6 bg-indigo rounded-full flex items-center justify-center"
+              :style="{ zIndex: 10 - index }"
+            >
+              <component :is="getToolIcon(tool.name)" class="w-4 h-4"/>
             </div>
           </div>
         </div>
@@ -393,19 +401,19 @@ function parseMarkdown(text: string) {
 
 // # <content>
 .markdown-content h1
-  @apply text-3xl font-bold mt-4 mb-4
+  @apply text-3xl font-bold mt-2 mb-2
 
 // ## <content>
 .markdown-content h2
-  @apply text-2xl font-bold mt-4 mb-4
+  @apply text-2xl font-bold mt-2 mb-2
 
 // ### <content>
 .markdown-content h3
-  @apply text-xl font-bold mt-4 mb-4
+  @apply text-xl font-bold mt-2 mb-2
 
 // #### <content>
 .markdown-content h4
-  @apply text-lg font-bold mt-4 mb-4
+  @apply text-lg font-bold mt-2 mb-2
 
 // <i>. <content>
 .markdown-content ol
