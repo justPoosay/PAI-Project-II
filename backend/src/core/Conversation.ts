@@ -10,11 +10,15 @@ import { ModelSchema } from "../../../shared/schemas.ts";
 import { openai } from "@ai-sdk/openai";
 import logger from "../lib/logger.ts";
 
+type Subscriber = (message: ServerBoundWebSocketMessage) => void | Promise<void>;
+
 class ConversationClass {
   private readonly id: string;
   private readonly ws: ServerWebSocket<WSData>;
   private messages: CoreMessage[] = [];
   private model: Model = availableModels[0];
+  
+  private subscribers: Subscriber[] = [];
   
   private async open() {
     this.ws.subscribe(this.id);
@@ -28,8 +32,6 @@ class ConversationClass {
     } else {
       logger.warn("Invalid model in DB for chat", this.id);
     }
-    
-    this.publish({ role: "setup", model: this.model });
   }
   
   async close() {
@@ -49,14 +51,21 @@ class ConversationClass {
   }
   
   async onMessage(data: ServerBoundWebSocketMessage) {
-    if(data.role === "modify" && data.action === "model") {
-      this.model = data.model;
-      await db.chat.update({ where: { id: this.id }, data: { model: data.model } });
-    }
-    
     if(data.role === "message" && data.action === "create") {
       await this.createCompletion(data.content);
     }
+    
+    for(const subscriber of this.subscribers) {
+      await subscriber(data);
+    }
+  }
+  
+  private subscribe(subscriber: Subscriber) {
+    this.subscribers.push(subscriber);
+  }
+  
+  private unsubscribe(subscriber: Subscriber) {
+    this.subscribers = this.subscribers.filter(sub => sub !== subscriber);
   }
   
   private async createCompletion(userInput: string): Promise<CoreAssistantMessage> {
@@ -64,6 +73,13 @@ class ConversationClass {
     this.messages.push({ role: "user", content: userInput } satisfies CoreUserMessage);
     await db.message.create({ data: { chatId: this.id, role: "user", content: userInput } });
     // ---
+    
+    const abortController = new AbortController();
+    function subscriber(message: ServerBoundWebSocketMessage) {
+      if (message.role === "action" && message.action === "abort") {
+        abortController.abort();
+      }
+    }
     
     const toolCalls: (Omit<ToolCall, "args"> & { args: string })[] = [];
     logger.trace("Creating completion for chat", this.id, this.messages);
@@ -78,15 +94,24 @@ class ConversationClass {
             toolCalls.push({ id: chunk.toolCallId, name: chunk.toolName, args: JSON.stringify(chunk.args) });
           }
         }
-      }
+      },
+      abortSignal: abortController.signal
     });
     
+    this.subscribe(subscriber);
+    
     let fullResponse = "";
-    for await (const delta of result.textStream) {
-      fullResponse += delta;
+    try {
+      for await (const delta of result.textStream) {
+        fullResponse += delta;
+      }
+    } catch(e) {
+      // Successfully aborted
     }
     
     const message = { role: "assistant", content: fullResponse } satisfies CoreAssistantMessage;
+    
+    this.unsubscribe(subscriber);
     
     // ---
     this.messages.push(message);

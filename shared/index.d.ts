@@ -4,7 +4,7 @@ import {
   ClientBoundWebSocketMessageSchema,
   ServerBoundWebSocketMessageSchema,
   ModelSchema,
-  MessageSchema
+  MessageSchema, ConversationSchema
 } from "./schemas.ts";
 
 /** @description conversation message as held by the client */

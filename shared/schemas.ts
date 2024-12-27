@@ -68,10 +68,6 @@ export const ClientBoundWebSocketMessageSchema = z.union([
     role: z.literal("rename"),
     name: z.string(),
   }),
-  z.object({
-    role: z.literal("setup"),
-    model: ModelSchema
-  })
 ]);
 
 /** @description message sent from the client to the server */
@@ -85,9 +81,4 @@ export const ServerBoundWebSocketMessageSchema = z.union([
     role: z.literal("action"),
     action: z.literal("abort"),
   }),
-  z.object({
-    role: z.literal("modify"),
-    action: z.literal("model"),
-    model: ModelSchema
-  })
 ]);

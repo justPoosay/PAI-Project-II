@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import { routes } from "../../shared/schemas.ts";
+import { ConversationSchema, routes } from "../../shared/schemas.ts";
 import type { Conversation } from "@/lib/types.ts";
 import type { Model } from "../../shared";
 
@@ -33,23 +33,32 @@ export const useConversationStore = defineStore("conversations", () => {
     return c;
   }
   
-  async function $rename(id: string, name: string, request = true) {
-    if(request) {
+  type ModifyData = { id: string, name?: string | null, model?: Model, requestChange?: boolean };
+  
+  async function $modify({ id, requestChange = true, ...data }: ModifyData) {
+    const index = conversations.value.findIndex(c => c.id === id);
+    
+    if(requestChange) {
       const res = await fetch(`/api/${id}/modify`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name })
+        body: JSON.stringify(data)
       });
       if(!res.ok) return;
+      const result = ConversationSchema.safeParse(await res.json());
+      if(result.success) {
+        conversations.value[index] = { ...result.data, updated_at: new Date(result.data.updated_at) };
+      }
+      return;
     }
-    const conversation = conversations.value.find(c => c.id === id);
-    if(conversation) conversation.name = name;
+    
+    conversations.value[index] = { ...conversations.value[index], ...data };
   }
   
   return {
     conversations,
     $fetch,
     $create,
-    $rename
+    $modify
   };
 });

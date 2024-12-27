@@ -22,8 +22,6 @@ export const server = serve({
     async function get(): Promise<Response | undefined> {
       const match = router.match(url.pathname);
       
-      logger.info(req.method, url.pathname);
-      
       if(!match) return Response.json({ success: false, error: "Not Found" }, { status: 404 });
       
       try {
