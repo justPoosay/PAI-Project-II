@@ -28,13 +28,15 @@ export const useConversationStore = defineStore("conversations", () => {
     return c;
   }
   
-  async function $rename(id: string, name: string) {
-    const res = await fetch(`/api/${id}/modify`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name })
-    });
-    if (!res.ok) return;
+  async function $rename(id: string, name: string, request = true) {
+    if(request) {
+      const res = await fetch(`/api/${id}/modify`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name })
+      });
+      if(!res.ok) return;
+    }
     const conversation = conversations.value.find(c => c.id === id);
     if(conversation) conversation.name = name;
   }

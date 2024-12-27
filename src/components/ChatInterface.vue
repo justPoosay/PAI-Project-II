@@ -219,7 +219,7 @@ async function init(id: typeof route.params.id) {
     }
 
     if(msg.role === "rename") {
-      conversationStore.$rename(id, msg.name);
+      conversationStore.$rename(id, msg.name, false);
     }
 
     if(msg.role === "setup") {
