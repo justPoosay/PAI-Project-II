@@ -2,6 +2,7 @@ import { type CoreTool } from "ai";
 import weather from "./impl/weather.ts";
 import scrape from "./impl/scrape.ts";
 import search from "./impl/search.ts";
+import logger from "../../lib/logger.ts";
 
 export interface Tool {
   core: CoreTool;
@@ -19,7 +20,7 @@ export const tools = {
 const toolEntries = await Promise.all(
   Object.entries(tools).map(async([name, { core, dependency }]): Promise<[string, CoreTool] | null> => {
     const isAvailable = await dependency();
-    if (!isAvailable) console.warn(`Tool ${name} is not available`);
+    if (!isAvailable) logger.warn(`Tool ${name} is not available`);
     return isAvailable ? [name, core] : null;
   })
 );
