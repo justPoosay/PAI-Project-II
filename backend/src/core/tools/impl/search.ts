@@ -12,7 +12,7 @@ export default {
     const res = await fetch(`${baseUrl}/me?api_key=${env.SEARCH_API_KEY}`);
     if(!res.ok) return res.statusText;
     const json = await res.json();
-    return json.remaining_credits > 0 ? null : "No remaining credits";
+    return json.account.remaining_credits > 0 ? null : "No remaining credits";
   },
   core: tool({
     description: "Search the web",
