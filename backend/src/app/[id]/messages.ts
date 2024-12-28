@@ -6,7 +6,7 @@ export async function GET(req: AppRequest): Promise<Response> {
   const { id } = req.route.params;
   const result = await db.message.findMany({
     where: { chatId: id, Chat: { active: true } },
-    include: { toolCalls: true }
+    include: { toolCalls: true, attachments: true },
   });
   return Response.json(
     routes["[id]"]["messages"].parse( // To make sure the backend crashes if it doesn't provide the data client expects

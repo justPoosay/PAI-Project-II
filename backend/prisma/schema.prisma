@@ -13,11 +13,12 @@ enum Role {
 }
 
 model Message {
-  id        Int        @id @default(autoincrement())
-  content   String
-  role      Role
-  author    String? // the model name, always null for the user
-  toolCalls ToolCall[]
+  id          Int          @id @default(autoincrement())
+  content     String
+  role        Role
+  author      String? // the model name, always null for the user
+  toolCalls   ToolCall[]
+  attachments Attachment[]
 
   Chat   Chat   @relation(fields: [chatId], references: [id], onDelete: Cascade)
   chatId String
@@ -43,4 +44,19 @@ model Chat {
 
   created_at DateTime @default(now())
   updated_at DateTime @default(now()) @updatedAt
+}
+
+model Upload {
+  id    String  @id @default(cuid())
+  hash  String
+  mime  String
+  image Boolean
+}
+
+model Attachment {
+  i     Int     @id @default(autoincrement())
+  id    String
+  image Boolean
+
+  Message Message[]
 }

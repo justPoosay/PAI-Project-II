@@ -1,9 +1,18 @@
+import { file } from "bun";
 import { db } from "../lib/db.ts";
 import type { ServerWebSocket } from "bun";
 import type { WSData } from "../lib/types.ts";
 import type { ClientBoundWebSocketMessage, ServerBoundWebSocketMessage, ToolCall, Model } from "../../../shared";
 import { server } from "../index.ts";
-import { type CoreAssistantMessage, type CoreMessage, type CoreUserMessage, streamText } from "ai";
+import {
+  type AssistantContent,
+  type CoreAssistantMessage,
+  type CoreMessage,
+  type CoreUserMessage,
+  type FilePart,
+  type ImagePart,
+  streamText, type TextPart, type UserContent
+} from "ai";
 import tools from "./tools";
 import { availableModels, models } from "./constants.ts";
 import { ModelSchema } from "../../../shared/schemas.ts";
@@ -12,10 +21,15 @@ import logger from "../lib/logger.ts";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
+import { modelInfo } from "../../../shared/constants.ts";
+import * as path from "node:path";
+import { uploadDir } from "../app/upload";
+import type { Attachment, Message } from "@prisma/client";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
+type MessageCreateMessage = ServerBoundWebSocketMessage & { role: "message", action: "create" }
 type Subscriber = (message: ServerBoundWebSocketMessage) => void | Promise<void>;
 
 class ConversationClass {
@@ -26,11 +40,38 @@ class ConversationClass {
   
   private subscribers: Subscriber[] = [];
   
+  private async getContent(data: (Message & { attachments: Attachment[] }) | MessageCreateMessage) {
+    return modelInfo[this.model].imageInput
+      ? data.attachments
+        ? [
+          ...(
+            await Promise.all(
+              data.attachments.map<Promise<FilePart | ImagePart>>(async v => {
+                const { hash, mime } = (await db.upload.findUnique({ where: { id: v.id } }))!;
+                const bytes = await file(path.join(uploadDir, hash)).bytes();
+                
+                return v.image
+                  ? {
+                    type: "image",
+                    image: bytes
+                  } satisfies ImagePart
+                  : {
+                    type: "file",
+                    data: bytes,
+                    mimeType: mime
+                  } satisfies FilePart;
+              }) ?? []
+            )
+          ),
+          ...(data.content ? [{ type: "text", text: data.content } as TextPart satisfies TextPart] : [])
+        ]
+        : data.content
+      : data.content;
+  }
+  
   private async open() {
     this.ws.subscribe(this.id);
     
-    const messages = await db.message.findMany({ where: { chatId: this.id } });
-    this.messages = messages.sort((a, b) => a.id - b.id).map(({ role, content }) => ({ role, content }));
     const chat = await db.chat.findUnique({ where: { id: this.id } });
     const result = ModelSchema.safeParse(chat?.model);
     if(result.success) {
@@ -38,6 +79,21 @@ class ConversationClass {
     } else {
       logger.warn("Invalid model in DB for chat", this.id);
     }
+    const messages = await db.message.findMany({ where: { chatId: this.id }, include: { attachments: true } });
+    this.messages = await Promise.all(
+      messages.sort((a, b) => a.id - b.id)
+      .map(async v => (
+        v.role === "user"
+          ? {
+            role: v.role,
+            content: await this.getContent(v) satisfies UserContent
+          } satisfies CoreUserMessage
+          : {
+            role: v.role,
+            content: v.content,
+          } satisfies CoreAssistantMessage
+      ))
+    );
   }
   
   async close() {
@@ -58,7 +114,7 @@ class ConversationClass {
   
   async onMessage(data: ServerBoundWebSocketMessage) {
     if(data.role === "message" && data.action === "create") {
-      await this.createCompletion(data.content);
+      await this.createCompletion(data);
     }
     
     for(const subscriber of this.subscribers) {
@@ -74,10 +130,21 @@ class ConversationClass {
     this.subscribers = this.subscribers.filter(sub => sub !== subscriber);
   }
   
-  private async createCompletion(userInput: string): Promise<CoreAssistantMessage> {
+  private async createCompletion(data: MessageCreateMessage): Promise<CoreAssistantMessage> {
+    const content: CoreUserMessage["content"] = await this.getContent(data);
+    
     // ---
-    this.messages.push({ role: "user", content: userInput } satisfies CoreUserMessage);
-    await db.message.create({ data: { chatId: this.id, role: "user", content: userInput } });
+    this.messages.push({ role: "user", content } satisfies CoreUserMessage);
+    await db.message.create({
+      data: {
+        chatId: this.id,
+        role: "user",
+        content: data.content,
+        attachments: {
+          create: data.attachments
+        }
+      }
+    });
     // ---
     
     const abortController = new AbortController();
@@ -96,7 +163,7 @@ class ConversationClass {
     const result = streamText({
       model: models[this.model].model,
       messages: this.messages,
-      ...(models[this.model].supportsTools && { tools, maxSteps: 32 }),
+      ...(models[this.model].toolUsage && { tools, maxSteps: 32 }),
       system: "The current day and time is " + date + ".",
       onChunk: ({ chunk }) => {
         if(["tool-call", "tool-result", "text-delta"].includes(chunk.type)) {
@@ -143,7 +210,7 @@ class ConversationClass {
     
     if(this.messages.length === 2) {
       const chat = await db.chat.findUnique({ where: { id: this.id } });
-      if(!chat?.name) { // Don't rename if the chat already has a name
+      if(!chat?.name) { // Don't rename if the chat already has a name (somehow)
         const result = streamText({
           model: openai("gpt-4o-mini"),
           system: "Based on the messages provided, create a name up to 20 characters long describing the chat. Don't wrap your response in quotes.",

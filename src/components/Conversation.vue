@@ -27,9 +27,26 @@
               :data-self="message.role === 'user'"
               class="max-w-[80%] p-3 relative backdrop-blur-md rounded-tl-2xl rounded-tr-2xl shadow-sm bg-gradient-to-tr from-white/15 via-white/10 to-white/15 data-[self=true]:bg-gradient-to-tl data-[self=true]:from-white/25 data-[self=true]:via-white/20 data-[self=true]:to-white/25 data-[self=true]:rounded-bl-2xl data-[self=false]:rounded-br-2xl"
             >
-              <div v-if="message.content" v-html="parseMarkdown(message.content)" class="markdown-content"></div>
+              <div v-if="message.content" v-html="parseMarkdown(message.content)" class="markdown-content"/>
               <div v-else class="flex items-center justify-center">
                 <Loader/>
+              </div>
+              <div v-if="message.role === 'user' && message.attachments?.length" class="flex flex-wrap mt-2">
+                <a
+                  v-for="attachment in message.attachments"
+                  :key="attachment.id"
+                  :href="`/api/upload/${attachment.id}`"
+                  :download="attachment.image ? 'image.png' : 'file.txt'"
+                  class="flex items-center p-1 bg-white/5 backdrop-blur-sm rounded-lg mr-2"
+                >
+                  <img
+                    v-if="attachment.image"
+                    :src="`/api/upload/${attachment.id}`"
+                    class="w-8 h-8 rounded-lg mr-2"
+                    alt="Attachment"
+                  />
+                  <span v-else class="text-white/75">File</span>
+                </a>
               </div>
             </div>
           </div>
@@ -38,20 +55,58 @@
     </div>
 
     <!-- Input Area -->
-    <div class="absolute bottom-4 left-4 right-4 z-10">
+    <div
+      class="absolute bottom-4 left-4 right-4 z-10"
+      @drop.prevent="upload($event.dataTransfer?.files)"
+    >
       <div
         class="flex flex-col items-start max-w-2xl mx-auto bg-gradient-to-br from-vue-black/35 via-vue-black-soft/25 to-vue-black/35 backdrop-blur-sm rounded-xl p-2 shadow-lg"
       >
-          <textarea
-            v-model="input"
-            @keydown="handleKeyDown"
-            placeholder="Type a message..."
-            class="bg-transparent p-2 focus:outline-none resize-none w-full"
-          />
+        <div v-if="uploads.length" class="flex">
+          <div
+            v-for="file in uploads"
+            class="relative"
+          >
+            <button
+              class="absolute -top-1.5 right-0 rounded-full bg-vue-black/75 p-[1px]"
+              @click="uploads = uploads.filter(f => f.hash !== file.hash)"
+            >
+              <XIcon class="w-4 h-4"/>
+            </button>
+            <img
+              v-if="file.image"
+              :key="file.hash"
+              :src="file.href"
+              :data-disabled="!modelInfo[model].imageInput"
+              class="w-12 h-12 rounded-lg mr-2 overflow-hidden data-[disabled=true]:grayscale"
+              alt="File"
+            />
+          </div>
+        </div>
+        <textarea
+          v-model="input"
+          @keydown="handleKeyDown"
+          placeholder="Type a message..."
+          class="bg-transparent p-2 focus:outline-none resize-none w-full"
+        />
         <div class="flex justify-between w-full text-white/75">
-          <button class="p-2 rounded-full hover:bg-white/5 transition mt-1">
+          <input
+            type="file"
+            multiple
+            accept="image/*"
+            class="hidden"
+            id="file"
+            @change.prevent="upload(($event.target as HTMLInputElement)?.files ?? undefined)"
+            :disabled="!modelInfo[model].imageInput"
+          >
+          <label
+            :aria-disabled="!modelInfo[model].imageInput"
+            class="p-2 rounded-full aria-[disabled=false]:hover:bg-white/5 transition mt-1 aria-[disabled=false]:cursor-pointer aria-[disabled=true]:text-white/25"
+            :title="modelInfo[model].imageInput ? 'Upload File' : 'This model does not support file input'"
+            for="file"
+          >
             <PaperclipIcon class="w-6 h-6 "/>
-          </button>
+          </label>
           <button
             v-if="messages[messages.length - 1]?.finished ?? true"
             @click="sendMessage"
@@ -81,6 +136,7 @@ import {
   SendIcon,
   PaperclipIcon,
   CircleStopIcon,
+  XIcon
   // HammerIcon,
   // CloudLightningIcon,
   // BracesIcon, GlobeIcon,
@@ -90,7 +146,7 @@ import { Marked, Renderer } from "marked";
 import { markedHighlight } from "marked-highlight";
 import hljs from "highlight.js";
 import DOMPurify from "dompurify";
-import { capitalize, isValidJSON } from "@/lib/utils.ts";
+import { calculateHash, capitalize, isValidJSON } from "@/lib/utils.ts";
 import type { ClientMessage as Message, ServerBoundWebSocketMessage } from "../../shared";
 import { onBeforeRouteUpdate, useRoute } from "vue-router";
 import { ClientBoundWebSocketMessageSchema, routes } from "../../shared/schemas.ts";
@@ -101,6 +157,9 @@ import router from "@/router";
 import { useModelStore } from "@/stores/models.ts";
 import type { Conversation } from "@/lib/types.ts";
 import Loader from "@/components/Loader.vue";
+import { z } from "zod";
+
+type FileData = Omit<z.infer<(typeof routes["upload"])>[0], "id"> & { id?: string, href: string }
 
 const route = useRoute();
 const conversationStore = useConversationStore();
@@ -109,6 +168,57 @@ const modelStore = useModelStore();
 const messages = ref<Message[]>([]);
 const conversation = ref<Conversation | null>(conversationStore.conversations.find((c) => c.id === route.params.id) ?? null);
 const input = ref("");
+const uploads = ref<FileData[]>([]);
+
+async function upload(fileList: FileList | undefined) {
+  if(!fileList?.length || !modelInfo[model.value].imageInput) {
+    return;
+  }
+
+  const files = Array.from<File>(fileList);
+  const fileData = (await Promise.all(
+    files.map<Promise<FileData>>(
+      async file => ({
+        hash: (await calculateHash(await file.arrayBuffer())).hex,
+        href: URL.createObjectURL(file),
+        image: file.type.startsWith("image/"),
+      })
+    )
+  )).filter(f => !uploads.value.find(u => u.hash === f.hash));
+
+  if(!fileData.length) {
+    return;
+  }
+
+  uploads.value.push(...fileData);
+  const formData = new FormData();
+  files.forEach(file => formData.append("file", file));
+
+  const res = await fetch("/api/upload", {
+    method: "POST",
+    body: formData,
+  });
+
+  if(!res.ok) {
+    console.log("Failed to upload files");
+    uploads.value = uploads.value.filter(file => !fileData.find(f => f.hash === file.hash));
+    return;
+  }
+
+  const result = routes["upload"].safeParse(await res.json());
+  if(result.success) {
+    uploads.value.forEach(file => {
+      const data = result.data.find(f => f.hash === file.hash);
+      if(data) {
+        file.id = data.id;
+        URL.revokeObjectURL(file.href);
+        file.href = "/api/upload/" + data.id;
+      }
+    });
+  } else {
+    uploads.value = uploads.value.filter(file => !fileData.find(f => f.hash === file.hash));
+  }
+}
 
 const model = ref(modelStore.models[0]);
 watch(model, function(newValue, oldValue) {
@@ -118,9 +228,11 @@ watch(model, function(newValue, oldValue) {
 });
 
 const packetQueue = ref<ServerBoundWebSocketMessage[]>([]);
+
 function send(data: ServerBoundWebSocketMessage) {
-  if (!ws.value || ws.value.readyState !== WebSocket.OPEN) {
+  if(!ws.value || ws.value.readyState !== WebSocket.OPEN) {
     packetQueue.value.push(data);
+    console.log("WebSocket not open, queueing packet");
     return;
   }
 
@@ -146,6 +258,7 @@ const ws = ref<WebSocket | null>(null);
 
 async function init(id: typeof route.params.id) {
   id = id as string;
+  console.log("Initializing conversation", id);
   ws.value?.close(); // to unsubscribe from the previous WebSocket connection server-side
   messages.value = [];
   const c = conversationStore.conversations.find((c) => c.id === id) ?? null;
@@ -195,6 +308,14 @@ async function init(id: typeof route.params.id) {
     }
 
     if(msg.role === "finish") {
+      if(messages.value[messages.value.length - 1]?.role === "user") {
+        messages.value.push({
+          role: "assistant",
+          content: "",
+          finished: false,
+          author: model.value
+        });
+      }
       messages.value[messages.value.length - 1].finished = true;
     }
 
@@ -227,7 +348,8 @@ async function fetchMessages(id: typeof route.params.id) {
   }
 }
 
-onBeforeRouteUpdate(async(to, _, next) => {
+onBeforeRouteUpdate(async(to, from, next) => {
+  console.log("Route update", to.params.id, from.params.id);
   await init(to.params.id);
   next();
 });
@@ -244,24 +366,32 @@ async function sendMessage() {
     return;
   }
 
-  if(input.value.trim()) {
+  if(input.value.trim() || uploads.value.length) {
     if(route.params.id === "new") {
       const { id } = await conversationStore.$create({ model: model.value });
       await router.push({ name: "c", params: { id } });
     }
 
+    const attachments = modelInfo[model.value].imageInput
+      ? uploads.value.filter(f => !!f.id) as { id: string, image: boolean }[]
+      : undefined;
+
     messages.value.push({
       role: "user",
       content: input.value,
       finished: true,
+      attachments,
     });
+
     send({
       role: "message",
       action: "create",
       content: input.value,
+      attachments
     });
 
     input.value = "";
+    if(attachments) uploads.value = [];
   }
 }
 

@@ -91,3 +91,19 @@
 //
 // const res = await fetch(`${baseUrl}/me?api_key=${env.SEARCH_API_KEY}`);
 // console.log(await res.json());
+
+// import type { CoreMessage } from "ai";
+//
+// const message = {
+//   role: "user", content: [{
+//     type: "image",
+//     image: "https://example.com/image.jpg"
+//   }]
+// } satisfies CoreMessage;
+
+import { CryptoHasher } from "bun";
+
+const buffer = new Uint8Array([1, 2, 3, 4, 5, 6]);
+const hash = new CryptoHasher("sha256").update(buffer).digest("base64");
+
+console.log(hash);

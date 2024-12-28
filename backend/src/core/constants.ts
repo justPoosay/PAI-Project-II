@@ -29,14 +29,14 @@ export const models = {
     model: anthropic("claude-3-5-sonnet-latest"),
     env: "ANTHROPIC_API_KEY",
   },
-  "grok-beta": {
-    ...modelInfo["grok-beta"],
-    model: xai("grok-beta"),
-    env: "XAI_API_KEY",
-  },
   "grok-2": {
     ...modelInfo["grok-2"],
     model: xai("grok-2"),
+    env: "XAI_API_KEY",
+  },
+  "grok-beta": {
+    ...modelInfo["grok-beta"],
+    model: xai("grok-beta"),
     env: "XAI_API_KEY",
   },
   "llama-3.3-70b-versatile": {

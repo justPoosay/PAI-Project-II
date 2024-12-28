@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const ModelSchema = z.enum([
-  "gpt-4o", "gpt-4o-mini", "claude-3-5-sonnet", "grok-beta", "grok-2", "llama-3.3-70b-versatile", "mixtral-8x7b-32768"
+  "gpt-4o", "gpt-4o-mini", "claude-3-5-sonnet", "grok-2", "grok-beta", "llama-3.3-70b-versatile", "mixtral-8x7b-32768"
 ]);
 
 export const ToolCallSchema = z.object({
@@ -10,10 +10,16 @@ export const ToolCallSchema = z.object({
   args: z.record(z.unknown()),
 });
 
+export const AttachmentSchema = z.object({
+  id: z.string(),
+  image: z.boolean()
+})
+
 export const MessageSchema = z.union([
   z.object({
     role: z.literal("user"),
     content: z.string(),
+    attachments: z.array(AttachmentSchema).optional()
   }),
   z.object({
     role: z.literal("assistant"),
@@ -36,7 +42,12 @@ export const routes = {
   },
   "conversations": z.array(ConversationSchema),
   "create": ConversationSchema,
-  "models": z.array(ModelSchema)
+  "models": z.array(ModelSchema),
+  "upload": z.object({
+    id: z.string(),
+    hash: z.string(),
+    image: z.boolean()
+  }).array()
 } as const;
 
 /** @description message sent from the server to the client */
@@ -76,6 +87,7 @@ export const ServerBoundWebSocketMessageSchema = z.union([
     role: z.literal("message"),
     action: z.literal("create"),
     content: z.string(),
+    attachments: z.array(AttachmentSchema).optional()
   }),
   z.object({
     role: z.literal("action"),
