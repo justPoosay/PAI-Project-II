@@ -28,22 +28,23 @@
               class="max-w-[80%] p-3 relative backdrop-blur-md rounded-tl-2xl rounded-tr-2xl shadow-sm bg-gradient-to-tr from-white/15 via-white/10 to-white/15 data-[self=true]:bg-gradient-to-tl data-[self=true]:from-white/25 data-[self=true]:via-white/20 data-[self=true]:to-white/25 data-[self=true]:rounded-bl-2xl data-[self=false]:rounded-br-2xl"
             >
               <div v-if="message.content" v-html="parseMarkdown(message.content)" class="markdown-content"/>
-              <div v-else class="flex items-center justify-center">
+              <div v-else-if="message.role !== 'user' || !message.attachments?.length" class="flex items-center justify-center">
                 <Loader/>
               </div>
-              <div v-if="message.role === 'user' && message.attachments?.length" class="flex flex-wrap mt-2">
+              <div v-if="message.role === 'user' && message.attachments?.length" class="flex flex-wrap">
                 <a
                   v-for="attachment in message.attachments"
                   :key="attachment.id"
                   :href="`/api/upload/${attachment.id}`"
                   :download="attachment.image ? 'image.png' : 'file.txt'"
-                  class="flex items-center p-1 bg-white/5 backdrop-blur-sm rounded-lg mr-2"
+                  class="flex items-center p-1 bg-white/5 backdrop-blur-sm rounded-lg"
                 >
                   <img
                     v-if="attachment.image"
                     :src="`/api/upload/${attachment.id}`"
-                    class="w-8 h-8 rounded-lg mr-2"
+                    class="rounded-lg"
                     alt="Attachment"
+                    width="128"
                   />
                   <span v-else class="text-white/75">File</span>
                 </a>

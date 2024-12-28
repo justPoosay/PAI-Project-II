@@ -208,20 +208,26 @@ class ConversationClass {
     this.publish({ role: "finish" });
     // ---
     
-    if(this.messages.length === 2) {
-      const chat = await db.chat.findUnique({ where: { id: this.id } });
-      if(!chat?.name) { // Don't rename if the chat already has a name (somehow)
-        const result = streamText({
-          model: openai("gpt-4o-mini"),
-          system: "Based on the messages provided, create a name up to 20 characters long describing the chat. Don't wrap your response in quotes.",
-          prompt: JSON.stringify(this.messages),
-        });
-        let name = "";
-        for await (const delta of result.textStream) {
-          name += delta;
-          this.publish({ role: "rename", name });
+    try {
+      if(this.messages.length === 2) {
+        const chat = await db.chat.findUnique({ where: { id: this.id } });
+        if(!chat?.name) { // Don't rename if the chat already has a name (somehow)
+          const result = streamText({
+            model: openai("gpt-4o-mini"),
+            system: "Based on the messages provided, create a name up to 20 characters long describing the chat. Don't wrap your response in quotes.",
+            prompt: JSON.stringify(this.messages),
+          });
+          let name = "";
+          for await (const delta of result.textStream) {
+            name += delta;
+            this.publish({ role: "rename", name });
+          }
+          await db.chat.update({ where: { id: this.id }, data: { name } });
         }
-        await db.chat.update({ where: { id: this.id }, data: { name } });
+      }
+    } catch(e) {
+      if(e instanceof Error) {
+        logger.error("Error renaming chat", e.message);
       }
     }
     
