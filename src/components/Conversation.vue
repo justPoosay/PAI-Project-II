@@ -373,6 +373,9 @@ function parseMarkdown(text: string) {
   & > ul, & > ol
     @apply ml-4
 
+.markdown-content hr
+  @apply border-t border-white/30 my-4
+
 // Blockquote
 .markdown-content blockquote
   @apply border-l-4 border-white/30 pl-4 py-1 my-4 italic bg-white/5 rounded
