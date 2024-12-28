@@ -117,7 +117,13 @@ watch(model, function(newValue, oldValue) {
   }
 });
 
+const packetQueue = ref<ServerBoundWebSocketMessage[]>([]);
 function send(data: ServerBoundWebSocketMessage) {
+  if (!ws.value || ws.value.readyState !== WebSocket.OPEN) {
+    packetQueue.value.push(data);
+    return;
+  }
+
   ws.value?.send(JSON.stringify(data));
 }
 
@@ -199,6 +205,7 @@ async function init(id: typeof route.params.id) {
 
   ws.value.onopen = function() {
     console.log("Connected to WebSocket");
+    packetQueue.value.forEach(send);
   };
 
   ws.value.onclose = function() {
