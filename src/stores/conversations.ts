@@ -3,19 +3,28 @@ import { ref } from "vue";
 import { ConversationSchema, routes } from "../../shared/schemas.ts";
 import type { Conversation } from "@/lib/types.ts";
 import type { Model } from "../../shared";
+import { isBackendAlive } from "@/lib/utils.ts";
 
 export const useConversationStore = defineStore("conversations", () => {
   const conversations = ref<Conversation[]>([]);
+  const error = ref<string | null>();
   
   async function $fetch() {
     try {
       const res = await fetch("/api/conversations");
-      if(!res.ok) throw new Error("Failed to fetch conversations");
+      if(!res.ok) {
+        const alive = await isBackendAlive();
+        if(!alive) throw new Error("Backend seems to be dead");
+        throw new Error(res.statusText);
+      }
       const result = routes["conversations"].safeParse(await res.json());
       if(!result.success) throw new Error("Backend provided bogus data");
       conversations.value = result.data.map(c => ({ ...c, updated_at: new Date(c.updated_at) }));
+      error.value = null;
     } catch(e) {
-      console.error(e);
+      if(e instanceof Error) {
+        error.value = e.message;
+      }
     }
   }
   
@@ -58,6 +67,7 @@ export const useConversationStore = defineStore("conversations", () => {
   return {
     conversations,
     $fetch,
+    error,
     $create,
     $modify
   };

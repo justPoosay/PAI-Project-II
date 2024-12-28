@@ -18,3 +18,8 @@ export function omit<T extends Record<string, unknown>, K extends keyof T>(obj: 
 export function capitalize(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
+
+export async function isBackendAlive(): Promise<boolean> {
+  const res = await fetch("/api/alive");
+  return res.ok;
+}

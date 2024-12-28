@@ -9,6 +9,12 @@ import { availableModels, models } from "./constants.ts";
 import { ModelSchema } from "../../../shared/schemas.ts";
 import { openai } from "@ai-sdk/openai";
 import logger from "../lib/logger.ts";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 type Subscriber = (message: ServerBoundWebSocketMessage) => void | Promise<void>;
 
@@ -75,18 +81,23 @@ class ConversationClass {
     // ---
     
     const abortController = new AbortController();
+    
     function subscriber(message: ServerBoundWebSocketMessage) {
-      if (message.role === "action" && message.action === "abort") {
+      if(message.role === "action" && message.action === "abort") {
         abortController.abort();
       }
     }
     
     const toolCalls: (Omit<ToolCall, "args"> & { args: string })[] = [];
     logger.trace("Creating completion for chat", this.id, this.messages);
+    
+    const date = dayjs().tz("America/Los_Angeles").format("h:mm A on MMMM D, YYYY PST");
+    
     const result = streamText({
       model: models[this.model].model,
       messages: this.messages,
       ...(models[this.model].supportsTools && { tools, maxSteps: 32 }),
+      system: "The current day and time is " + date + ".",
       onChunk: ({ chunk }) => {
         if(["tool-call", "tool-result", "text-delta"].includes(chunk.type)) {
           this.publish({ role: "chunk", ...chunk } as ClientBoundWebSocketMessage);

@@ -29,14 +29,7 @@
             >
               <div v-if="message.content" v-html="parseMarkdown(message.content)" class="markdown-content"></div>
               <div v-else class="flex items-center justify-center">
-                <div class="flex justify-center items-center">
-                  <span class="w-2 h-2 bg-white rounded-full mx-1 opacity-30"
-                        style="animation: pulse 1.4s infinite ease-in-out;"/>
-                  <span class="w-2 h-2 bg-white rounded-full mx-1 opacity-30"
-                        style="animation: pulse 1.4s infinite ease-in-out; animation-delay: 0.2s;"/>
-                  <span class="w-2 h-2 bg-white rounded-full mx-1 opacity-30"
-                        style="animation: pulse 1.4s infinite ease-in-out; animation-delay: 0.4s;"/>
-                </div>
+                <Loader/>
               </div>
             </div>
           </div>
@@ -107,17 +100,15 @@ import ModelSelector from "@/components/ModelSelector.vue";
 import router from "@/router";
 import { useModelStore } from "@/stores/models.ts";
 import type { Conversation } from "@/lib/types.ts";
+import Loader from "@/components/Loader.vue";
 
+const route = useRoute();
 const conversationStore = useConversationStore();
 const modelStore = useModelStore();
-const conversation = ref<Conversation | null>(conversationStore.conversations.find((c) => c.id === route.params.id) ?? null);
-const route = useRoute();
-const input = ref("");
-
-await conversationStore.$fetch();
-await modelStore.$fetch();
 
 const messages = ref<Message[]>([]);
+const conversation = ref<Conversation | null>(conversationStore.conversations.find((c) => c.id === route.params.id) ?? null);
+const input = ref("");
 
 const model = ref(modelStore.models[0]);
 watch(model, function(newValue, oldValue) {
@@ -236,6 +227,9 @@ onBeforeRouteUpdate(async(to, _, next) => {
 
 onMounted(async() => {
   await init(route.params.id);
+
+  // await conversationStore.$fetch();
+  // await modelStore.$fetch();
 });
 
 async function sendMessage() {
@@ -432,12 +426,6 @@ function parseMarkdown(text: string) {
 
 .hljs-comment
   @apply font-['Monaspace_Radon'] text-gray-300/75 italic
-
-@keyframes pulse
-  0%, 100%
-    @apply opacity-30
-  50%
-    @apply opacity-100
 
 .v-popper--theme-tooltip .v-popper__inner
   @apply bg-white/15 backdrop-blur-md
