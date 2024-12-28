@@ -32,6 +32,8 @@ RUN bunx prisma generate
 COPY backend/docker-entrypoint.sh ./
 RUN chmod +x docker-entrypoint.sh
 
+RUN chown -R bun:bun /usr/src/app/backend
+
 USER bun
 EXPOSE 3000/tcp
 ENTRYPOINT ["./docker-entrypoint.sh"]

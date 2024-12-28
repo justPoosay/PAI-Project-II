@@ -6,8 +6,9 @@ import { env } from "../../../lib/utils.ts";
 import logger from "../../../lib/logger.ts";
 
 export default {
-  dependency(): boolean {
-    return !!env.FIRECRAWL_API_URL || !!env.FIRECRAWL_API_KEY;
+  dependency() {
+    const available = !!env.FIRECRAWL_API_URL || !!env.FIRECRAWL_API_KEY;
+    return available ? null : "Missing FIRECRAWL_API_URL or FIRECRAWL_API_KEY";
   },
   core: tool({
     description: "Get website's content",

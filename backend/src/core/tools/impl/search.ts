@@ -7,12 +7,12 @@ import logger from "../../../lib/logger.ts";
 const baseUrl = "https://www.searchapi.io/api/v1";
 
 export default {
-  async dependency(): Promise<boolean> {
-    if(!env.SEARCH_API_KEY) return false;
+  async dependency() {
+    if(!env.SEARCH_API_KEY) return "Missing SEARCH_API_KEY";
     const res = await fetch(`${baseUrl}/me?api_key=${env.SEARCH_API_KEY}`);
-    if(!res.ok) return false;
+    if(!res.ok) return res.statusText;
     const json = await res.json();
-    return json.remaining_credits > 0;
+    return json.remaining_credits > 0 ? null : "No remaining credits";
   },
   core: tool({
     description: "Search the web",

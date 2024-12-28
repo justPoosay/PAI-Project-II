@@ -7,10 +7,10 @@ import logger from "../../../lib/logger.ts";
 const baseUrl = "https://api.weatherapi.com/v1";
 
 export default {
-  async dependency(): Promise<boolean> {
-    if(!env.WEATHER_API_KEY) return false;
+  async dependency() {
+    if(!env.WEATHER_API_KEY) return "Missing WEATHER_API_KEY";
     const res = await fetch(`${baseUrl}/current.json?key=${env.WEATHER_API_KEY}&q=London`);
-    return res.status !== 401; // Unauthorized
+    return res.status === 401 ? "Invalid WEATHER_API_KEY" : null;
   },
   core: tool({
     description: "Get the weather for a location",

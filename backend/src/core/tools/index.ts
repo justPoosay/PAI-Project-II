@@ -7,8 +7,8 @@ import logger from "../../lib/logger.ts";
 export interface Tool {
   core: CoreTool;
   
-  /** Returns false if the tool is not available */
-  dependency(): Promise<boolean> | boolean;
+  /** Returns null if the tool is available, otherwise returns an error message */
+  dependency(): (string | null) | Promise<string | null>;
 }
 
 export const tools = {
@@ -19,9 +19,9 @@ export const tools = {
 
 const toolEntries = await Promise.all(
   Object.entries(tools).map(async([name, { core, dependency }]): Promise<[string, CoreTool] | null> => {
-    const isAvailable = await dependency();
-    if (!isAvailable) logger.warn(`Tool ${name} is not available`);
-    return isAvailable ? [name, core] : null;
+    const error = await dependency();
+    if (error) logger.warn(`"${name}" tool is not available! Error: ${error}`);
+    return error ? null : [name, core];
   })
 );
 
