@@ -1,5 +1,5 @@
 <template>
-  <div class="flex h-full selection:bg-white/10 text-white bg-[url('/img/DarkestHour.webp')]">
+  <div class="flex h-full selection:bg-white/10 text-white bg-[url('/img/bg/Mountain.webp')] bg-cover">
     <Suspense>
       <ConversationWrapper/>
 
