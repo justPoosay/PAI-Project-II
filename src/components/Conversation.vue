@@ -8,9 +8,9 @@
     </div>
 
     <!-- Chat Messages -->
-    <div class="flex-1 overflow-y-auto p-4 pb-36" ref="chatContainer">
+    <div v-if="!messages.loading && !messages.error && messages.array.length" class="flex-1 overflow-y-auto p-4 pb-36">
       <div class="max-w-5xl mx-auto">
-        <div v-for="(message, i) in messages" :key="i" class="mb-2 relative">
+        <div v-for="(message, i) in messages.array" :key="i" class="mb-2 relative">
           <div
             :data-self="message.role === 'user'"
             class="flex justify-start data-[self=true]:justify-end items-end space-x-2"
@@ -53,6 +53,19 @@
             </div>
           </div>
         </div>
+      </div>
+    </div>
+    <div v-else class="flex-1 flex items-center justify-center">
+      <div class="text-center" v-if="!messages.loading && !messages.error && !messages.array.length">
+        <h1 class="text-2xl font-bold">No messages yet</h1>
+        <h2>Start typing to begin a conversation</h2>
+      </div>
+      <div class="text-center" v-else-if="messages.loading">
+        <Loader/>
+      </div>
+      <div class="text-center" v-else>
+        <h1 class="text-2xl font-bold">An error occurred</h1>
+        <h2>{{ messages.error }}</h2>
       </div>
     </div>
 
@@ -110,7 +123,7 @@
             <PaperclipIcon class="w-6 h-6 "/>
           </label>
           <button
-            v-if="messages[messages.length - 1]?.finished ?? true"
+            v-if="messages.array[messages.array.length - 1]?.finished ?? true"
             @click="sendMessage"
             class="p-2 rounded-full hover:bg-white/5 transition mt-1"
           >
@@ -148,7 +161,7 @@ import { Marked, Renderer } from "marked";
 import { markedHighlight } from "marked-highlight";
 import hljs from "highlight.js";
 import DOMPurify from "dompurify";
-import { calculateHash, capitalize, isValidJSON } from "@/lib/utils.ts";
+import { calculateHash, capitalize, isBackendAlive, isValidJSON } from "@/lib/utils.ts";
 import type { ClientMessage as Message, ServerBoundWebSocketMessage } from "../../shared";
 import { onBeforeRouteUpdate, useRoute } from "vue-router";
 import { ClientBoundWebSocketMessageSchema, routes } from "../../shared/schemas.ts";
@@ -167,7 +180,11 @@ const route = useRoute();
 const conversationStore = useConversationStore();
 const modelStore = useModelStore();
 
-const messages = ref<Message[]>([]);
+const messages = ref<{ loading: boolean, error: string | null, array: Message[] }>({
+  loading: true,
+  error: null,
+  array: []
+});
 const conversation = ref<Conversation | null>(conversationStore.conversations.find((c) => c.id === route.params.id) ?? null);
 const input = ref("");
 const uploads = ref<FileData[]>([]);
@@ -260,13 +277,14 @@ const ws = ref<WebSocket | null>(null);
 
 async function init(id: typeof route.params.id) {
   id = id as string;
+  const isNew = id === "new";
   console.log("Initializing conversation", id);
   ws.value?.close(); // to unsubscribe from the previous WebSocket connection server-side
-  messages.value = [];
+  messages.value = { loading: !isNew, error: null, array: [] };
   const c = conversationStore.conversations.find((c) => c.id === id) ?? null;
   conversation.value = c;
   model.value = c?.model ?? modelStore.models[0];
-  if(id === "new") {
+  if(isNew) {
     return;
   }
   const url = "ws://" + window.location.host + "/api/" + id;
@@ -278,8 +296,8 @@ async function init(id: typeof route.params.id) {
     const msg = result.data;
 
     if(msg.role === "chunk") {
-      if(messages.value[messages.value.length - 1]?.finished) {
-        messages.value.push({
+      if(messages.value.array[messages.value.array.length - 1]?.finished) {
+        messages.value.array.push({
           role: "assistant",
           content: "",
           finished: false,
@@ -288,11 +306,11 @@ async function init(id: typeof route.params.id) {
       }
 
       if(msg.type === "text-delta") {
-        messages.value[messages.value.length - 1].content += msg.textDelta;
+        messages.value.array[messages.value.array.length - 1].content += msg.textDelta;
       }
 
       if(msg.type === "tool-call") {
-        const lastMessage = messages.value[messages.value.length - 1];
+        const lastMessage = messages.value.array[messages.value.array.length - 1];
         if(lastMessage.role === "user") return; // this should never happen
         if(!lastMessage.toolCalls) {
           lastMessage.toolCalls = [];
@@ -310,15 +328,15 @@ async function init(id: typeof route.params.id) {
     }
 
     if(msg.role === "finish") {
-      if(messages.value[messages.value.length - 1]?.role === "user") {
-        messages.value.push({
+      if(messages.value.array[messages.value.array.length - 1]?.role === "user") {
+        messages.value.array.push({
           role: "assistant",
           content: "",
           finished: false,
           author: model.value
         });
       }
-      messages.value[messages.value.length - 1].finished = true;
+      messages.value.array[messages.value.array.length - 1].finished = true;
     }
 
     if(msg.role === "rename") {
@@ -341,12 +359,18 @@ async function init(id: typeof route.params.id) {
 async function fetchMessages(id: typeof route.params.id) {
   try {
     const res = await fetch(`/api/${id}/messages`);
-    if(!res.ok) throw new Error("Failed to fetch messages");
+    if(!res.ok) {
+      const alive = await isBackendAlive();
+      if(!alive) throw new Error("Backend seems to be dead");
+      throw new Error(res.statusText);
+    }
     const result = routes["[id]"]["messages"].safeParse(await res.json());
-    if(result.success) messages.value = result.data.map((msg) => ({ ...msg, finished: true }));
+    if(!result.success) throw new Error("Backend provided bogus data");
+    messages.value = { loading: false, error: null, array: result.data.map((msg) => ({ ...msg, finished: true })) };
   } catch(e) {
-    // TODO
-    console.error(e);
+    if(e instanceof Error) {
+      messages.value = { loading: false, error: e.message, array: [] };
+    }
   }
 }
 
@@ -364,7 +388,7 @@ onMounted(async() => {
 });
 
 async function sendMessage() {
-  if(messages.value[messages.value.length - 1]?.role === "user") {
+  if(messages.value.array[messages.value.array.length - 1]?.role === "user") {
     return;
   }
 
@@ -378,7 +402,7 @@ async function sendMessage() {
       ? uploads.value.filter(f => !!f.id) as { id: string, image: boolean }[]
       : undefined;
 
-    messages.value.push({
+    messages.value.array.push({
       role: "user",
       content: input.value,
       finished: true,
