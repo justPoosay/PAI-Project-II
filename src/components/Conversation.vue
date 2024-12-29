@@ -624,4 +624,10 @@ function parseMarkdown(text: string) {
 
 .v-popper--theme-tooltip .v-popper__arrow-outer
   @apply border-white/15
+
+.v-popper__popper
+  transition: none !important
+
+.v-popper__popper *
+  transition: none !important
 </style>
