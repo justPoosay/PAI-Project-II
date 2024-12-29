@@ -28,7 +28,8 @@
               class="max-w-[80%] p-3 relative backdrop-blur-md rounded-tl-2xl rounded-tr-2xl shadow-sm bg-gradient-to-tr from-white/15 via-white/10 to-white/15 data-[self=true]:bg-gradient-to-tl data-[self=true]:from-white/25 data-[self=true]:via-white/20 data-[self=true]:to-white/25 data-[self=true]:rounded-bl-2xl data-[self=false]:rounded-br-2xl"
             >
               <div v-if="message.content" v-html="parseMarkdown(message.content)" class="markdown-content"/>
-              <div v-else-if="message.role !== 'user' || !message.attachments?.length" class="flex items-center justify-center">
+              <div v-else-if="message.role !== 'user' || !message.attachments?.length"
+                   class="flex items-center justify-center">
                 <Loader/>
               </div>
               <div v-if="message.role === 'user' && message.attachments?.length" class="flex flex-wrap">
@@ -409,8 +410,11 @@ function parseMarkdown(text: string) {
       emptyLangClass: "hljs",
       langPrefix: "hljs language-",
       highlight(code, lang) {
-        const language = hljs.getLanguage(lang) ? lang : "plaintext";
-        return hljs.highlight(code, { language }).value;
+        return lang
+          ? hljs.getLanguage(lang)
+            ? hljs.highlight(code, { language: lang }).value
+            : hljs.highlightAuto(code).value
+          : hljs.highlightAuto(code).value;
       },
     })
   );
