@@ -66,15 +66,12 @@
                   v-for="(call, i) in message.toolCalls ?? []"
                   class="hover:bg-white/5 transition p-1 rounded-md"
                   :key="i"
+                  v-tooltip="{
+                    content: `${call.name}(${Object.entries(call.args).map(([k, v]) => `${k}=&quot;${v}&quot;`).join(', ')})`,
+                    placement: 'right'
+                  }"
                 >
-                  <component
-                    :is="getToolIcon(call.name)"
-                    class="w-3 h-3"
-                    v-tooltip="{
-                      content: `${call.name}(${Object.entries(call.args).map(([k, v]) => `${k}=&quot;${v}&quot;`).join(', ')})`,
-                      placement: 'right'
-                    }"
-                  />
+                  <component :is="getToolIcon(call.name)" class="w-3 h-3"/>
                 </div>
               </div>
             </div>
