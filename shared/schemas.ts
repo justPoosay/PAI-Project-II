@@ -87,7 +87,8 @@ export const ServerBoundWebSocketMessageSchema = z.union([
     role: z.literal("message"),
     action: z.literal("create"),
     content: z.string(),
-    attachments: z.array(AttachmentSchema).optional()
+    attachments: z.array(AttachmentSchema).optional(),
+    model: ModelSchema.optional()
   }),
   z.object({
     role: z.literal("action"),

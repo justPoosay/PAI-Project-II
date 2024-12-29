@@ -413,7 +413,8 @@ async function sendMessage() {
       role: "message",
       action: "create",
       content: input.value,
-      attachments
+      attachments,
+      model: model.value,
     });
 
     input.value = "";

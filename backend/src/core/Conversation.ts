@@ -35,6 +35,7 @@ type Subscriber = (message: ServerBoundWebSocketMessage) => void | Promise<void>
 class ConversationClass {
   private readonly id: string;
   private readonly ws: ServerWebSocket<WSData>;
+  private messagesRaw: (Message & { attachments: Attachment[] })[] = [];
   private messages: CoreMessage[] = [];
   private model: Model = availableModels[0];
   
@@ -69,19 +70,9 @@ class ConversationClass {
       : data.content;
   }
   
-  private async open() {
-    this.ws.subscribe(this.id);
-    
-    const chat = await db.chat.findUnique({ where: { id: this.id } });
-    const result = ModelSchema.safeParse(chat?.model);
-    if(result.success) {
-      this.model = result.data;
-    } else {
-      logger.warn("Invalid model in DB for chat", this.id);
-    }
-    const messages = await db.message.findMany({ where: { chatId: this.id }, include: { attachments: true } });
+  private async revalidateMessages() {
     this.messages = await Promise.all(
-      messages.sort((a, b) => a.id - b.id)
+      this.messagesRaw.sort((a, b) => a.id - b.id)
       .map(async v => (
         v.role === "user"
           ? {
@@ -94,6 +85,23 @@ class ConversationClass {
           } satisfies CoreAssistantMessage
       ))
     );
+  }
+  
+  private async open() {
+    this.ws.subscribe(this.id);
+    
+    const chat = await db.chat.findUnique({ where: { id: this.id } });
+    const result = ModelSchema.safeParse(chat?.model);
+    if(result.success) {
+      this.model = result.data;
+    } else {
+      logger.warn("Invalid model in DB for chat", this.id);
+    }
+    this.messagesRaw = (await db.message.findMany({
+      where: { chatId: this.id },
+      include: { attachments: true }
+    })).sort((a, b) => a.id - b.id);
+    await this.revalidateMessages();
   }
   
   async close() {
@@ -131,20 +139,31 @@ class ConversationClass {
   }
   
   private async createCompletion(data: MessageCreateMessage): Promise<CoreAssistantMessage> {
+    if(data.model && this.model !== data.model) {
+      const [prev, next] = [this.model, data.model];
+      this.model = data.model;
+      if(modelInfo[prev].imageInput !== modelInfo[next].imageInput) { // If the new model requires a different input type
+        await this.revalidateMessages(); // Revalidate messages to ensure they're in the correct format for the new model
+      }
+    }
+    
     const content: CoreUserMessage["content"] = await this.getContent(data);
     
     // ---
     this.messages.push({ role: "user", content } satisfies CoreUserMessage);
-    await db.message.create({
-      data: {
-        chatId: this.id,
-        role: "user",
-        content: data.content,
-        attachments: {
-          create: data.attachments
-        }
-      }
-    });
+    this.messagesRaw.push(
+      await db.message.create({
+        data: {
+          chatId: this.id,
+          role: "user",
+          content: data.content,
+          attachments: {
+            create: data.attachments
+          }
+        },
+        include: { attachments: true }
+      })
+    );
     // ---
     
     const abortController = new AbortController();
@@ -193,18 +212,21 @@ class ConversationClass {
     
     // ---
     this.messages.push(message);
-    await db.message.create({
-      data: {
-        chatId: this.id,
-        ...message,
-        ...(toolCalls.length && {
-          toolCalls: {
-            create: toolCalls
-          }
-        }),
-        author: this.model
-      }
-    });
+    this.messagesRaw.push(
+      await db.message.create({
+        data: {
+          chatId: this.id,
+          ...message,
+          ...(toolCalls.length && {
+            toolCalls: {
+              create: toolCalls
+            }
+          }),
+          author: this.model
+        },
+        include: { attachments: true }
+      })
+    );
     this.publish({ role: "finish" });
     // ---
     
