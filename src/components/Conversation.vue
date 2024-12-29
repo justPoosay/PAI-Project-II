@@ -50,6 +50,33 @@
                   <span v-else class="text-white/75">File</span>
                 </a>
               </div>
+              <div
+                v-if="message.role === 'assistant'"
+                class="flex p-0.5 rounded-md bg-white/15 backdrop-blur-sm absolute -bottom-3 left-1 shadow-md"
+              >
+                <button
+                  title="Copy to Clipboard"
+                  @click="copyToClipboard(message.content)"
+                  class="hover:bg-white/5 transition p-1 rounded-md"
+                >
+                  <CopyIcon class="w-3 h-3"/>
+                </button>
+                <span v-if="message.toolCalls?.length" class="bg-white/25 min-h-full w-[2px] mx-1"/>
+                <div
+                  v-for="(call, i) in message.toolCalls ?? []"
+                  class="hover:bg-white/5 transition p-1 rounded-md"
+                  :key="i"
+                >
+                  <component
+                    :is="getToolIcon(call.name)"
+                    class="w-3 h-3"
+                    v-tooltip="{
+                      content: `${call.name}(${Object.entries(call.args).map(([k, v]) => `${k}=&quot;${v}&quot;`).join(', ')})`,
+                      placement: 'right'
+                    }"
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -151,11 +178,12 @@ import {
   SendIcon,
   PaperclipIcon,
   CircleStopIcon,
-  XIcon
-  // HammerIcon,
-  // CloudLightningIcon,
-  // BracesIcon, GlobeIcon,
-  // SearchIcon,
+  XIcon,
+  CopyIcon,
+  HammerIcon,
+  CloudLightningIcon,
+  GlobeIcon,
+  SearchIcon,
 } from "lucide-vue-next";
 import { Marked, Renderer } from "marked";
 import { markedHighlight } from "marked-highlight";
@@ -188,6 +216,10 @@ const messages = ref<{ loading: boolean, error: string | null, array: Message[] 
 const conversation = ref<Conversation | null>(conversationStore.conversations.find((c) => c.id === route.params.id) ?? null);
 const input = ref("");
 const uploads = ref<FileData[]>([]);
+
+function copyToClipboard(text: string) {
+  navigator.clipboard.writeText(text);
+}
 
 async function upload(fileList: FileList | undefined) {
   if(!fileList?.length || !modelInfo[model.value].imageInput) {
@@ -258,20 +290,18 @@ function send(data: ServerBoundWebSocketMessage) {
   ws.value?.send(JSON.stringify(data));
 }
 
-// function getToolIcon(toolName: string) {
-//   switch(toolName.toLowerCase()) {
-//     case "eval":
-//       return BracesIcon;
-//     case "weather":
-//       return CloudLightningIcon;
-//     case "search":
-//       return SearchIcon;
-//     case "scrape":
-//       return GlobeIcon;
-//     default:
-//       return HammerIcon;
-//   }
-// }
+function getToolIcon(toolName: string) {
+  switch(toolName.toLowerCase()) {
+    case "weather":
+      return CloudLightningIcon;
+    case "search":
+      return SearchIcon;
+    case "scrape":
+      return GlobeIcon;
+    default:
+      return HammerIcon;
+  }
+}
 
 const ws = ref<WebSocket | null>(null);
 
