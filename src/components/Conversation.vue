@@ -241,7 +241,7 @@ async function upload(fileList: FileList | undefined) {
 
 const model = ref(modelStore.models[0]);
 watch(model, function(newValue, oldValue) {
-  if(newValue !== oldValue && conversation.value) {
+  if(newValue !== oldValue && conversation.value && conversation.value.model !== newValue) {
     conversationStore.$modify({ id: conversation.value.id, model: newValue });
   }
 });
@@ -430,6 +430,7 @@ function handleKeyDown(e: KeyboardEvent) {
 }
 
 function parseMarkdown(text: string) {
+  const stock = new Marked(); // for parsing blockquotes
   const marked = new Marked(
     markedHighlight({
       emptyLangClass: "hljs",
@@ -459,13 +460,7 @@ function parseMarkdown(text: string) {
         .join("\n")
       }</blockquote>`;
     }
-    return `<blockquote>${
-      quote.text
-      .split("\n")
-      .filter(Boolean)
-      .map(v => `<p>${v}</p>`)
-      .join("\n")
-    }</blockquote>`;
+    return stock.parse(quote.raw, { async: false });
   };
 
   marked.use({ renderer });
