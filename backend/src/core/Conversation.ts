@@ -183,7 +183,10 @@ class ConversationClass {
       model: models[this.model].model,
       messages: this.messages,
       ...(models[this.model].toolUsage && { tools, maxSteps: 32 }),
-      system: "The current day and time is " + date + ".",
+      system: `
+      NEVEW invent or improvise infowmation. If you can't give a weasonabwe answew, twy to use avaiable tools, and if you are stiww stuck, just say what you awe thinking.
+      The cuwwent day and time is ${date}.
+      `.trim(),
       onChunk: ({ chunk }) => {
         if(["tool-call", "tool-result", "text-delta"].includes(chunk.type)) {
           this.publish({ role: "chunk", ...chunk } as ClientBoundWebSocketMessage);
