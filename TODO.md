@@ -1,3 +1,1 @@
-- heartbeats
 - error handling
-- re-add showing tools used by the assistant

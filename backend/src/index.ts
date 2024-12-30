@@ -5,6 +5,7 @@ import { ServerBoundWebSocketMessageSchema } from "../../shared/schemas.ts";
 import Conversation from "./core/Conversation.ts";
 import { isValidJSON } from "./lib/utils.ts";
 import logger from "./lib/logger.ts";
+import type { ClientBoundWebSocketMessage } from "../../shared";
 
 const router = new FileSystemRouter({
   style: "nextjs",
@@ -65,12 +66,20 @@ export const server = serve({
         logger.trace("Received invalid data", message);
         return;
       }
+      
       const result = ServerBoundWebSocketMessageSchema.safeParse(JSON.parse(message));
       if(!result.success) {
         logger.trace("Received invalid message", message);
         return;
       }
-      logger.trace("Received message", result.data);
+      
+      if(result.data.role === "ping") {
+        ws.send(JSON.stringify({ role: "pong" } satisfies ClientBoundWebSocketMessage));
+        logger.trace("Received ping");
+      } else {
+        logger.trace("Received message", result.data);
+      }
+      
       await ws.data.instance?.onMessage(result.data);
     },
   },

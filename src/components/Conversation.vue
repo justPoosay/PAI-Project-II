@@ -25,7 +25,7 @@
             />
             <div
               :data-self="message.role === 'user'"
-              class="max-w-[80%] p-3 relative backdrop-blur-md rounded-tl-2xl rounded-tr-2xl shadow-sm bg-gradient-to-tr from-white/15 via-white/10 to-white/15 data-[self=true]:bg-gradient-to-tl data-[self=true]:from-white/25 data-[self=true]:via-white/20 data-[self=true]:to-white/25 data-[self=true]:rounded-bl-2xl data-[self=false]:rounded-br-2xl"
+              class="max-w-[80%] p-2 relative backdrop-blur-md rounded-tl-2xl rounded-tr-2xl shadow-sm bg-gradient-to-tr from-white/15 via-white/10 to-white/15 data-[self=true]:bg-gradient-to-tl data-[self=true]:from-white/25 data-[self=true]:via-white/20 data-[self=true]:to-white/25 data-[self=true]:rounded-bl-2xl data-[self=false]:rounded-br-2xl"
             >
               <div v-if="message.content" v-html="parseMarkdown(message.content)" class="markdown-content"/>
               <div v-else-if="message.role !== 'user' || !message.attachments?.length"
@@ -275,18 +275,6 @@ watch(model, function(newValue, oldValue) {
   }
 });
 
-const packetQueue = ref<ServerBoundWebSocketMessage[]>([]);
-
-function send(data: ServerBoundWebSocketMessage) {
-  if(!ws.value || ws.value.readyState !== WebSocket.OPEN) {
-    packetQueue.value.push(data);
-    console.log("WebSocket not open, queueing packet");
-    return;
-  }
-
-  ws.value?.send(JSON.stringify(data));
-}
-
 function getToolIcon(toolName: string) {
   switch(toolName.toLowerCase()) {
     case "weather":
@@ -301,26 +289,58 @@ function getToolIcon(toolName: string) {
 }
 
 const ws = ref<WebSocket | null>(null);
+const isConnected = ref(false);
+const HEARTBEAT_INTERVAL = 10000;
+const HEARTBEAT_TIMEOUT = 5000;
+const MAX_RECONNECT_ATTEMPTS = 5;
+let heartbeatInterval: number | undefined;
+let heartbeatTimeout: number | undefined;
+let reconnectAttempts = 0;
 
-async function init(id: typeof route.params.id) {
+const packetQueue = ref<ServerBoundWebSocketMessage[]>([]);
+
+function send(data: ServerBoundWebSocketMessage) {
+  if(!ws.value || ws.value.readyState !== WebSocket.OPEN) {
+    packetQueue.value.push(data);
+    console.log("WebSocket not open, queueing packet");
+    return;
+  }
+
+  ws.value?.send(JSON.stringify(data));
+}
+
+async function init(id: typeof route.params.id, wsOnly = false) {
   id = id as string;
   const isNew = id === "new";
-  console.log("Initializing conversation", id);
-  ws.value?.close(); // to unsubscribe from the previous WebSocket connection server-side
-  messages.value = { loading: !isNew, error: null, array: [] };
-  const c = conversationStore.conversations.find((c) => c.id === id) ?? null;
-  conversation.value = c;
-  model.value = c?.model ?? modelStore.models[0];
+
+  cleanup();
+
+  if(!wsOnly) {
+    console.log("Initializing conversation", id);
+    messages.value = { loading: !isNew, error: null, array: [] };
+    const c = conversationStore.conversations.find((c) => c.id === id) ?? null;
+    conversation.value = c;
+    model.value = c?.model ?? modelStore.models[0];
+  }
+
   if(isNew) {
     return;
   }
+
   const url = "ws://" + window.location.host + "/api/" + id;
   ws.value = new WebSocket(url);
+
   ws.value.onmessage = function(ev) {
+    resetHeartbeatTimeout();
+
     if(typeof ev.data !== "string" || !isValidJSON(ev.data)) return;
     const result = ClientBoundWebSocketMessageSchema.safeParse(JSON.parse(ev.data));
     if(!result.success) return;
     const msg = result.data;
+
+    if(msg.role === "pong") {
+      return;
+    }
 
     if(msg.role === "chunk") {
       if(messages.value.array[messages.value.array.length - 1]?.finished) {
@@ -373,14 +393,71 @@ async function init(id: typeof route.params.id) {
 
   ws.value.onopen = function() {
     console.log("Connected to WebSocket");
+    isConnected.value = true;
+    reconnectAttempts = 0;
+    startHeartbeat();
     packetQueue.value.forEach(send);
+    packetQueue.value = [];
   };
 
   ws.value.onclose = function() {
     console.log("Disconnected from WebSocket");
+    isConnected.value = false;
+    cleanup();
   };
 
-  await fetchMessages(id);
+  ws.value.onerror = function(e) {
+    console.error("WebSocket error:", e);
+    cleanup();
+  };
+
+  if(!wsOnly) {
+    await fetchMessages(id);
+  }
+}
+
+function startHeartbeat() {
+  cleanup({ closeConnection: false });
+
+  heartbeatInterval = window.setInterval(() => {
+    if(ws.value?.readyState === WebSocket.OPEN) {
+      send({ role: "ping" });
+
+      heartbeatTimeout = window.setTimeout(() => {
+        console.log("Heartbeat timeout - reconnecting...");
+        ws.value?.close();
+        if(reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+          reconnectAttempts++;
+          init(route.params.id, true);
+        } else {
+          console.error("Max reconnection attempts reached");
+        }
+      }, HEARTBEAT_TIMEOUT);
+    }
+  }, HEARTBEAT_INTERVAL);
+}
+
+function resetHeartbeatTimeout() {
+  if(heartbeatTimeout) {
+    clearTimeout(heartbeatTimeout);
+    heartbeatTimeout = undefined;
+  }
+}
+
+function cleanup(config = { closeConnection: true }) {
+  if(ws.value && config.closeConnection) {
+    ws.value.close();
+    ws.value = null;
+  }
+
+  if(heartbeatInterval) {
+    clearInterval(heartbeatInterval);
+    heartbeatInterval = undefined;
+  }
+  if(heartbeatTimeout) {
+    clearTimeout(heartbeatTimeout);
+    heartbeatTimeout = undefined;
+  }
 }
 
 async function fetchMessages(id: typeof route.params.id) {
@@ -419,7 +496,8 @@ async function sendMessage() {
     return;
   }
 
-  if(input.value.trim() || uploads.value.length) {
+  const content = input.value.trim();
+  if(content || uploads.value.length) {
     if(route.params.id === "new") {
       const { id } = await conversationStore.$create({ model: model.value });
       await router.push({ name: "c", params: { id } });
@@ -431,7 +509,7 @@ async function sendMessage() {
 
     messages.value.array.push({
       role: "user",
-      content: input.value,
+      content,
       finished: true,
       attachments,
     });
@@ -439,7 +517,7 @@ async function sendMessage() {
     send({
       role: "message",
       action: "create",
-      content: input.value,
+      content,
       attachments,
       model: model.value,
     });
@@ -456,43 +534,52 @@ function handleKeyDown(e: KeyboardEvent) {
   }
 }
 
+// ---
+const stock = new Marked(); // for parsing blockquotes
+const marked = new Marked(
+  markedHighlight({
+    emptyLangClass: "hljs",
+    langPrefix: "hljs language-",
+    highlight(code, lang) {
+      return lang
+        ? hljs.getLanguage(lang)
+          ? hljs.highlight(code, { language: lang }).value
+          : hljs.highlightAuto(code).value
+        : hljs.highlightAuto(code).value;
+    },
+  })
+);
+
+const renderer = new Renderer();
+renderer.blockquote = (quote) => {
+  const match = quote.text.match(/^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)]/);
+  if(match) {
+    const type = match[1].toLowerCase();
+    const title = capitalize(type);
+    return `<blockquote data-type="${type}">${
+      quote.text
+      .replace(match[0], title)
+      .split("\n")
+      .filter(Boolean)
+      .map(v => `<p${v === title ? " class=\"callout-title\"" : ""}>${v}</p>`)
+      .join("\n")
+    }</blockquote>`;
+  }
+  return stock.parse(quote.raw, { async: false });
+};
+
+marked.use({ renderer });
+
+// ---
+
+const markdownCache = new Map<string, string>();
+
 function parseMarkdown(text: string) {
-  const stock = new Marked(); // for parsing blockquotes
-  const marked = new Marked(
-    markedHighlight({
-      emptyLangClass: "hljs",
-      langPrefix: "hljs language-",
-      highlight(code, lang) {
-        return lang
-          ? hljs.getLanguage(lang)
-            ? hljs.highlight(code, { language: lang }).value
-            : hljs.highlightAuto(code).value
-          : hljs.highlightAuto(code).value;
-      },
-    })
-  );
+  if(markdownCache.has(text)) {
+    return markdownCache.get(text);
+  }
 
-  const renderer = new Renderer();
-  renderer.blockquote = (quote) => {
-    const match = quote.text.match(/^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)]/);
-    if(match) {
-      const type = match[1].toLowerCase();
-      const title = capitalize(type);
-      return `<blockquote data-type="${type}">${
-        quote.text
-        .replace(match[0], title)
-        .split("\n")
-        .filter(Boolean)
-        .map(v => `<p${v === title ? " class=\"callout-title\"" : ""}>${v}</p>`)
-        .join("\n")
-      }</blockquote>`;
-    }
-    return stock.parse(quote.raw, { async: false });
-  };
-
-  marked.use({ renderer });
-
-  return DOMPurify.sanitize(
+  const parsed = DOMPurify.sanitize(
     marked.parse(
       text.replace(/^[\u200B\u200C\u200D\u200E\u200F\uFEFF]/, ""),
       {
@@ -502,6 +589,9 @@ function parseMarkdown(text: string) {
       }
     )
   );
+
+  markdownCache.set(text, parsed);
+  return parsed;
 }
 </script>
 

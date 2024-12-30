@@ -13,7 +13,7 @@ export const ToolCallSchema = z.object({
 export const AttachmentSchema = z.object({
   id: z.string(),
   image: z.boolean()
-})
+});
 
 export const MessageSchema = z.union([
   z.object({
@@ -79,6 +79,9 @@ export const ClientBoundWebSocketMessageSchema = z.union([
     role: z.literal("rename"),
     name: z.string(),
   }),
+  z.object({
+    role: z.literal("pong")
+  })
 ]);
 
 /** @description message sent from the client to the server */
@@ -94,4 +97,7 @@ export const ServerBoundWebSocketMessageSchema = z.union([
     role: z.literal("action"),
     action: z.literal("abort"),
   }),
+  z.object({
+    role: z.literal("ping")
+  })
 ]);
