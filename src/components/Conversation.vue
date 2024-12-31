@@ -636,13 +636,13 @@ function parseMarkdown(text: string) {
 
 // <i>. <content>
 .markdown-content ol
-  @apply list-decimal list-outside ml-6 mb-4
+  @apply list-decimal list-outside ml-6 my-1
   & ol, & ul
     @apply mt-2 mb-2
 
 // - <content>
 .markdown-content ul
-  @apply list-disc list-outside ml-6 mb-4
+  @apply list-disc list-outside ml-6 my-1
   & ul, & ol
     @apply mt-2 mb-2
 

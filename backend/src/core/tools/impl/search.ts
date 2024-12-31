@@ -18,7 +18,7 @@ export default {
     description: "Search the web",
     parameters: z.object({
       query: z.string().describe("The query to search for, supports all the stuff you'd expect from a search engine"),
-      engine: z.enum(["google", "bing", "duckduckgo"]).default("google").describe("The search engine to use"),
+      engine: z.enum(["google", "bing", "duckduckgo"]).default("duckduckgo").describe("The search engine to use"),
       num: z.number().optional().describe("The maximum number of results to return"),
       page: z.number().optional().describe("The page number to start at"),
     }),

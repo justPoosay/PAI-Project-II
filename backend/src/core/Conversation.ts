@@ -5,7 +5,6 @@ import type { WSData } from "../lib/types.ts";
 import type { ClientBoundWebSocketMessage, ServerBoundWebSocketMessage, ToolCall, Model } from "../../../shared";
 import { server } from "../index.ts";
 import {
-  type AssistantContent,
   type CoreAssistantMessage,
   type CoreMessage,
   type CoreUserMessage,
@@ -25,6 +24,7 @@ import { modelInfo } from "../../../shared/constants.ts";
 import * as path from "node:path";
 import { uploadDir } from "../app/upload";
 import type { Attachment, Message } from "@prisma/client";
+import owofify from "owoifyx";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -183,10 +183,11 @@ class ConversationClass {
       model: models[this.model].model,
       messages: this.messages,
       ...(models[this.model].toolUsage && { tools, maxSteps: 32 }),
-      system: `
-      NEVEW invent or improvise infowmation. If you can't give a weasonabwe answew, twy to use avaiable tools, and if you are stiww stuck, just say what you awe thinking.
-      The cuwwent day and time is ${date}.
-      `.trim(),
+      system: owofify(`
+      NEVER invent or improvise information. If you can't give a reasonable answer, twy to use available tools, and if you are still stuck, just say what you are thinking.
+      ${tools["search"] && tools["scrape"] ? "Remember that when searching the web you don't need to go of only the search result website metadata, you can also get the full view of the website" : ""}
+      The current day and time is ${date}.
+      `.split("\n").map(line => line.trim()).join("\n").trim()),
       onChunk: ({ chunk }) => {
         if(["tool-call", "tool-result", "text-delta"].includes(chunk.type)) {
           this.publish({ role: "chunk", ...chunk } as ClientBoundWebSocketMessage);
