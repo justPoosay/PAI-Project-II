@@ -21,7 +21,7 @@ export default {
     async execute({ url, format }) {
       const app = new FirecrawlApp({ apiKey: env.FIRECRAWL_API_KEY, apiUrl: env.FIRECRAWL_API_URL });
       try {
-        return app.scrapeUrl(url, { formats: [format] });
+        return await app.scrapeUrl(url, { formats: [format] });
       } catch(e: any) {
         logger.error("Encountered an error during execution of the tool", e);
         return e.message;

@@ -184,7 +184,7 @@ class ConversationClass {
       messages: this.messages,
       ...(models[this.model].toolUsage && { tools, maxSteps: 32 }),
       system: owofify(`
-      NEVER invent or improvise information. If you can't give a reasonable answer, twy to use available tools, and if you are still stuck, just say what you are thinking.
+      NEVER invent or improvise information. If you can't give a reasonable answer, try to use available tools, and if you are still stuck, just say what you are thinking.
       ${tools["search"] && tools["scrape"] ? "Remember that when searching the web you don't need to go of only the search result website metadata, you can also get the full view of the website" : ""}
       The current day and time is ${date}.
       `.split("\n").map(line => line.trim()).join("\n").trim()),
@@ -207,7 +207,11 @@ class ConversationClass {
         fullResponse += delta;
       }
     } catch(e) {
-      // Successfully aborted
+      if (e instanceof Error && e.name === "AbortError") {
+        // Successfully aborted
+      } else {
+        logger.error("Error creating completion", e);
+      }
     }
     
     const message = { role: "assistant", content: fullResponse } satisfies CoreAssistantMessage;
