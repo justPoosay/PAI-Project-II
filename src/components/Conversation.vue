@@ -599,6 +599,9 @@ function parseMarkdown(text: string) {
 .markdown-content
   @apply break-words
 
+.markdown-content a
+  @apply text-sky-400 hover:underline
+
 .markdown-content pre
   @apply rounded overflow-x-auto
 
