@@ -290,7 +290,7 @@ function getToolIcon(toolName: string) {
 
 const ws = ref<WebSocket | null>(null);
 const isConnected = ref(false);
-const HEARTBEAT_INTERVAL = 10000;
+const HEARTBEAT_INTERVAL = 30000;
 const HEARTBEAT_TIMEOUT = 5000;
 const MAX_RECONNECT_ATTEMPTS = 5;
 let heartbeatInterval: number | undefined;
