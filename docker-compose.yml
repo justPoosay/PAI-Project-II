@@ -25,6 +25,7 @@ services:
       - FIRECRAWL_API_URL=${FIRECRAWL_API_URL:-}
       - WEATHER_API_KEY=${WEATHER_API_KEY:-}
       - SEARCH_API_KEY=${SEARCH_API_KEY:-}
+      - GITHUB_PAT=${GITHUB_PAT:-}
       - LOG_LEVEL=${LOG_LEVEL:-info}
     depends_on:
       db:
