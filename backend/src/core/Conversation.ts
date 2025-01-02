@@ -182,7 +182,7 @@ class ConversationClass {
     const result = streamText({
       model: models[this.model].model,
       messages: this.messages,
-      ...(models[this.model].toolUsage && { tools, maxSteps: 32 }),
+      ...(models[this.model].toolUsage && { tools, maxSteps: 128 }),
       system: owofify(`
       NEVER invent or improvise information. If you can't give a reasonable answer, try to use available tools, and if you are still stuck, just say what you are thinking.
       ${tools["search"] && tools["scrape"] ? "Remember that when searching the web you don't need to go of only the search result website metadata, you can also get the full view of the website" : ""}

@@ -1,8 +1,9 @@
 import { type CoreTool } from "ai";
+import logger from "../../lib/logger.ts";
 import weather from "./impl/weather.ts";
 import scrape from "./impl/scrape.ts";
 import search from "./impl/search.ts";
-import logger from "../../lib/logger.ts";
+import { repo_file, repo_tree } from "./impl/github.ts";
 
 export interface Tool {
   core: CoreTool;
@@ -14,7 +15,9 @@ export interface Tool {
 export const tools = {
   weather,
   scrape,
-  search
+  search,
+  repo_tree,
+  repo_file
 } as const satisfies Record<string, Tool>;
 
 const toolEntries = await Promise.all(

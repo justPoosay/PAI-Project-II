@@ -13,9 +13,7 @@ export default {
   core: tool({
     description: "Get website's content",
     parameters: z.object({
-      url: z
-      .string()
-      .describe("The url to scrape"),
+      url: z.string().describe("The url to scrape"),
       format: z.enum(["markdown", "html"]).default("markdown").describe("The format to return the content in")
     }),
     async execute({ url, format }) {
