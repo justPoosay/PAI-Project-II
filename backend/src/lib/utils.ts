@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { LogLevelSchema } from "./logger.ts";
+import { LogLevelSchema } from "./schemas.ts";
 
 export function isValidJSON(str: string): boolean {
   try {

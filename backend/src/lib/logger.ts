@@ -2,12 +2,12 @@ import { color, type ColorInput } from "bun";
 import { z } from "zod";
 import dayjs from "dayjs";
 import { env } from "./utils.ts";
+import { LogLevelSchema } from "./schemas.ts";
 
 function colorize(input: ColorInput, text: string) {
   return color(input, "ansi") + text + color("white", "ansi");
 }
 
-export const LogLevelSchema = z.enum(["trace", "debug", "info", "warn", "error", "fatal"]);
 type LogLevel = z.infer<typeof LogLevelSchema>;
 
 const logLevel = {
