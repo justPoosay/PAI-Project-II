@@ -51,7 +51,7 @@
                 </a>
               </div>
               <div
-                v-if="message.role === 'assistant'"
+                v-if="message.role === 'assistant' && !errorMessageRegex.test(message.content)"
                 class="flex p-0.5 rounded-md bg-white/15 backdrop-blur-sm absolute -bottom-3 left-1 shadow-md"
               >
                 <button
@@ -93,6 +93,7 @@
       </div>
     </div>
 
+    <ErrorPopup :show="showError" :error="error"/>
     <!-- Input Area -->
     <div
       class="absolute bottom-4 left-4 right-4 z-10"
@@ -187,17 +188,18 @@ import { markedHighlight } from "marked-highlight";
 import hljs from "highlight.js";
 import DOMPurify from "dompurify";
 import { calculateHash, capitalize, isBackendAlive, isValidJSON } from "@/lib/utils.ts";
-import type { ClientMessage as Message, ServerBoundWebSocketMessage } from "../../shared";
+import type { ClientBoundWebSocketMessage, ClientMessage as Message, ServerBoundWebSocketMessage } from "../../shared";
 import { onBeforeRouteUpdate, useRoute } from "vue-router";
 import { ClientBoundWebSocketMessageSchema, routes } from "../../shared/schemas.ts";
 import { useConversationStore } from "@/stores/conversations.ts";
-import { modelInfo } from "../../shared/constants.ts";
+import { errorMessageRegex, modelInfo } from "../../shared/constants.ts";
 import ModelSelector from "@/components/ModelSelector.vue";
 import router from "@/router";
 import { useModelStore } from "@/stores/models.ts";
 import type { Conversation } from "@/lib/types.ts";
 import Loader from "@/components/Loader.vue";
 import { z } from "zod";
+import ErrorPopup from "@/components/ErrorPopup.vue";
 
 type FileData = Omit<z.infer<(typeof routes["upload"])>[0], "id"> & { id?: string, href: string }
 
@@ -213,6 +215,17 @@ const messages = ref<{ loading: boolean, error: string | null, array: Message[] 
 const conversation = ref<Conversation | null>(conversationStore.conversations.find((c) => c.id === route.params.id) ?? null);
 const input = ref("");
 const uploads = ref<FileData[]>([]);
+const error = ref<Omit<Extract<ClientBoundWebSocketMessage, { role: "error" }>, "role"> | null>(null);
+const showError = ref(false);
+
+function showErrorPopup(err: Omit<Extract<ClientBoundWebSocketMessage, { role: "error" }>, "role">) {
+  error.value = err;
+  showError.value = true;
+
+  setTimeout(() => {
+    showError.value = false;
+  }, 5000);
+}
 
 function copyToClipboard(text: string) {
   navigator.clipboard.writeText(text);
@@ -316,11 +329,12 @@ async function init(id: typeof route.params.id, wsOnly = false) {
   cleanup();
 
   if(!wsOnly) {
-    console.log("Initializing conversation", id);
     messages.value = { loading: !isNew, error: null, array: [] };
     const c = conversationStore.conversations.find((c) => c.id === id) ?? null;
     conversation.value = c;
     model.value = c?.model ?? modelStore.models[0];
+    error.value = null;
+    showError.value = false;
   }
 
   if(isNew) {
@@ -388,6 +402,11 @@ async function init(id: typeof route.params.id, wsOnly = false) {
 
     if(msg.role === "rename") {
       conversationStore.$modify({ id, requestChange: false, name: msg.name });
+    }
+
+    if(msg.role === "error") {
+      console.error(msg.title + ": " + msg.message);
+      showErrorPopup(msg);
     }
   };
 
@@ -552,7 +571,7 @@ const marked = new Marked(
 
 const renderer = new Renderer();
 renderer.blockquote = (quote) => {
-  const match = quote.text.match(/^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)]/);
+  const match = quote.text.match(/^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION|ERROR)]/);
   if(match) {
     const type = match[1].toLowerCase();
     const title = capitalize(type);
@@ -561,7 +580,10 @@ renderer.blockquote = (quote) => {
       .replace(match[0], title)
       .split("\n")
       .filter(Boolean)
-      .map(v => `<p${v === title ? " class=\"callout-title\"" : ""}>${v}</p>`)
+      .map(v => {
+        const isTitle = v === title;
+        return `<p${isTitle ? " class=\"callout-title\"" : ""}>${isTitle ? v : stock.parse(v, { async: false })}</p>`;
+      })
       .join("\n")
     }</blockquote>`;
   }
@@ -659,14 +681,21 @@ function parseMarkdown(text: string) {
   @apply border-t border-white/30 my-4
 
 // Blockquote
+.markdown-content blockquote:not(:last-child)
+  @apply mb-4
+
+.markdown-content blockquote:not(:first-child)
+  @apply mt-4
+
 .markdown-content blockquote
-  @apply border-l-4 border-white/30 pl-4 py-1 my-4 italic bg-white/5 rounded
+  @apply border-l-4 border-white/30 p-1 pl-3 italic bg-white/5 rounded
 
   &[data-type="note"],
   &[data-type="tip"],
   &[data-type="important"],
   &[data-type="warning"],
-  &[data-type="caution"]
+  &[data-type="caution"],
+  &[data-type="error"]
     @apply not-italic
 
     .callout-title
@@ -691,7 +720,8 @@ function parseMarkdown(text: string) {
     .callout-title
       @apply text-yellow-500
 
-  &[data-type="caution"]
+  &[data-type="caution"],
+  &[data-type="error"]
     @apply border-red-500
 
     .callout-title

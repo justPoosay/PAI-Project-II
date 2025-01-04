@@ -20,7 +20,7 @@ import logger from "../lib/logger.ts";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
-import { modelInfo } from "../../../shared/constants.ts";
+import { errorMessage, modelInfo } from "../../../shared/constants.ts";
 import * as path from "node:path";
 import { uploadDir } from "../app/upload";
 import type { Attachment, Message } from "@prisma/client";
@@ -206,15 +206,33 @@ class ConversationClass {
     this.subscribe(subscriber);
     
     let fullResponse = "";
+    let encounteredError: Omit<Extract<ClientBoundWebSocketMessage, { role: "error" }>, "role"> | null = null;
     try {
       for await (const delta of result.textStream) {
         fullResponse += delta;
       }
     } catch(e) {
-      if (e instanceof Error && e.name === "AbortError") {
+      if(e instanceof Error && e.name === "AbortError") {
         // Successfully aborted
-      } else {
-        logger.error("Error creating completion", e);
+      } else if(e instanceof Error) {
+        encounteredError = {
+          title: "Error creating completion",
+          message: e.name + ": " + e.message,
+          pof: "createCompletion()"
+        };
+        console.error(encounteredError);
+        if(!fullResponse) {
+          fullResponse = errorMessage(encounteredError);
+          this.publish({
+            role: "chunk",
+            type: "text-delta",
+            textDelta: fullResponse
+          });
+        }
+        this.publish({
+          role: "error",
+          ...encounteredError
+        });
       }
     }
     
@@ -242,26 +260,34 @@ class ConversationClass {
     this.publish({ role: "finish" });
     // ---
     
-    try {
-      if(this.messages.length === 2) {
-        const chat = await db.chat.findUnique({ where: { id: this.id } });
-        if(!chat?.name) { // Don't rename if the chat already has a name (somehow)
-          const result = streamText({
-            model: openai("gpt-4o-mini"),
-            system: "Based on the messages provided, create a name up to 20 characters long describing the chat. Don't wrap your response in quotes.",
-            prompt: JSON.stringify(this.messages),
-          });
-          let name = "";
-          for await (const delta of result.textStream) {
-            name += delta;
-            this.publish({ role: "rename", name });
+    if(!encounteredError) {
+      try {
+        if(this.messages.length === 2) {
+          const chat = await db.chat.findUnique({ where: { id: this.id } });
+          if(!chat?.name) { // Don't rename if the chat already has a name (somehow)
+            const result = streamText({
+              model: openai("gpt-4o-mini"),
+              system: "Based on the messages provided, create a name up to 20 characters long describing the chat. Don't wrap your response in quotes.",
+              prompt: JSON.stringify(this.messages),
+            });
+            let name = "";
+            for await (const delta of result.textStream) {
+              name += delta;
+              this.publish({ role: "rename", name });
+            }
+            await db.chat.update({ where: { id: this.id }, data: { name } });
           }
-          await db.chat.update({ where: { id: this.id }, data: { name } });
         }
-      }
-    } catch(e) {
-      if(e instanceof Error) {
-        logger.error("Error renaming chat", e.message);
+      } catch(e) {
+        if(e instanceof Error) {
+          logger.error("Error renaming chat", e.message);
+          this.publish({
+            role: "error",
+            title: "Error renaming chat",
+            message: e.name + ": " + e.message,
+            pof: "createCompletion"
+          });
+        }
       }
     }
     

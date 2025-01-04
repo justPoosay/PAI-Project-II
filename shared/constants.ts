@@ -1,4 +1,4 @@
-import type { Model } from "./index";
+import type { ClientBoundWebSocketMessage, Model } from "./index";
 
 export interface ModelInfo {
   toolUsage: boolean;
@@ -52,3 +52,8 @@ export const modelInfo = {
     logoSrc: "/img/mistral.svg",
   }
 } as const satisfies Record<Model, ModelInfo>;
+
+export const errorMessageRegex = /^> \[!ERROR\]\n> \*\*(?<title>.+)\*\*\n> (?<message>.+)$/;
+export const errorMessage = (error: Omit<Extract<ClientBoundWebSocketMessage, { role: "error" }>, "role">) => `> [!ERROR]
+> **${error.title}**
+> ${error.message}`

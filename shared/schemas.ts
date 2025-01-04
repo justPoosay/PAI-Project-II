@@ -81,6 +81,12 @@ export const ClientBoundWebSocketMessageSchema = z.union([
   }),
   z.object({
     role: z.literal("pong")
+  }),
+  z.object({
+    role: z.literal("error"),
+    title: z.string(),
+    message: z.string(),
+    pof: z.string().optional() // Point of failure
   })
 ]);
 
