@@ -1,10 +1,13 @@
 <template>
   <div
     :data-expanded="isExpanded"
-    class="flex flex-col bg-gradient-to-b from-white/10 via-white/5 to-white/10 backdrop-blur-sm transition-all duration-300 ease-out w-16 shadow-sm data-[expanded=true]:w-64 data-[expanded=true]:rounded-r-xl text-white/75 h-screen"
+    class="flex flex-col bg-gradient-to-b from-white/10 via-white/5 to-white/10 backdrop-blur-sm transition-all duration-300 ease-out w-16 max-lg:w-0 shadow-sm data-[expanded=true]:w-64 data-[expanded=true]:rounded-r-xl text-white/75 h-screen z-50 max-lg:fixed"
   >
-    <div class="p-1 pb-03 flex flex-col h-full">
-      <div class="flex justify-between items-center">
+    <div class="p-1 pb-3 flex flex-col h-full relative">
+      <div
+        :data-expanded="isExpanded"
+        class="flex data-[expanded=false]:max-lg:flex-col-reverse justify-center data-[expanded=true]:justify-between lg:justify-between data-[expanded=true]:items-center data-[expanded=false]:max-lg:absolute"
+      >
         <RouterLink
           to="/c/new"
           class="p-2 rounded-full hover:bg-white/5 transition"
@@ -22,7 +25,7 @@
           />
         </button>
       </div>
-      <div class="w-full h-[2px] bg-white/15 mt-1"/>
+      <div :data-expanded="isExpanded" class="w-full h-[2px] bg-white/15 mt-1 data-[expanded=false]:max-lg:hidden"/>
       <ul class="space-y-1 h-[calc(100vh-4rem)] overflow-y-auto pt-1">
         <li v-for="c in conversations" :key="c.id">
           <VMenu
