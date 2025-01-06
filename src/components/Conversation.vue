@@ -222,9 +222,11 @@ function showErrorPopup(err: Omit<Extract<ClientBoundWebSocketMessage, { role: "
   error.value = err;
   showError.value = true;
 
+  const msPerWord = 500;
+
   setTimeout(() => {
     showError.value = false;
-  }, 5000);
+  }, err.message.split(" ").length * msPerWord);
 }
 
 function copyToClipboard(text: string) {
