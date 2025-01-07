@@ -27,47 +27,50 @@
       </div>
       <div :data-expanded="isExpanded" class="w-full h-[2px] bg-white/15 mt-1 data-[expanded=false]:max-lg:hidden"/>
       <ul class="space-y-1 h-[calc(100vh-4rem)] overflow-y-auto pt-1">
-        <li v-for="c in conversations" :key="c.id">
-          <VMenu
-            v-if="editingId !== c.id"
-            placement="right"
-          >
-            <RouterLink
-              :data-current="router.currentRoute.value.params.id === c.id"
-              :to="`/c/${c.id}`"
-              class="flex-grow block py-2 px-2 rounded transition from-white/15 to-white/15 data-[current=true]:shadow-md hover:bg-gradient-to-r overflow-hidden"
+        <div v-for="[group, conversations] in Object.entries(groups).filter(v => v[1].length)">
+          <li class="text-white/50 text-sm px-2 py-1" :key="group">{{ group }}</li>
+          <li v-for="c in conversations" :key="c.id">
+            <VMenu
+              v-if="editingId !== c.id"
+              placement="right"
             >
-              <span class="block truncate" :title="c.name ?? undefined">{{ c.name ?? "Untitled" }}</span>
-            </RouterLink>
+              <RouterLink
+                :data-current="router.currentRoute.value.params.id === c.id"
+                :to="`/c/${c.id}`"
+                class="flex-grow block py-2 px-2 rounded transition from-white/15 to-white/15 data-[current=true]:shadow-md hover:bg-gradient-to-r overflow-hidden"
+              >
+                <span class="block truncate" :title="c.name ?? undefined">{{ c.name ?? "Untitled" }}</span>
+              </RouterLink>
 
-            <template #popper>
-              <div class="flex p-2 text-white/75 space-x-2">
-                <button title="delete" @click="deleteConversation(c.id)">
-                  <Trash2Icon class="w-5 h-5"/>
-                </button>
-                <button title="rename" @click="startEdit(c)">
-                  <Pencil class="w-5 h-5"/>
-                </button>
-              </div>
-            </template>
-          </VMenu>
-          <input
-            v-else
-            v-model="editedName"
-            @keydown.enter="saveEdit(c.id)"
-            @keydown.esc="cancelEdit"
-            @blur="cancelEdit"
-            class="flex-grow block py-2 px-2 rounded bg-white/10 text-white focus:outline-none focus:ring-1 focus:ring-white/30 w-full"
-            :ref="el => { if (el) (el as HTMLInputElement).focus() }"
-          >
-        </li>
+              <template #popper>
+                <div class="flex p-2 text-white/75 space-x-2">
+                  <button title="delete" @click="deleteConversation(c.id)">
+                    <Trash2Icon class="w-5 h-5"/>
+                  </button>
+                  <button title="rename" @click="startEdit(c)">
+                    <Pencil class="w-5 h-5"/>
+                  </button>
+                </div>
+              </template>
+            </VMenu>
+            <input
+              v-else
+              v-model="editedName"
+              @keydown.enter="saveEdit(c.id)"
+              @keydown.esc="cancelEdit"
+              @blur="cancelEdit"
+              class="flex-grow block py-2 px-2 rounded bg-white/10 text-white focus:outline-none focus:ring-1 focus:ring-white/30 w-full"
+              :ref="el => { if (el) (el as HTMLInputElement).focus() }"
+            >
+          </li>
+        </div>
       </ul>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, type Ref, ref } from "vue";
 import { PlusIcon, ChevronLeftIcon, Trash2Icon, Pencil } from "lucide-vue-next";
 import { useConversationStore } from "@/stores/conversations.ts";
 import { storeToRefs } from "pinia";
@@ -80,6 +83,41 @@ const editedName = ref("");
 
 const conversationStore = useConversationStore();
 const { conversations } = storeToRefs(conversationStore);
+
+type Conversations = typeof conversations extends Ref<infer U> ? U : never;
+
+const groups = computed(function() {
+  const groups = {
+    "Today"(date) {
+      const today = new Date();
+      return date.getDate() === today.getDate() && date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear();
+    },
+    "Yesterday"(date) {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      return date.getDate() === yesterday.getDate() && date.getMonth() === yesterday.getMonth() && date.getFullYear() === yesterday.getFullYear();
+    },
+    "Last Week"(date) {
+      const lastWeek = new Date();
+      lastWeek.setDate(lastWeek.getDate() - 7);
+      return date >= lastWeek;
+    },
+    "Older"(_) {
+      return true;
+    },
+  } as const satisfies Record<string, (date: Date) => boolean>;
+
+  return conversations.value.reduce(
+    function(acc, v) {
+      const group = Object.keys(groups).find(g => groups[g as keyof typeof groups](v.updated_at)) ?? "Older";
+      acc[group as keyof typeof acc].push(v);
+      return acc;
+    },
+    Object.fromEntries(
+      Object.keys(groups).map(v => [v, [] as Conversations]),
+    ) as Record<keyof typeof groups, Conversations>
+  );
+});
 
 function toggleSidebar() {
   isExpanded.value = !isExpanded.value;
