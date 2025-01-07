@@ -10,7 +10,7 @@ import {
   type CoreUserMessage,
   type FilePart,
   type ImagePart,
-  streamText, type TextPart, type UserContent
+  streamText, type TextPart, type UserContent,
 } from "ai";
 import tools from "./tools";
 import { availableModels, models } from "./constants.ts";
@@ -24,7 +24,6 @@ import { errorMessage, modelInfo } from "../../../shared/constants.ts";
 import * as path from "node:path";
 import { uploadDir } from "../app/upload";
 import type { Attachment, Message } from "@prisma/client";
-import owofify from "owoifyx";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -54,17 +53,17 @@ class ConversationClass {
                 return v.image
                   ? {
                     type: "image",
-                    image: bytes
+                    image: bytes,
                   } satisfies ImagePart
                   : {
                     type: "file",
                     data: bytes,
-                    mimeType: mime
+                    mimeType: mime,
                   } satisfies FilePart;
-              }) ?? []
+              }) ?? [],
             )
           ),
-          ...(data.content ? [{ type: "text", text: data.content } as TextPart satisfies TextPart] : [])
+          ...(data.content ? [{ type: "text", text: data.content } as TextPart satisfies TextPart] : []),
         ]
         : data.content
       : data.content;
@@ -77,13 +76,13 @@ class ConversationClass {
         v.role === "user"
           ? {
             role: v.role,
-            content: await this.getContent(v) satisfies UserContent
+            content: await this.getContent(v) satisfies UserContent,
           } satisfies CoreUserMessage
           : {
             role: v.role,
             content: v.content,
           } satisfies CoreAssistantMessage
-      ))
+      )),
     );
   }
   
@@ -99,7 +98,7 @@ class ConversationClass {
     }
     this.messagesRaw = (await db.message.findMany({
       where: { chatId: this.id },
-      include: { attachments: true }
+      include: { attachments: true },
     })).sort((a, b) => a.id - b.id);
     await this.revalidateMessages();
   }
@@ -158,11 +157,11 @@ class ConversationClass {
           role: "user",
           content: data.content,
           attachments: {
-            create: data.attachments
-          }
+            create: data.attachments,
+          },
         },
-        include: { attachments: true }
-      })
+        include: { attachments: true },
+      }),
     );
     // ---
     
@@ -200,7 +199,7 @@ class ConversationClass {
           }
         }
       },
-      abortSignal: abortController.signal
+      abortSignal: abortController.signal,
     });
     
     this.subscribe(subscriber);
@@ -218,7 +217,7 @@ class ConversationClass {
         encounteredError = {
           title: "Error creating completion",
           message: e.name + ": " + e.message,
-          pof: "createCompletion()"
+          pof: "createCompletion()",
         };
         console.error(encounteredError);
         if(!fullResponse) {
@@ -226,12 +225,12 @@ class ConversationClass {
           this.publish({
             role: "chunk",
             type: "text-delta",
-            textDelta: fullResponse
+            textDelta: fullResponse,
           });
         }
         this.publish({
           role: "error",
-          ...encounteredError
+          ...encounteredError,
         });
       }
     }
@@ -249,33 +248,37 @@ class ConversationClass {
           ...message,
           ...(toolCalls.length && {
             toolCalls: {
-              create: toolCalls
-            }
+              create: toolCalls,
+            },
           }),
-          author: this.model
+          author: this.model,
         },
-        include: { attachments: true }
-      })
+        include: { attachments: true },
+      }),
     );
     this.publish({ role: "finish" });
     // ---
     
     if(!encounteredError) {
       try {
-        if(this.messages.length === 2) {
+        if(this.messages.length >= 2) {
           const chat = await db.chat.findUnique({ where: { id: this.id } });
-          if(!chat?.name) { // Don't rename if the chat already has a name (somehow)
+          if(!chat?.name) {
             const result = streamText({
               model: openai("gpt-4o-mini"),
-              system: "Based on the messages provided, create a name up to 20 characters long describing the chat. Don't wrap your response in quotes.",
+              system: "Based on the messages provided, create a name up to 20 characters long describing the chat. Don't wrap your response in quotes. If these messages are not enough to create a descriptive name, or its just a greeting of some sort, reply with 'null' (without quotes).",
               prompt: JSON.stringify(this.messages),
             });
             let name = "";
             for await (const delta of result.textStream) {
               name += delta;
-              this.publish({ role: "rename", name });
+              if(name !== "null") {
+                this.publish({ role: "rename", name });
+              }
             }
-            await db.chat.update({ where: { id: this.id }, data: { name } });
+            if(name !== "null") {
+              await db.chat.update({ where: { id: this.id }, data: { name } });
+            }
           }
         }
       } catch(e) {
@@ -285,7 +288,7 @@ class ConversationClass {
             role: "error",
             title: "Error renaming chat",
             message: e.name + ": " + e.message,
-            pof: "createCompletion"
+            pof: "createCompletion",
           });
         }
       }
