@@ -14,6 +14,11 @@ type Model = ModelInfo & {
 
 /** @description model info, useful only for back-end */
 export const models = {
+  "claude-3-5-sonnet": {
+    ...modelInfo["claude-3-5-sonnet"],
+    model: anthropic("claude-3-5-sonnet-latest"),
+    env: "ANTHROPIC_API_KEY",
+  },
   "gpt-4o": {
     ...modelInfo["gpt-4o"],
     model: openai("gpt-4o"),
@@ -23,11 +28,6 @@ export const models = {
     ...modelInfo["gpt-4o-mini"],
     model: openai("gpt-4o-mini"),
     env: "OPENAI_API_KEY",
-  },
-  "claude-3-5-sonnet": {
-    ...modelInfo["claude-3-5-sonnet"],
-    model: anthropic("claude-3-5-sonnet-latest"),
-    env: "ANTHROPIC_API_KEY",
   },
   "grok-2": {
     ...modelInfo["grok-2"],

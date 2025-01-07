@@ -9,6 +9,12 @@ export interface ModelInfo {
 
 /** @description general model info, useful for both front-end and back-end */
 export const modelInfo = {
+  "claude-3-5-sonnet": {
+    toolUsage: true,
+    imageInput: true,
+    name: "Claude 3.5 Sonnet",
+    logoSrc: "/img/anthropic.svg",
+  },
   "gpt-4o": {
     toolUsage: true,
     imageInput: true,
@@ -20,12 +26,6 @@ export const modelInfo = {
     imageInput: true,
     name: "GPT-4o Mini",
     logoSrc: "/img/openai.svg",
-  },
-  "claude-3-5-sonnet": {
-    toolUsage: true,
-    imageInput: true,
-    name: "Claude 3.5 Sonnet",
-    logoSrc: "/img/anthropic.svg",
   },
   "grok-2": {
     toolUsage: true,
