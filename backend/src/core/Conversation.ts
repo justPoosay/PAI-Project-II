@@ -183,7 +183,7 @@ class ConversationClass {
       model: models[this.model].model,
       messages: this.messages,
       ...(models[this.model].toolUsage && { tools, maxSteps: 128 }),
-      system: owofify(`
+      system: `
       NEVER invent or improvise information. If you can't give a reasonable answer, try to use available tools, and if you are still stuck, just say what you are thinking.
       ${tools["search"] && tools["scrape"] ? "Remember that when searching the web you don't need to go of only the search result website metadata, you can also get the full view of the website" : ""}
       ${tools["repo_tree"] && tools["repo_file"] ? "Remember that you can get contents of as many files as you want, so don't be afraid to go thru every file in the repo" : ""}
@@ -191,7 +191,7 @@ class ConversationClass {
       Always assume that any mentioned PC is running Arch Linux, unless stated otherwise.
       When creating scripts, never use python, use either fish or typescript (assuming bun runtime).
       The current day and time is ${date}.
-      `.split("\n").map(line => line.trim()).join("\n").trim()),
+      `.split("\n").map(line => line.trim()).join("\n").trim(),
       onChunk: ({ chunk }) => {
         if(["tool-call", "tool-result", "text-delta"].includes(chunk.type)) {
           this.publish({ role: "chunk", ...chunk } as ClientBoundWebSocketMessage);
