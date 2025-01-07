@@ -6,7 +6,7 @@
     <div class="p-1 pb-3 flex flex-col h-full relative">
       <div
         :data-expanded="isExpanded"
-        class="flex data-[expanded=false]:max-lg:flex-col-reverse justify-center data-[expanded=true]:justify-between lg:justify-between data-[expanded=true]:items-center data-[expanded=false]:max-lg:absolute"
+        class="flex data-[expanded=false]:max-lg:flex-col-reverse justify-center data-[expanded=true]:justify-between lg:justify-between data-[expanded=true]:items-center data-[expanded=false]:max-lg:absolute data-[expanded=false]:max-lg:p-1 data-[expanded=false]:max-lg:bg-white/10 data-[expanded=false]:max-lg:backdrop-blur-sm data-[expanded=false]:max-lg:rounded-full"
       >
         <RouterLink
           to="/c/new"
@@ -70,7 +70,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, type Ref, ref } from "vue";
+import { computed, onMounted, onUnmounted, type Ref, ref } from "vue";
 import { PlusIcon, ChevronLeftIcon, Trash2Icon, Pencil } from "lucide-vue-next";
 import { useConversationStore } from "@/stores/conversations.ts";
 import { storeToRefs } from "pinia";
@@ -115,7 +115,7 @@ const groups = computed(function() {
     },
     Object.fromEntries(
       Object.keys(groups).map(v => [v, [] as Conversations]),
-    ) as Record<keyof typeof groups, Conversations>
+    ) as Record<keyof typeof groups, Conversations>,
   );
 });
 
@@ -152,6 +152,21 @@ async function deleteConversation(id: string) {
     console.error(e);
   }
 }
+
+function resizeHandler() {
+  if(window.innerWidth < 1024 && isExpanded.value) {
+    isExpanded.value = false;
+  }
+}
+
+onMounted(function() {
+  window.addEventListener("resize", resizeHandler);
+  resizeHandler();
+});
+
+onUnmounted(function() {
+  window.removeEventListener("resize", resizeHandler);
+});
 </script>
 
 <style lang="sass" scoped>
