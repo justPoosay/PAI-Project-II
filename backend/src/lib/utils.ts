@@ -29,7 +29,7 @@ export const env = z.object({
   FIRECRAWL_API_KEY: z.string().optional(),
   FIRECRAWL_API_URL: z.string().optional(),
   WEATHER_API_KEY: z.string().optional(),
-  SEARCH_API_KEY: z.string().optional(),
+  SERP_API_KEY: z.string().optional(),
   
   GITHUB_PAT: z.string().optional(),
   
