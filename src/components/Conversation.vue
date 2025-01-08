@@ -319,6 +319,7 @@ function send(data: ServerBoundWebSocketMessage) {
   if(!ws.value || ws.value.readyState !== WebSocket.OPEN) {
     packetQueue.value.push(data);
     console.log("WebSocket not open, queueing packet");
+    init(route.params.id, true); // attempt to reconnect
     return;
   }
 
