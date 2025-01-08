@@ -210,7 +210,7 @@ const modelStore = useModelStore();
 const messages = ref<{ loading: boolean, error: string | null, array: Message[] }>({
   loading: true,
   error: null,
-  array: []
+  array: [],
 });
 const conversation = ref<Conversation | null>(conversationStore.conversations.find((c) => c.id === route.params.id) ?? null);
 const input = ref("");
@@ -245,8 +245,8 @@ async function upload(fileList: FileList | undefined) {
         hash: (await calculateHash(await file.arrayBuffer())).hex,
         href: URL.createObjectURL(file),
         image: file.type.startsWith("image/"),
-      })
-    )
+      }),
+    ),
   )).filter(f => !uploads.value.find(u => u.hash === f.hash));
 
   if(!fileData.length) {
@@ -364,7 +364,7 @@ async function init(id: typeof route.params.id, wsOnly = false) {
           role: "assistant",
           content: "",
           finished: false,
-          author: model.value
+          author: model.value,
         });
       }
 
@@ -396,7 +396,7 @@ async function init(id: typeof route.params.id, wsOnly = false) {
           role: "assistant",
           content: "",
           finished: false,
-          author: model.value
+          author: model.value,
         });
       }
       messages.value.array[messages.value.array.length - 1].finished = true;
@@ -568,7 +568,7 @@ const marked = new Marked(
           : hljs.highlightAuto(code).value
         : hljs.highlightAuto(code).value;
     },
-  })
+  }),
 );
 
 const renderer = new Renderer();
@@ -610,8 +610,8 @@ function parseMarkdown(text: string) {
         async: false,
         breaks: true,
         gfm: true,
-      }
-    )
+      },
+    ),
   );
 
   markdownCache.set(text, parsed);
@@ -623,136 +623,133 @@ function parseMarkdown(text: string) {
 .markdown-content
   @apply break-words
 
-.markdown-content a
-  @apply text-sky-400 hover:underline
+  a
+    @apply text-sky-400 hover:underline
 
-.markdown-content pre
-  @apply rounded overflow-x-auto
+  pre
+    @apply rounded overflow-x-auto
 
-// \`\`\`\n<content>\n\`\`\`
-.markdown-content pre code.hljs
-  @apply block bg-white/5 backdrop-blur-sm text-white/80 p-1 rounded font-['Monaspace_Neon'] text-sm mb-2
+  code
+    @apply font-monaspace_neon
 
-// **<content>**
-.markdown-content strong
-  @apply font-bold
+  // \`\`\`\n<content>\n\`\`\`
+  pre:has(code.hljs)
+    code.hljs
+      @apply block bg-white/[2%] shadow-md backdrop-blur-sm text-white/80 p-1 rounded text-sm mb-2
 
-// *<content>*
-.markdown-content em
-  @apply italic
+  strong
+    @apply font-bold
 
-// `<content>`
-.markdown-content code:not(.hljs)
-  @apply bg-white/5 backdrop-blur-sm rounded p-1 font-['Monaspace_Neon'] text-sm
+  em
+    @apply italic
 
-// # <content>
-.markdown-content h1
-  @apply text-3xl font-bold mt-2 mb-2
+  // `<content>`
+  code:not(.hljs)
+    @apply bg-white/5 backdrop-blur-sm rounded p-1 text-sm
 
-// ## <content>
-.markdown-content h2
-  @apply text-2xl font-bold mt-2 mb-2
+  // # <content>
+  h1
+    @apply text-3xl font-bold mt-2 mb-2
 
-// ### <content>
-.markdown-content h3
-  @apply text-xl font-bold mt-2 mb-2
+  // ## <content>
+  h2
+    @apply text-2xl font-bold mt-2 mb-2
 
-// #### <content>
-.markdown-content h4
-  @apply text-lg font-bold mt-2 mb-2
+  // ### <content>
+  h3
+    @apply text-xl font-bold mt-2 mb-2
 
-// <i>. <content>
-.markdown-content ol
-  @apply list-decimal list-outside ml-6 my-1
-  & ol, & ul
-    @apply mt-2 mb-2
+  // #### <content>
+  h4
+    @apply text-lg font-bold mt-2 mb-2
 
-// - <content>
-.markdown-content ul
-  @apply list-disc list-outside ml-6 my-1
-  & ul, & ol
-    @apply mt-2 mb-2
+  // <i>. <content>
+  ol
+    @apply list-decimal list-outside ml-6 my-1
+    & ol, & ul
+      @apply mt-2 mb-2
 
-// Nested list items
-.markdown-content li
-  @apply mb-1
-  & > ul, & > ol
-    @apply ml-4
+  // - <content>
+  ul
+    @apply list-disc list-outside ml-6 my-1
+    & ul, & ol
+      @apply mt-2 mb-2
 
-.markdown-content hr
-  @apply border-t border-white/30 my-4
+  // Nested list items
+  li
+    @apply mb-1
+    & > ul, & > ol
+      @apply ml-4
 
-// Blockquote
-.markdown-content blockquote:not(:last-child)
-  @apply mb-4
+  hr
+    @apply border-t border-white/30 my-4
 
-.markdown-content blockquote:not(:first-child)
-  @apply mt-4
+  // Blockquote
+  blockquote
+    @apply border-l-4 border-white/30 p-1 pl-3 italic bg-white/5 rounded
+    &:not(:last-child)
+      @apply mb-4
 
-.markdown-content blockquote
-  @apply border-l-4 border-white/30 p-1 pl-3 italic bg-white/5 rounded
+    &:not(:first-child)
+      @apply mt-4
 
-  &[data-type="note"],
-  &[data-type="tip"],
-  &[data-type="important"],
-  &[data-type="warning"],
-  &[data-type="caution"],
-  &[data-type="error"]
-    @apply not-italic
+    &[data-type="note"],
+    &[data-type="tip"],
+    &[data-type="important"],
+    &[data-type="warning"],
+    &[data-type="caution"],
+    &[data-type="error"]
+      @apply not-italic
+      .callout-title
+        @apply font-bold
 
-    .callout-title
-      @apply font-bold
+    &[data-type="note"],
+    &[data-type="tip"]
+      @apply border-blue-500
+      .callout-title
+        @apply text-blue-500
 
-  &[data-type="note"],
-  &[data-type="tip"]
-    @apply border-blue-500
+    &[data-type="important"]
+      @apply border-violet-700
+      .callout-title
+        @apply text-violet-500
 
-    .callout-title
-      @apply text-blue-500
+    &[data-type="warning"]
+      @apply border-yellow-500
+      .callout-title
+        @apply text-yellow-500
 
-  &[data-type="important"]
-    @apply border-violet-700
+    &[data-type="caution"],
+    &[data-type="error"]
+      @apply border-red-500
+      .callout-title
+        @apply text-red-500
 
-    .callout-title
-      @apply text-violet-500
+  // Table
+  table
+    @apply w-full border-collapse my-4
+    th, td
+      @apply border border-white/30 p-2
 
-  &[data-type="warning"]
-    @apply border-yellow-500
+    th
+      @apply bg-white/10 font-bold
 
-    .callout-title
-      @apply text-yellow-500
-
-  &[data-type="caution"],
-  &[data-type="error"]
-    @apply border-red-500
-
-    .callout-title
-      @apply text-red-500
-
-// Table
-.markdown-content table
-  @apply w-full border-collapse my-4
-  th, td
-    @apply border border-white/30 p-2
-
-  th
-    @apply bg-white/10 font-bold
-
-  tr:nth-child(even)
-    @apply bg-white/5
+    tr:nth-child(even)
+      @apply bg-white/5
 
 .hljs-comment
-  @apply font-['Monaspace_Radon'] text-gray-300/75 italic
+  @apply font-monaspace_radon text-gray-300/75 italic
 
-.v-popper--theme-tooltip .v-popper__inner
-  @apply bg-white/15 backdrop-blur-md
+.v-popper--theme-tooltip
+  .v-popper__inner
+    @apply bg-white/15 backdrop-blur-md
 
-.v-popper--theme-tooltip .v-popper__arrow-outer
-  @apply border-white/15
+  .v-popper__arrow-outer
+    @apply border-white/15
 
 .v-popper__popper
   transition: none !important
 
-.v-popper__popper *
-  transition: none !important
+  *
+    transition: none !important
 </style>

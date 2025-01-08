@@ -53,7 +53,7 @@
 }
 
 :root, html, body, #app {
-  @apply h-full font-['SF_Pro_Rounded'];
+  @apply h-full font-sf_pro_rounded;
 }
 
 ::-webkit-scrollbar {
