@@ -25,7 +25,7 @@
             />
             <div
               :data-self="message.role === 'user'"
-              class="max-w-[80%] p-2 relative backdrop-blur-md rounded-tl-2xl rounded-tr-2xl shadow-sm bg-gradient-to-tr from-white/15 via-white/10 to-white/15 data-[self=true]:bg-gradient-to-tl data-[self=true]:from-white/25 data-[self=true]:via-white/20 data-[self=true]:to-white/25 data-[self=true]:rounded-bl-2xl data-[self=false]:rounded-br-2xl"
+              class="max-w-[80%] p-2 pb-3 relative backdrop-blur-md rounded-tl-2xl rounded-tr-2xl shadow-lg bg-gradient-to-tr from-white/10 via-white/5 to-white/10 data-[self=true]:bg-gradient-to-tl data-[self=true]:from-white/5 data-[self=true]:via-white/[3%] data-[self=true]:to-white/5 data-[self=true]:rounded-bl-2xl data-[self=false]:rounded-br-2xl"
             >
               <div v-if="message.content" v-html="parseMarkdown(message.content)" class="markdown-content"/>
               <div v-else-if="message.role !== 'user' || !message.attachments?.length"
@@ -96,11 +96,11 @@
     <ErrorPopup :show="showError" :error="error"/>
     <!-- Input Area -->
     <div
-      class="absolute bottom-4 left-4 right-4 z-10"
+      class="absolute bottom-4 left-4 right-4 z-10 pointer-events-none"
       @drop.prevent="upload($event.dataTransfer?.files)"
     >
       <div
-        class="flex flex-col items-start max-w-2xl mx-auto bg-gradient-to-br from-vue-black/35 via-vue-black-soft/25 to-vue-black/35 backdrop-blur-sm rounded-xl p-2 shadow-lg"
+        class="flex flex-col items-start max-w-2xl mx-auto bg-gradient-to-br from-vue-black/30 via-vue-black-soft/20 to-vue-black/30 backdrop-blur-sm rounded-xl p-2 shadow-lg pointer-events-auto"
       >
         <div v-if="uploads.length" class="flex">
           <div
