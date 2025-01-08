@@ -1,7 +1,7 @@
 <template>
   <div
     :data-expanded="isExpanded"
-    class="flex flex-col bg-gradient-to-b from-white/10 via-white/5 to-white/10 backdrop-blur-sm transition-all duration-300 ease-out w-16 max-lg:w-0 shadow-sm data-[expanded=true]:w-64 data-[expanded=true]:rounded-r-xl text-white/75 h-screen z-50 max-lg:fixed"
+    class="flex flex-col bg-gradient-to-b from-gray-300/5 via-gray-300/[2%] to-gray-300/5 backdrop-blur-md transition-all duration-300 ease-out w-16 max-lg:w-0 shadow-sm data-[expanded=true]:w-64 data-[expanded=true]:rounded-r-xl text-white/75 h-screen z-50 max-lg:fixed"
   >
     <div class="p-1 pb-3 flex flex-col h-full relative">
       <div
@@ -37,7 +37,7 @@
               <RouterLink
                 :data-current="router.currentRoute.value.params.id === c.id"
                 :to="`/c/${c.id}`"
-                class="flex-grow block py-2 px-2 rounded transition from-white/15 to-white/15 data-[current=true]:shadow-md hover:bg-gradient-to-r overflow-hidden"
+                class="flex-grow block py-2 px-2 rounded transition-all duration-300 ease-out from-white/10 via-white/5 to-white/10 data-[current=true]:shadow-md hover:bg-gradient-to-r overflow-hidden hover:pl-4"
               >
                 <span class="block truncate" :title="c.name ?? undefined">{{ c.name ?? "Untitled" }}</span>
               </RouterLink>

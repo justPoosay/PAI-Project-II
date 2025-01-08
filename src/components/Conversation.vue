@@ -25,7 +25,7 @@
             />
             <div
               :data-self="message.role === 'user'"
-              class="max-w-[80%] p-2 pb-3 relative backdrop-blur-md rounded-tl-2xl rounded-tr-2xl shadow-lg bg-gradient-to-tr from-white/10 via-white/5 to-white/10 data-[self=true]:bg-gradient-to-tl data-[self=true]:from-white/5 data-[self=true]:via-white/[3%] data-[self=true]:to-white/5 data-[self=true]:rounded-bl-2xl data-[self=false]:rounded-br-2xl"
+              class="max-w-[80%] p-2 pb-3 relative backdrop-blur-md bg-clip-padding rounded-tl-2xl rounded-tr-2xl shadow-lg bg-gradient-to-tr from-white/10 via-white/5 to-white/10 data-[self=true]:bg-gradient-to-tl data-[self=true]:from-white/5 data-[self=true]:via-white/[3%] data-[self=true]:to-white/5 data-[self=true]:rounded-bl-2xl data-[self=false]:rounded-br-2xl"
             >
               <div v-if="message.content" v-html="parseMarkdown(message.content)" class="markdown-content"/>
               <div v-else-if="message.role !== 'user' || !message.attachments?.length"
@@ -185,6 +185,7 @@ import {
 } from "lucide-vue-next";
 import { Marked, Renderer } from "marked";
 import { markedHighlight } from "marked-highlight";
+import markedKatex from "marked-katex-extension";
 import hljs from "highlight.js";
 import DOMPurify from "dompurify";
 import { calculateHash, capitalize, isBackendAlive, isValidJSON } from "@/lib/utils.ts";
@@ -572,7 +573,7 @@ const marked = new Marked(
 );
 
 const renderer = new Renderer();
-renderer.blockquote = (quote) => {
+renderer.blockquote = function(quote) {
   const match = quote.text.match(/^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION|ERROR)]/);
   if(match) {
     const type = match[1].toLowerCase();
@@ -593,6 +594,7 @@ renderer.blockquote = (quote) => {
 };
 
 marked.use({ renderer });
+marked.use(markedKatex({ throwOnError: false, nonStandard: true, output: "mathml" }));
 
 // ---
 
