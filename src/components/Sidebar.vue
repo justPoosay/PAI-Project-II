@@ -37,7 +37,7 @@
               <RouterLink
                 :data-current="router.currentRoute.value.params.id === c.id"
                 :to="`/c/${c.id}`"
-                class="flex-grow block py-2 px-2 rounded transition-all duration-300 ease-out from-white/10 via-white/5 to-white/10 data-[current=true]:shadow-md hover:bg-gradient-to-r overflow-hidden hover:pl-4"
+                class="flex-grow block py-2 px-2 rounded transition-all duration-300 ease-out from-white/5 via-white/[2%] to-white/5 data-[current=true]:shadow-md hover:bg-gradient-to-r overflow-hidden hover:pl-4"
               >
                 <span class="block truncate" :title="c.name ?? undefined">{{ c.name ?? "Untitled" }}</span>
               </RouterLink>
