@@ -100,7 +100,7 @@
       @drop.prevent="upload($event.dataTransfer?.files)"
     >
       <div
-        class="flex flex-col items-start max-w-2xl mx-auto bg-gradient-to-br from-vue-black/30 via-vue-black-soft/20 to-vue-black/30 backdrop-blur-sm rounded-xl p-2 shadow-lg pointer-events-auto"
+        class="flex flex-col items-start max-w-2xl mx-auto bg-gradient-to-br from-vue-black/30 via-vue-black-soft/20 to-vue-black/30 backdrop-blur-md rounded-xl p-2 shadow-lg pointer-events-auto"
       >
         <div v-if="uploads.length" class="flex">
           <div
