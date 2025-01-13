@@ -502,7 +502,9 @@ async function fetchMessages(id: typeof route.params.id) {
 
 onBeforeRouteUpdate(async(to, from, next) => {
   console.log("Route update", to.params.id, from.params.id);
-  await init(to.params.id);
+  if(to.params.id !== from.params.id) {
+    await init(to.params.id);
+  }
   next();
 });
 

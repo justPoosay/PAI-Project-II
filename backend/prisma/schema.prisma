@@ -51,6 +51,8 @@ model Upload {
   hash  String
   mime  String
   image Boolean
+
+  Attachment Attachment[]
 }
 
 model Attachment {
@@ -59,4 +61,5 @@ model Attachment {
   image Boolean
 
   Message Message[]
+  Upload  Upload    @relation(fields: [id], references: [id])
 }

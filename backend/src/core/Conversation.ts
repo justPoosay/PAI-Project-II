@@ -10,7 +10,9 @@ import {
   type CoreUserMessage,
   type FilePart,
   type ImagePart,
-  streamText, type TextPart, type UserContent,
+  type TextPart,
+  type UserContent,
+  streamText,
 } from "ai";
 import tools from "./tools";
 import { availableModels, models } from "./constants.ts";
