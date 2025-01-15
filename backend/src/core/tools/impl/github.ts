@@ -15,22 +15,23 @@ export const repo_tree = {
     description: "Get GitHub repository tree",
     parameters: z.object({
       owner: z.string().describe("The owner of the repository"),
-      repo: z.string().describe("The repository name")
+      repo: z.string().describe("The repository name"),
+      branch: z.string().optional().describe("The branch to fetch the tree from"),
     }),
-    async execute({ owner, repo }) {
+    async execute({ owner, repo, branch }) {
       try {
         const octokit = new Octokit({
-          auth: process.env.GITHUB_PAT ?? "",
+          auth: env.GITHUB_PAT,
         });
-        return await getRepositoryTree(octokit, owner, repo);
+        return await getRepositoryTree(octokit, owner, repo, branch);
       } catch(e) {
         if(e instanceof Error) {
           logger.error("Encountered an error during execution of the tool", e);
           return e.message;
         }
       }
-    }
-  })
+    },
+  }),
 } satisfies Tool;
 
 export const repo_file = {
@@ -42,20 +43,21 @@ export const repo_file = {
     parameters: z.object({
       owner: z.string().describe("The owner of the repository"),
       repo: z.string().describe("The repository name"),
-      path: z.string().describe("The path to the file (e.g src/index.ts)")
+      path: z.string().describe("The path to the file (e.g src/index.ts)"),
+      branch: z.string().optional().describe("The branch to fetch the file from"),
     }),
-    async execute({ owner, repo, path }) {
+    async execute({ owner, repo, path, branch }) {
       try {
         const octokit = new Octokit({
-          auth: process.env.GITHUB_PAT ?? "",
+          auth: env.GITHUB_PAT,
         });
-        return await getFileContent(octokit, owner, repo, path);
+        return await getFileContent(octokit, owner, repo, path, branch);
       } catch(e) {
         if(e instanceof Error) {
           logger.error("Encountered an error during execution of the tool", e);
           return e.message;
         }
       }
-    }
-  })
+    },
+  }),
 } satisfies Tool;
