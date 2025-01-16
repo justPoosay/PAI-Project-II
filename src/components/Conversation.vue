@@ -17,7 +17,7 @@
           >
             <img
               v-if="message.role === 'assistant'"
-              class="w-6 h-6"
+              class="w-6 h-6 max-md:hidden"
               :alt="message.author"
               :src="modelInfo[message.author].logoSrc"
               width="24"
@@ -25,7 +25,7 @@
             />
             <div
               :data-self="message.role === 'user'"
-              class="max-w-[80%] p-2 data-[self=false]:pb-3 relative backdrop-blur-md bg-clip-padding rounded-tl-2xl rounded-tr-2xl shadow-lg bg-gradient-to-tr from-white/10 via-white/5 to-white/10 data-[self=true]:bg-gradient-to-tl data-[self=true]:from-white/5 data-[self=true]:via-white/[3%] data-[self=true]:to-white/5 data-[self=true]:rounded-bl-2xl data-[self=false]:rounded-br-2xl"
+              class="max-w-[80%] max-md:max-w-full p-2 data-[self=false]:pb-3 relative backdrop-blur-md bg-clip-padding rounded-tl-2xl rounded-tr-2xl shadow-lg bg-gradient-to-tr from-white/10 via-white/5 to-white/10 data-[self=true]:bg-gradient-to-tl data-[self=true]:from-white/5 data-[self=true]:via-white/[3%] data-[self=true]:to-white/5 data-[self=true]:rounded-bl-2xl data-[self=false]:rounded-br-2xl"
             >
               <div v-if="message.content" v-html="parseMarkdown(message.content)" class="markdown-content"/>
               <div v-else-if="message.role !== 'user' || !message.attachments?.length"
