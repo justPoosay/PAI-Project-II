@@ -1,11 +1,12 @@
 import { MongoClient, Db, ObjectId } from "mongodb";
 import { ConversationDTO, type ConversationEntity, conversationEntitySchema } from "../schemas/ConversationSchemas";
+import { dbName } from "../index.ts";
 
 export default class ConversationService {
   #db: Db;
   
   constructor(mongoClient: MongoClient) {
-    this.#db = mongoClient.db();
+    this.#db = mongoClient.db(dbName);
   }
   
   get #collection() {
@@ -22,17 +23,21 @@ export default class ConversationService {
     return entities.map(ConversationDTO.convertFromEntity);
   }
   
-  async create(dto: Omit<ConversationDTO, "id">) {
+  async create(dto: Omit<ConversationDTO, "id" | "created_at" | "updated_at">) {
+    const now = new Date();
+    const obj = { ...dto, created_at: now, updated_at: now };
     const candidate = conversationEntitySchema.parse({
-      ...dto,
+      ...obj,
       _id: new ObjectId(),
     });
     const { insertedId: _id } = await this.#collection.insertOne(candidate);
-    return ConversationDTO.convertFromEntity({ ...dto, _id });
+    return ConversationDTO.convertFromEntity({ ...obj, _id });
   }
   
-  async update(id: ConversationDTO["id"], dto: Omit<Partial<ConversationDTO>, "id">) {
-    const candidate = conversationEntitySchema.partial().parse(dto);
+  async update(id: ConversationDTO["id"], dto: Omit<Partial<ConversationDTO>, "id" | "created_at" | "updated_at">) {
+    const now = new Date();
+    const obj = { ...dto, created_at: now, updated_at: now };
+    const candidate = conversationEntitySchema.partial().parse(obj);
     
     const value = await this.#collection.findOneAndUpdate(
       { _id: new ObjectId(id) },

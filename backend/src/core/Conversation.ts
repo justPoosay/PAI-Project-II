@@ -1,6 +1,6 @@
 import type { ServerWebSocket } from "bun";
 import type { WSData } from "../lib/types.ts";
-import type { ClientBoundWebSocketMessage, ServerBoundWebSocketMessage, ToolCall, Model } from "../../../shared";
+import type { ClientBoundWebSocketMessage, ServerBoundWebSocketMessage } from "../../../shared";
 import { server } from "../index.ts";
 import {
   type CoreMessage,
@@ -24,6 +24,11 @@ dayjs.extend(timezone);
 type MessageCreateMessage = ServerBoundWebSocketMessage & { role: "message", action: "create" }
 type Subscriber = (message: ServerBoundWebSocketMessage) => void | Promise<void>;
 
+type Chunk = Extract<
+  Parameters<NonNullable<Parameters<typeof streamText>[0]["onChunk"]>>[0]["chunk"],
+  { type: "tool-call" | "tool-result" | "text-delta" }
+>;
+
 class ConversationClass {
   private readonly id: string;
   private readonly ws: ServerWebSocket<WSData>;
@@ -36,7 +41,7 @@ class ConversationClass {
       role,
       content: "content" in rest
         ? rest.content
-        : rest.chunks.filter(v => v.type === "text-delta").map(v => v.textDelta).join(""),
+        : rest.chunks.filter(v => v.type === "text-delta").map((v) => v.textDelta).join(""),
     } satisfies CoreMessage));
   }
   
@@ -101,11 +106,6 @@ class ConversationClass {
     }
     
     logger.trace("Creating completion for chat", this.id);
-    
-    type Chunk = Extract<
-      Parameters<NonNullable<Parameters<typeof streamText>[0]["onChunk"]>>[0]["chunk"],
-      { type: "tool-call" | "tool-result" | "text-delta" }
-    >;
     
     const date = dayjs().tz("America/Los_Angeles").format("h:mm A on MMMM D, YYYY PST");
     const model = this.c.model;

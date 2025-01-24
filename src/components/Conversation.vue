@@ -27,7 +27,7 @@
               :data-self="message.role === 'user'"
               class="max-w-[80%] max-md:max-w-full p-2 data-[self=false]:pb-3 relative backdrop-blur-md bg-clip-padding rounded-tl-2xl rounded-tr-2xl shadow-lg bg-gradient-to-tr from-white/10 via-white/5 to-white/10 data-[self=true]:bg-gradient-to-tl data-[self=true]:from-white/5 data-[self=true]:via-white/[3%] data-[self=true]:to-white/5 data-[self=true]:rounded-bl-2xl data-[self=false]:rounded-br-2xl"
             >
-              <div v-if="message.content" v-html="parseMarkdown(message.content)" class="markdown-content"/>
+              <div v-if="getContent(message)" v-html="parseMarkdown(getContent(message))" class="markdown-content"/>
               <div v-else-if="message.role !== 'user' || !message.attachments?.length"
                    class="flex items-center justify-center">
                 <Loader/>
@@ -51,28 +51,16 @@
                 </a>
               </div>
               <div
-                v-if="message.role === 'assistant' && !errorMessageRegex.test(message.content)"
+                v-if="message.role === 'assistant' && !errorMessageRegex.test(getContent(message))"
                 class="flex p-0.5 rounded-md bg-white/15 backdrop-blur-sm absolute -bottom-3 left-1 shadow-md"
               >
                 <button
                   title="Copy to Clipboard"
-                  @click="copyToClipboard(message.content)"
+                  @click="copyToClipboard(getContent(message))"
                   class="hover:bg-white/5 transition p-1 rounded-md"
                 >
                   <CopyIcon class="w-3 h-3"/>
                 </button>
-                <span v-if="message.toolCalls?.length" class="bg-white/25 min-h-full w-[2px] mx-1"/>
-                <div
-                  v-for="(call, i) in message.toolCalls ?? []"
-                  class="hover:bg-white/5 transition p-1 rounded-md"
-                  :key="i"
-                  v-tooltip="{
-                    content: `${call.name}(${Object.entries(call.args).map(([k, v]) => `${k}=&quot;${v}&quot;`).join(', ')})`,
-                    placement: 'right'
-                  }"
-                >
-                  <component :is="getToolIcon(call.name)" class="w-3 h-3"/>
-                </div>
               </div>
             </div>
           </div>
@@ -363,27 +351,15 @@ async function init(id: typeof route.params.id, wsOnly = false) {
       if(messages.value.array[messages.value.array.length - 1]?.finished) {
         messages.value.array.push({
           role: "assistant",
-          content: "",
+          chunks: [],
           finished: false,
           author: model.value,
         });
       }
 
-      if(msg.type === "text-delta") {
-        messages.value.array[messages.value.array.length - 1].content += msg.textDelta;
-      }
-
-      if(msg.type === "tool-call") {
-        const lastMessage = messages.value.array[messages.value.array.length - 1];
-        if(lastMessage.role === "user") return; // this should never happen
-        if(!lastMessage.toolCalls) {
-          lastMessage.toolCalls = [];
-        }
-        lastMessage.toolCalls.push({
-          id: msg.toolCallId,
-          name: msg.toolName,
-          args: msg.args,
-        });
+      const lastMessage = messages.value.array[messages.value.array.length - 1];
+      if (lastMessage.role === "assistant") {
+        lastMessage.chunks.push(msg);
       }
 
       if(msg.type === "tool-result") {
@@ -395,7 +371,7 @@ async function init(id: typeof route.params.id, wsOnly = false) {
       if(messages.value.array[messages.value.array.length - 1]?.role === "user") {
         messages.value.array.push({
           role: "assistant",
-          content: "",
+          chunks: [],
           finished: false,
           author: model.value,
         });
@@ -510,10 +486,13 @@ onBeforeRouteUpdate(async(to, from, next) => {
 
 onMounted(async() => {
   await init(route.params.id);
-
-  // await conversationStore.$fetch();
-  // await modelStore.$fetch();
 });
+
+function getContent(msg: Message) {
+  return "content" in msg
+    ? msg.content
+    : msg.chunks.filter(v => v.type === "text-delta").map((v) => v.textDelta).join("");
+}
 
 async function sendMessage() {
   if(messages.value.array[messages.value.array.length - 1]?.role === "user") {

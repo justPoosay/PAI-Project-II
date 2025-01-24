@@ -1,6 +1,5 @@
 import { z } from "zod";
 import {
-  ToolCallSchema,
   ClientBoundWebSocketMessageSchema,
   ServerBoundWebSocketMessageSchema,
   ModelSchema,
@@ -15,5 +14,4 @@ export type ClientMessage = z.infer<typeof MessageSchema> & {
 export type ClientBoundWebSocketMessage = z.infer<typeof ClientBoundWebSocketMessageSchema>
 export type ServerBoundWebSocketMessage = z.infer<typeof ServerBoundWebSocketMessageSchema>
 
-export type ToolCall = z.infer<typeof ToolCallSchema>
 export type Model = z.infer<typeof ModelSchema>
