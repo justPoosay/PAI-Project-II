@@ -1,5 +1,4 @@
 import type { AppRequest } from "../lib/types.ts";
-import { db } from "../lib/db.ts";
 import { ModelSchema, routes } from "../../../shared/schemas.ts";
 import { z } from "zod";
 import type { Model } from "../../../shared";

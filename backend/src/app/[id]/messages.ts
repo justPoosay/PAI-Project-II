@@ -1,21 +1,11 @@
 import type { AppRequest } from "../../lib/types.ts";
-import { db } from "../../lib/db.ts";
 import { routes } from "../../../../shared/schemas.ts";
+import { ConversationService } from "../../lib/database";
 
 export async function GET(req: AppRequest): Promise<Response> {
   const { id } = req.route.params;
-  const result = await db.message.findMany({
-    where: { chatId: id, Chat: { active: true } },
-    include: { toolCalls: true, attachments: true },
-  });
+  const c = await ConversationService.findOne(id, { archived: false });
   return Response.json(
-    routes["[id]"]["messages"].parse( // To make sure the backend crashes if it doesn't provide the data client expects
-      result.map(({ toolCalls: calls, ...message }) => {
-        const toolCalls = calls.length
-          ? calls.map(({ args, ...rest }) => ({ args: JSON.parse(args), ...rest }))
-          : undefined;
-        return { ...message, ...(toolCalls && { toolCalls }) };
-      }).sort((a, b) => a.id - b.id)
-    )
+    routes["[id]"]["messages"].parse(c?.messages ?? []),
   );
 }

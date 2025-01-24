@@ -1,12 +1,12 @@
 import type { AppRequest, WSData } from "../../lib/types.ts";
 import { server } from "../../index.ts";
-import { db } from "../../lib/db.ts";
 import logger from "../../lib/logger.ts";
+import { ConversationService } from "../../lib/database";
 
 export async function GET(req: AppRequest): Promise<Response | undefined> {
   const { id } = req.route.params;
-  const result = await db.chat.findFirst({ where: { id, active: true } });
-  if(!result) return new Response(null, { status: 404 });
+  const c = await ConversationService.findOne(id, { archived: false });
+  if(!c) return new Response(null, { status: 404 });
   const success = server.upgrade<WSData>(req, {
     data: {
       type: "chat",

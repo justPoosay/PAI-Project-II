@@ -1,31 +1,22 @@
-import { file } from "bun";
-import { db } from "../lib/db.ts";
 import type { ServerWebSocket } from "bun";
 import type { WSData } from "../lib/types.ts";
 import type { ClientBoundWebSocketMessage, ServerBoundWebSocketMessage, ToolCall, Model } from "../../../shared";
 import { server } from "../index.ts";
 import {
-  type CoreAssistantMessage,
   type CoreMessage,
-  type CoreUserMessage,
-  type FilePart,
-  type ImagePart,
-  type TextPart,
-  type UserContent,
   streamText,
 } from "ai";
 import tools from "./tools";
-import { availableModels, models } from "./constants.ts";
-import { ModelSchema } from "../../../shared/schemas.ts";
+import { models } from "./constants.ts";
 import { openai } from "@ai-sdk/openai";
 import logger from "../lib/logger.ts";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import { errorMessage, modelInfo } from "../../../shared/constants.ts";
-import * as path from "node:path";
-import { uploadDir } from "../app/upload";
-import type { Attachment, Message } from "@prisma/client";
+import { type ConversationDTO } from "../lib/database/schemas/ConversationSchemas";
+import { ConversationService } from "../lib/database";
+import { randomUUIDv7 } from "bun";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -36,73 +27,22 @@ type Subscriber = (message: ServerBoundWebSocketMessage) => void | Promise<void>
 class ConversationClass {
   private readonly id: string;
   private readonly ws: ServerWebSocket<WSData>;
-  private messagesRaw: (Message & { attachments: Attachment[] })[] = [];
-  private messages: CoreMessage[] = [];
-  private model: Model = availableModels[0];
+  private c: ConversationDTO = null!;
   
   private subscribers: Subscriber[] = [];
   
-  private async getContent(data: (Message & { attachments: Attachment[] }) | MessageCreateMessage) {
-    return modelInfo[this.model].imageInput
-      ? data.attachments
-        ? [
-          ...(
-            await Promise.all(
-              data.attachments.map<Promise<FilePart | ImagePart>>(async v => {
-                const { hash, mime } = (await db.upload.findUnique({ where: { id: v.id } }))!;
-                const bytes = await file(path.join(uploadDir, hash)).bytes();
-                
-                return v.image
-                  ? {
-                    type: "image",
-                    image: bytes,
-                  } satisfies ImagePart
-                  : {
-                    type: "file",
-                    data: bytes,
-                    mimeType: mime,
-                  } satisfies FilePart;
-              }) ?? [],
-            )
-          ),
-          ...(data.content ? [{ type: "text", text: data.content } as TextPart satisfies TextPart] : []),
-        ]
-        : data.content
-      : data.content;
-  }
-  
-  private async revalidateMessages() {
-    this.messages = await Promise.all(
-      this.messagesRaw.sort((a, b) => a.id - b.id)
-      .map(async v => (
-        v.role === "user"
-          ? {
-            role: v.role,
-            content: await this.getContent(v) satisfies UserContent,
-          } satisfies CoreUserMessage
-          : {
-            role: v.role,
-            content: v.content,
-          } satisfies CoreAssistantMessage
-      )),
-    );
+  private get coreMessages() {
+    return this.c.messages.map(({ role, ...rest }) => ({
+      role,
+      content: "content" in rest
+        ? rest.content
+        : rest.chunks.filter(v => v.type === "text-delta").map(v => v.textDelta).join(""),
+    } satisfies CoreMessage));
   }
   
   private async open() {
     this.ws.subscribe(this.id);
-    
-    const chat = await db.chat.findUnique({ where: { id: this.id } });
-    const result = ModelSchema.safeParse(chat?.model);
-    if(result.success) {
-      this.model = result.data;
-    } else {
-      logger.warn("Invalid model in DB for chat", this.id);
-    }
-    this.messagesRaw = (await db.message.findMany({
-      where: { chatId: this.id },
-      include: { attachments: true },
-    })).sort((a, b) => a.id - b.id);
-    await this.revalidateMessages();
+    this.c = (await ConversationService.findOne(this.id))!;
   }
   
   async close() {
@@ -139,32 +79,17 @@ class ConversationClass {
     this.subscribers = this.subscribers.filter(sub => sub !== subscriber);
   }
   
-  private async createCompletion(data: MessageCreateMessage): Promise<CoreAssistantMessage> {
-    if(data.model && this.model !== data.model) {
-      const [prev, next] = [this.model, data.model];
-      this.model = data.model;
-      if(modelInfo[prev].imageInput !== modelInfo[next].imageInput) { // If the new model requires a different input type
-        await this.revalidateMessages(); // Revalidate messages to ensure they're in the correct format for the new model
+  private async createCompletion(data: MessageCreateMessage) {
+    if(data.model && this.c.model !== data.model) {
+      const [prev, next] = [this.c.model, data.model];
+      this.c.model = data.model;
+      if(modelInfo[prev].imageInput !== modelInfo[next].imageInput) {
       }
     }
     
-    const content: CoreUserMessage["content"] = await this.getContent(data);
-    
     // ---
-    this.messages.push({ role: "user", content } satisfies CoreUserMessage);
-    this.messagesRaw.push(
-      await db.message.create({
-        data: {
-          chatId: this.id,
-          role: "user",
-          content: data.content,
-          attachments: {
-            create: data.attachments,
-          },
-        },
-        include: { attachments: true },
-      }),
-    );
+    this.c.messages.push({ role: "user", content: data.content, id: randomUUIDv7() });
+    await ConversationService.update(this.id, { messages: this.c.messages });
     // ---
     
     const abortController = new AbortController();
@@ -175,15 +100,20 @@ class ConversationClass {
       }
     }
     
-    const toolCalls: (Omit<ToolCall, "args"> & { args: string })[] = [];
-    logger.trace("Creating completion for chat", this.id, this.messages);
+    logger.trace("Creating completion for chat", this.id);
+    
+    type Chunk = Extract<
+      Parameters<NonNullable<Parameters<typeof streamText>[0]["onChunk"]>>[0]["chunk"],
+      { type: "tool-call" | "tool-result" | "text-delta" }
+    >;
     
     const date = dayjs().tz("America/Los_Angeles").format("h:mm A on MMMM D, YYYY PST");
-    
+    const model = this.c.model;
+    const chunks: Chunk[] = [];
     const result = streamText({
-      model: models[this.model].model,
-      messages: this.messages,
-      ...(models[this.model].toolUsage && { tools, maxSteps: 128 }),
+      model: models[model].model,
+      messages: this.coreMessages,
+      ...(models[model].toolUsage && { tools, maxSteps: 128 }),
       system: `
       NEVER invent or improvise information. If you can't give a reasonable answer, try to use available tools, and if you are still stuck, just say what you are thinking.
       ${tools["search"] && tools["scrape"] ? "Remember that when searching the web you don't need to go of only the search result website metadata, you can also get the full view of the website" : ""}
@@ -196,9 +126,7 @@ class ConversationClass {
       onChunk: ({ chunk }) => {
         if(["tool-call", "tool-result", "text-delta"].includes(chunk.type)) {
           this.publish({ role: "chunk", ...chunk } as ClientBoundWebSocketMessage);
-          if(chunk.type === "tool-call") {
-            toolCalls.push({ id: chunk.toolCallId, name: chunk.toolName, args: JSON.stringify(chunk.args) });
-          }
+          chunks.push(chunk as Chunk);
         }
       },
       abortSignal: abortController.signal,
@@ -237,39 +165,22 @@ class ConversationClass {
       }
     }
     
-    const message = { role: "assistant", content: fullResponse } satisfies CoreAssistantMessage;
-    
     this.unsubscribe(subscriber);
     
     // ---
-    this.messages.push(message);
-    this.messagesRaw.push(
-      await db.message.create({
-        data: {
-          chatId: this.id,
-          ...message,
-          ...(toolCalls.length && {
-            toolCalls: {
-              create: toolCalls,
-            },
-          }),
-          author: this.model,
-        },
-        include: { attachments: true },
-      }),
-    );
+    this.c.messages.push({ role: "assistant", chunks, author: model, id: randomUUIDv7() });
+    await ConversationService.update(this.id, { messages: this.c.messages });
     this.publish({ role: "finish" });
     // ---
     
     if(!encounteredError) {
       try {
-        if(this.messages.length >= 2) {
-          const chat = await db.chat.findUnique({ where: { id: this.id } });
-          if(!chat?.name) {
+        if(this.c.messages.length >= 2) {
+          if(!this.c?.name) {
             const result = streamText({
               model: openai("gpt-4o-mini"),
               system: "Based on the messages provided, create a name up to 20 characters long describing the chat. Don't wrap your response in quotes. If these messages are not enough to create a descriptive name, or its just a greeting of some sort, reply with 'null' (without quotes).",
-              prompt: JSON.stringify(this.messages),
+              prompt: JSON.stringify(this.coreMessages),
             });
             let name = "";
             for await (const delta of result.textStream) {
@@ -279,7 +190,8 @@ class ConversationClass {
               }
             }
             if(name !== "null") {
-              await db.chat.update({ where: { id: this.id }, data: { name } });
+              this.c.name = name;
+              await ConversationService.update(this.id, { name });
             }
           }
         }
@@ -295,8 +207,6 @@ class ConversationClass {
         }
       }
     }
-    
-    return message;
   }
 }
 
