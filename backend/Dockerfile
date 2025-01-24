@@ -17,23 +17,17 @@ COPY shared shared/
 
 ENV NODE_ENV=production
 WORKDIR /usr/src/app/backend
-RUN bunx prisma generate
 
 FROM base AS release
 COPY --from=install /temp/prod/node_modules backend/node_modules
 COPY --from=prerelease /usr/src/app/backend/src backend/src
 COPY --from=prerelease /usr/src/app/backend/package.json backend/
-COPY --from=prerelease /usr/src/app/backend/prisma backend/prisma
 COPY --from=prerelease /usr/src/app/shared shared/
 
 WORKDIR /usr/src/app/backend
-RUN bunx prisma generate
-
-COPY backend/docker-entrypoint.sh ./
-RUN chmod +x docker-entrypoint.sh
 
 RUN chown -R bun:bun /usr/src/app/backend
 
 USER bun
 EXPOSE 3000/tcp
-ENTRYPOINT ["./docker-entrypoint.sh"]
+CMD ["bun", "run", "src/index.ts"]

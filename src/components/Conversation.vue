@@ -125,10 +125,10 @@
             class="hidden"
             id="file"
             @change.prevent="upload(($event.target as HTMLInputElement)?.files ?? undefined)"
-            :disabled="!modelInfo[model].imageInput"
+            :disabled="!modelInfo[model].imageInput || true"
           >
           <label
-            :aria-disabled="!modelInfo[model].imageInput"
+            :aria-disabled="!modelInfo[model].imageInput || true"
             class="p-2 rounded-full aria-[disabled=false]:hover:bg-white/5 transition mt-1 aria-[disabled=false]:cursor-pointer aria-[disabled=true]:text-white/25"
             :title="modelInfo[model].imageInput ? 'Upload File' : 'This model does not support file input'"
             for="file"
