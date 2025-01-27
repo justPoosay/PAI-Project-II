@@ -28,28 +28,28 @@
               class="max-w-[80%] max-md:max-w-full p-2 data-[self=false]:pb-3 relative backdrop-blur-md bg-clip-padding rounded-tl-2xl rounded-tr-2xl shadow-lg bg-gradient-to-tr from-white/10 via-white/5 to-white/10 data-[self=true]:bg-gradient-to-tl data-[self=true]:from-white/5 data-[self=true]:via-white/[3%] data-[self=true]:to-white/5 data-[self=true]:rounded-bl-2xl data-[self=false]:rounded-br-2xl"
             >
               <div v-if="getContent(message)" v-html="parseMarkdown(getContent(message))" class="markdown-content"/>
-              <div v-else-if="message.role !== 'user' || !message.attachments?.length"
-                   class="flex items-center justify-center">
-                <Loader/>
-              </div>
-              <div v-if="message.role === 'user' && message.attachments?.length" class="flex flex-wrap">
-                <a
-                  v-for="attachment in message.attachments"
-                  :key="attachment.id"
-                  :href="`/api/upload/${attachment.id}`"
-                  :download="attachment.image ? 'image.png' : 'file.txt'"
-                  class="flex items-center p-1 bg-white/5 backdrop-blur-sm rounded-lg"
-                >
-                  <img
-                    v-if="attachment.image"
-                    :src="`/api/upload/${attachment.id}`"
-                    class="rounded-lg"
-                    alt="Attachment"
-                    width="128"
-                  />
-                  <span v-else class="text-white/75">File</span>
-                </a>
-              </div>
+              <!--              <div v-else-if="message.role !== 'user' || !message.attachments?.length"-->
+              <!--                   class="flex items-center justify-center">-->
+              <!--                <Loader/>-->
+              <!--              </div>-->
+              <!--              <div v-if="message.role === 'user' && message.attachments?.length" class="flex flex-wrap">-->
+              <!--                <a-->
+              <!--                  v-for="attachment in message.attachments"-->
+              <!--                  :key="attachment.id"-->
+              <!--                  :href="`/api/upload/${attachment.id}`"-->
+              <!--                  :download="attachment.image ? 'image.png' : 'file.txt'"-->
+              <!--                  class="flex items-center p-1 bg-white/5 backdrop-blur-sm rounded-lg"-->
+              <!--                >-->
+              <!--                  <img-->
+              <!--                    v-if="attachment.image"-->
+              <!--                    :src="`/api/upload/${attachment.id}`"-->
+              <!--                    class="rounded-lg"-->
+              <!--                    alt="Attachment"-->
+              <!--                    width="128"-->
+              <!--                  />-->
+              <!--                  <span v-else class="text-white/75">File</span>-->
+              <!--                </a>-->
+              <!--              </div>-->
               <div
                 v-if="message.role === 'assistant' && !errorMessageRegex.test(getContent(message))"
                 class="flex p-0.5 rounded-md bg-white/15 backdrop-blur-sm absolute -bottom-3 left-1 shadow-md"
@@ -144,7 +144,7 @@
           </button>
           <button
             v-else
-            @click="send({ role: 'action', action: 'abort' })"
+            @click="abortController.abort()"
             class="p-2 rounded-full hover:bg-white/5 transition mt-1"
           >
             <CircleStopIcon class="w-6 h-6"/>
@@ -159,27 +159,23 @@
 import "floating-vue/dist/style.css";
 import "highlight.js/styles/github-dark.css";
 
-import { ref, onMounted, watch } from "vue";
+import { ref, onMounted, watch, type Ref } from "vue";
 import {
   SendIcon,
   PaperclipIcon,
   CircleStopIcon,
   XIcon,
   CopyIcon,
-  HammerIcon,
-  CloudLightningIcon,
-  GlobeIcon,
-  SearchIcon,
 } from "lucide-vue-next";
 import { Marked, Renderer } from "marked";
 import { markedHighlight } from "marked-highlight";
 import markedKatex from "marked-katex-extension";
 import hljs from "highlight.js";
 import DOMPurify from "dompurify";
-import { calculateHash, capitalize, isBackendAlive, isValidJSON } from "@/lib/utils.ts";
-import type { ClientBoundWebSocketMessage, ClientMessage as Message, ServerBoundWebSocketMessage } from "../../shared";
+import { calculateHash, capitalize, isBackendAlive } from "@/lib/utils.ts";
+import type { ClientMessage as Message } from "../../shared";
 import { onBeforeRouteUpdate, useRoute } from "vue-router";
-import { ClientBoundWebSocketMessageSchema, routes } from "../../shared/schemas.ts";
+import { routes, SSESchema } from "../../shared/schemas.ts";
 import { useConversationStore } from "@/stores/conversations.ts";
 import { errorMessageRegex, modelInfo } from "../../shared/constants.ts";
 import ModelSelector from "@/components/ModelSelector.vue";
@@ -204,10 +200,11 @@ const messages = ref<{ loading: boolean, error: string | null, array: Message[] 
 const conversation = ref<Conversation | null>(conversationStore.conversations.find((c) => c.id === route.params.id) ?? null);
 const input = ref("");
 const uploads = ref<FileData[]>([]);
-const error = ref<Omit<Extract<ClientBoundWebSocketMessage, { role: "error" }>, "role"> | null>(null);
+const error = ref<Omit<Extract<z.infer<typeof SSESchema>, { kind: "error" }>, "kind" | "for"> | null>(null);
 const showError = ref(false);
+const abortController = new AbortController();
 
-function showErrorPopup(err: Omit<Extract<ClientBoundWebSocketMessage, { role: "error" }>, "role">) {
+function showErrorPopup(err: NonNullable<typeof error extends Ref<infer U> ? U : never>) {
   error.value = err;
   showError.value = true;
 
@@ -279,186 +276,12 @@ watch(model, function(newValue, oldValue) {
   }
 });
 
-function getToolIcon(toolName: string) {
-  switch(toolName.toLowerCase()) {
-    case "weather":
-      return CloudLightningIcon;
-    case "search":
-      return SearchIcon;
-    case "scrape":
-      return GlobeIcon;
-    default:
-      return HammerIcon;
-  }
+async function init(id: string) {
+  model
+  await fetchMessages(id);
 }
 
-const ws = ref<WebSocket | null>(null);
-const isConnected = ref(false);
-const HEARTBEAT_INTERVAL = 30000;
-const HEARTBEAT_TIMEOUT = 5000;
-const MAX_RECONNECT_ATTEMPTS = 5;
-let heartbeatInterval: number | undefined;
-let heartbeatTimeout: number | undefined;
-let reconnectAttempts = 0;
-
-const packetQueue = ref<ServerBoundWebSocketMessage[]>([]);
-
-function send(data: ServerBoundWebSocketMessage) {
-  if(!ws.value || ws.value.readyState !== WebSocket.OPEN) {
-    packetQueue.value.push(data);
-    console.log("WebSocket not open, queueing packet");
-    return;
-  }
-
-  ws.value?.send(JSON.stringify(data));
-}
-
-async function init(id: typeof route.params.id, wsOnly = false) {
-  id = id as string;
-  const isNew = id === "new";
-
-  cleanup();
-
-  if(!wsOnly) {
-    messages.value = { loading: !isNew, error: null, array: [] };
-    const c = conversationStore.conversations.find((c) => c.id === id) ?? null;
-    conversation.value = c;
-    model.value = c?.model ?? modelStore.models[0];
-    error.value = null;
-    showError.value = false;
-  }
-
-  if(isNew) {
-    return;
-  }
-
-  const url = "ws://" + window.location.host + "/api/" + id;
-  ws.value = new WebSocket(url);
-
-  ws.value.onmessage = function(ev) {
-    resetHeartbeatTimeout();
-
-    if(typeof ev.data !== "string" || !isValidJSON(ev.data)) return;
-    const result = ClientBoundWebSocketMessageSchema.safeParse(JSON.parse(ev.data));
-    if(!result.success) return;
-    const msg = result.data;
-
-    if(msg.role === "pong") {
-      return;
-    }
-
-    if(msg.role === "chunk") {
-      if(messages.value.array[messages.value.array.length - 1]?.finished) {
-        messages.value.array.push({
-          role: "assistant",
-          chunks: [],
-          finished: false,
-          author: model.value,
-        });
-      }
-
-      const lastMessage = messages.value.array[messages.value.array.length - 1];
-      if (lastMessage.role === "assistant") {
-        lastMessage.chunks.push(msg);
-      }
-
-      if(msg.type === "tool-result") {
-        // TODO (maybe)
-      }
-    }
-
-    if(msg.role === "finish") {
-      if(messages.value.array[messages.value.array.length - 1]?.role === "user") {
-        messages.value.array.push({
-          role: "assistant",
-          chunks: [],
-          finished: false,
-          author: model.value,
-        });
-      }
-      messages.value.array[messages.value.array.length - 1].finished = true;
-    }
-
-    if(msg.role === "rename") {
-      conversationStore.$modify({ id, requestChange: false, name: msg.name });
-    }
-
-    if(msg.role === "error") {
-      console.error(msg.title + ": " + msg.message);
-      showErrorPopup(msg);
-    }
-  };
-
-  ws.value.onopen = function() {
-    console.log("Connected to WebSocket");
-    isConnected.value = true;
-    reconnectAttempts = 0;
-    startHeartbeat();
-    packetQueue.value.forEach(send);
-    packetQueue.value = [];
-  };
-
-  ws.value.onclose = function() {
-    console.log("Disconnected from WebSocket");
-    isConnected.value = false;
-    cleanup();
-  };
-
-  ws.value.onerror = function(e) {
-    console.error("WebSocket error:", e);
-    cleanup();
-  };
-
-  if(!wsOnly) {
-    await fetchMessages(id);
-  }
-}
-
-function startHeartbeat() {
-  cleanup({ closeConnection: false });
-
-  heartbeatInterval = window.setInterval(() => {
-    if(ws.value?.readyState === WebSocket.OPEN) {
-      send({ role: "ping" });
-
-      heartbeatTimeout = window.setTimeout(() => {
-        console.log("Heartbeat timeout - reconnecting...");
-        ws.value?.close();
-        if(reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
-          reconnectAttempts++;
-          init(route.params.id, true);
-        } else {
-          console.error("Max reconnection attempts reached");
-        }
-      }, HEARTBEAT_TIMEOUT);
-    }
-  }, HEARTBEAT_INTERVAL);
-}
-
-function resetHeartbeatTimeout() {
-  if(heartbeatTimeout) {
-    clearTimeout(heartbeatTimeout);
-    heartbeatTimeout = undefined;
-  }
-}
-
-function cleanup(config = { closeConnection: true }) {
-  if(ws.value && config.closeConnection) {
-    ws.value.close();
-    ws.value = null;
-  }
-
-  if(heartbeatInterval) {
-    clearInterval(heartbeatInterval);
-    heartbeatInterval = undefined;
-  }
-  if(heartbeatTimeout) {
-    clearTimeout(heartbeatTimeout);
-    heartbeatTimeout = undefined;
-  }
-}
-
-async function fetchMessages(id: typeof route.params.id) {
+async function fetchMessages(id: string) {
   try {
     const res = await fetch(`/api/${id}/messages`);
     if(!res.ok) {
@@ -479,13 +302,27 @@ async function fetchMessages(id: typeof route.params.id) {
 onBeforeRouteUpdate(async(to, from, next) => {
   console.log("Route update", to.params.id, from.params.id);
   if(to.params.id !== from.params.id) {
-    await init(to.params.id);
+    await init(to.params.id as string);
   }
   next();
 });
 
 onMounted(async() => {
-  await init(route.params.id);
+  await init(route.params.id as string);
+
+  const sse = new EventSource("/api/sse");
+  sse.onmessage = (e) => {
+    const data = JSON.parse(e.data);
+    const { data: msg } = SSESchema.safeParse(data);
+    if(msg?.kind === "rename") {
+      conversationStore.$modify({ id: msg.for, requestChange: false, name: msg.newName });
+    }
+
+    if(msg?.kind === "error" && msg?.for === route.params.id) {
+      console.error(msg.title + ": ", msg.message);
+      showErrorPopup(msg);
+    }
+  };
 });
 
 function getContent(msg: Message) {
@@ -514,19 +351,31 @@ async function sendMessage() {
       role: "user",
       content,
       finished: true,
-      attachments,
     });
 
-    send({
-      role: "message",
-      action: "create",
-      content,
-      attachments,
-      model: model.value,
-    });
+    // send({
+    //   role: "message",
+    //   action: "create",
+    //   content,
+    //   attachments,
+    //   model: model.value,
+    // });
 
     input.value = "";
     if(attachments) uploads.value = [];
+
+    const res = await fetch(`/api/${route.params.id}/completion`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ message: content, model: model.value }),
+    });
+
+    const decoder = new TextDecoder();
+    for await (const chunk of res.body!) {
+      console.log(decoder.decode(chunk));
+    }
   }
 }
 

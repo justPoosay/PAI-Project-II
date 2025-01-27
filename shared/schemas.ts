@@ -101,3 +101,20 @@ export const ServerBoundWebSocketMessageSchema = z.union([
     role: z.literal("ping"),
   }),
 ]);
+
+export const SSESchema = z.union([
+  z.object({
+    kind: z.literal("rename"),
+    for: ConversationSchema.shape.id,
+    newName: z.string(),
+  }),
+  z.object({
+    kind: z.literal("error"),
+    for: ConversationSchema.shape.id,
+    title: z.string(),
+    message: z.string(),
+  }),
+  z.object({
+    kind: z.literal("keep-alive"),
+  }),
+]);

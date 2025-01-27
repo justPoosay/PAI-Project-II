@@ -1,5 +1,5 @@
 import type { AppRequest } from "../../lib/types.ts";
-import { object, string } from "zod";
+import { object, string, z } from "zod";
 import { ModelSchema } from "../../../../shared/schemas.ts";
 import { ConversationService } from "../../lib/database";
 import { randomUUIDv7 } from "bun";
@@ -10,6 +10,8 @@ import { type CoreMessage, streamText } from "ai";
 import { models } from "../../core/constants.ts";
 import tools from "../../core/tools";
 import logger from "../../lib/logger.ts";
+import { openai } from "@ai-sdk/openai";
+import { emitter } from "../../index";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -25,11 +27,17 @@ interface IError {
   message: string;
 }
 
-export async function GET(req: AppRequest): Promise<Response> {
+export async function POST(req: AppRequest): Promise<Response> {
   const c = await ConversationService.findOne(req.route.params.id, { archived: false });
-  const { data: opts } = Options.safeParse(req.route.query);
-  if(!c) return new Response(null, { status: 404 });
-  if(!opts) return new Response(null, { status: 400 });
+  let opts: z.infer<typeof Options> = null!;
+  try {
+    opts = Options.parse(await req.json()); // here either req.json or Options.parse can throw
+  } catch(e) {
+    return new Response(null, { status: 400 });
+  }
+  if(!c) {
+    return new Response(null, { status: 404 });
+  }
   
   c.messages.push({ id: randomUUIDv7(), role: "user", content: opts.message });
   c.model = opts.model ?? c.model;
@@ -37,18 +45,21 @@ export async function GET(req: AppRequest): Promise<Response> {
   const stream = new TransformStream();
   const writer = stream.writable.getWriter();
   
-  const messages = c.messages.map(({ role, ...rest }) => ({
-    role,
-    content: "content" in rest
-      ? rest.content
-      : rest.chunks.filter(v => v.type === "text-delta").map((v) => v.textDelta).join(""),
-  } satisfies CoreMessage));
+  function getMessages() {
+    return c!.messages.map(({ role, ...rest }) => ({
+      role,
+      content: "content" in rest
+        ? rest.content
+        : rest.chunks.filter(v => v.type === "text-delta").map((v) => v.textDelta).join(""),
+    } satisfies CoreMessage));
+  }
+  
   const date = dayjs().tz("America/Los_Angeles").format("h:mm A on MMMM D, YYYY PST");
   const chunks: Extract<typeof c["messages"] extends (infer U)[] ? U : never, { role: "assistant" }>["chunks"] = [];
   
   const comp = streamText({
     model: models[c.model].model,
-    messages,
+    messages: getMessages(),
     ...(models[c.model].toolUsage && { tools, maxSteps: 128 }),
     system: `
       NEVER invent or improvise information. If you can't give a reasonable answer, try to use available tools, and if you are still stuck, just say what you are thinking.
@@ -62,7 +73,7 @@ export async function GET(req: AppRequest): Promise<Response> {
     onChunk({ chunk }) {
       if(["tool-call", "tool-result", "text-delta"].includes(chunk.type)) {
         chunks.push(chunk as Extract<typeof chunk, { type: "tool-call" | "tool-result" | "text-delta" }>);
-        writer.write(chunk);
+        writer.write(JSON.stringify(chunk));
       }
     },
     abortSignal: req.signal,
@@ -78,7 +89,8 @@ export async function GET(req: AppRequest): Promise<Response> {
   const promise = new Promise<void>(async function(resolve) {
     let encounteredError: IError | null = null;
     try {
-      for await (const delta of comp.textStream) {}
+      for await (const _ of comp.textStream) {
+      }
     } catch(e) {
       if(e instanceof Error && e.name === "AbortError") {
         // Successfully aborted
@@ -93,7 +105,39 @@ export async function GET(req: AppRequest): Promise<Response> {
     }
     await writer.close();
     
-    c.messages.push({ id: randomUUIDv7(), role: "assistant", chunks });
+    c.messages.push({ id: randomUUIDv7(), role: "assistant", chunks, author: c.model });
+    
+    if(!encounteredError && c.messages.length >= 2 && !c.name) {
+      try {
+        const comp = streamText({
+          model: openai("gpt-4o-mini"),
+          system: "Based on the messages provided, create a name up to 20 characters long describing the chat. Don't wrap your response in quotes. If these messages are not enough to create a descriptive name, or its just a greeting of some sort, reply with 'null' (without quotes).",
+          prompt: JSON.stringify(getMessages()),
+        });
+        let newName = "";
+        for await (const delta of comp.textStream) {
+          newName += delta;
+          if(newName !== "null") {
+            emitter.emit("sse", { kind: "rename", for: c.id, newName });
+          }
+        }
+        if(newName !== "null") {
+          c.name = newName;
+        }
+      } catch(e) {
+        if(e instanceof Error) {
+          logger.error("Error renaming chat", e.message);
+          emitter.emit("sse", {
+            kind: "error",
+            for: c.id,
+            title: "Error renaming chat",
+            message: e.name + ": " + e.message,
+          });
+        }
+      }
+    }
+    
+    await ConversationService.update(c.id, { messages: c.messages, model: c.model, name: c.name });
     
     resolve();
   });

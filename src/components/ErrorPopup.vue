@@ -11,17 +11,18 @@
       v-if="show"
       class="absolute bottom-32 left-1/2 -translate-x-1/2 z-20 px-4 py-2 rounded-lg bg-red-500/75 backdrop-blur-sm text-white shadow-lg"
     >
-      <h5 class="font-semibold">{{ `${error?.title}${error?.pof ? ` (@${error?.pof}` : ""})` }}</h5>
+      <h5 class="font-semibold">{{ error?.title }}</h5>
       <p>{{ error?.message }}</p>
     </div>
   </Transition>
 </template>
 
 <script setup lang="ts">
-import type { ClientBoundWebSocketMessage } from "../../shared";
+import { z } from "zod";
+import type { SSESchema } from "../../shared/schemas";
 
 defineProps<{
   show: boolean
-  error: Omit<Extract<ClientBoundWebSocketMessage, { role: "error" }>, "role"> | null
+  error: Omit<Extract<z.infer<typeof SSESchema>, { kind: "error" }>, "kind" | "for"> | null
 }>();
 </script>

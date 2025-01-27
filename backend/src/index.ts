@@ -2,6 +2,13 @@ import { serve, FileSystemRouter } from "bun";
 import * as path from "node:path";
 import type { AppRequest } from "./lib/types";
 import logger from "./lib/logger.ts";
+import EventEmitter from "events";
+import { z } from "zod";
+import type { SSESchema } from "../../shared/schemas";
+
+export const emitter = new EventEmitter<{
+  sse: [data: z.infer<typeof SSESchema>];
+}>();
 
 const router = new FileSystemRouter({
   style: "nextjs",
@@ -46,6 +53,7 @@ export const server = serve({
     logger.info(ip?.address ?? "", req.method, url.pathname, res?.status ?? 200);
     return res;
   },
+  idleTimeout: 32,
 });
 
 logger.info(`Server running at http://localhost:${server.port}`);
