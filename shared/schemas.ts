@@ -33,7 +33,7 @@ export const MessageSchema = z.union([
   z.object({
     role: z.literal("user"),
     content: z.string(),
-    attachments: z.array(AttachmentSchema).optional(),
+    attachmentIds: z.string().array().optional(),
   }),
   z.object({
     role: z.literal("assistant"),

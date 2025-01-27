@@ -1,11 +1,7 @@
-import { serve, FileSystemRouter, type ServerWebSocket } from "bun";
+import { serve, FileSystemRouter } from "bun";
 import * as path from "node:path";
-import type { AppRequest, WSData } from "./lib/types";
-import { ServerBoundWebSocketMessageSchema } from "../../shared/schemas.ts";
-import Conversation from "./core/Conversation.ts";
-import { isValidJSON } from "./lib/utils.ts";
+import type { AppRequest } from "./lib/types";
 import logger from "./lib/logger.ts";
-import type { ClientBoundWebSocketMessage } from "../../shared";
 
 const router = new FileSystemRouter({
   style: "nextjs",
@@ -20,7 +16,7 @@ export const server = serve({
   async fetch(req) {
     const url = new URL(req.url);
     
-    async function get(): Promise<Response | undefined> {
+    async function get() {
       const match = router.match(url.pathname);
       
       if(!match) return Response.json({ success: false, error: "Not Found" }, { status: 404 });
@@ -34,8 +30,8 @@ export const server = serve({
         }
         const method = module[req.method];
         if(method && typeof method === "function") {
-          const result: (req: AppRequest) => Response | undefined = await method(Object.assign(req, { route: match }));
-          if(result instanceof Response || result === undefined) return result;
+          const result: (req: AppRequest) => Response = await method(Object.assign(req, { route: match }));
+          if(result instanceof Response) return result;
         }
       } catch(e) {
         console.error(e);
@@ -49,39 +45,6 @@ export const server = serve({
     const ip = server.requestIP(req);
     logger.info(ip?.address ?? "", req.method, url.pathname, res?.status ?? 200);
     return res;
-  },
-  websocket: {
-    async open(ws: ServerWebSocket<WSData>) {
-      logger.debug("WebSocket opened");
-      if(ws.data.type === "chat") {
-        ws.data.instance = Conversation(ws);
-      }
-    },
-    async close(ws: ServerWebSocket<WSData>) {
-      logger.debug("WebSocket closed");
-      await ws.data.instance?.close();
-    },
-    async message(ws: ServerWebSocket<WSData>, message) {
-      if(typeof message !== "string" || !isValidJSON(message)) {
-        logger.trace("Received invalid data", message);
-        return;
-      }
-      
-      const result = ServerBoundWebSocketMessageSchema.safeParse(JSON.parse(message));
-      if(!result.success) {
-        logger.trace("Received invalid message", message);
-        return;
-      }
-      
-      if(result.data.role === "ping") {
-        ws.send(JSON.stringify({ role: "pong" } satisfies ClientBoundWebSocketMessage));
-        logger.trace("Received ping");
-      } else {
-        logger.trace("Received message", result.data);
-      }
-      
-      await ws.data.instance?.onMessage(result.data);
-    },
   },
 });
 
