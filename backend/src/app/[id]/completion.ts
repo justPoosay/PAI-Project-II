@@ -100,10 +100,16 @@ export async function POST(req: AppRequest): Promise<Response> {
           message: e.name + ": " + e.message,
         };
         logger.error(encounteredError);
-        await writer.abort(encounteredError);
+        try {
+          await writer.abort(encounteredError);
+        } catch(e) {
+        }
       }
     }
-    await writer.close();
+    try {
+      await writer.close();
+    } catch(e) {
+    }
     
     c.messages.push({ id: randomUUIDv7(), role: "assistant", chunks, author: c.model });
     

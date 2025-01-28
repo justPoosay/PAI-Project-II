@@ -3,6 +3,8 @@ import { emitter } from "../index";
 const encoder = new TextEncoder();
 
 export async function GET() {
+  let listener: Parameters<typeof emitter.on<"sse">>[1];
+  
   return new Response(
     new ReadableStream({
       start(controller) {
@@ -14,7 +16,11 @@ export async function GET() {
             "Connection: keep-alive\r\n\r\n",
           ),
         );
-        emitter.on("sse", (data) => controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`)));
+        listener = data => controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
+        emitter.on("sse", listener);
+      },
+      cancel() {
+        emitter.off("sse", listener);
       },
     }),
     {

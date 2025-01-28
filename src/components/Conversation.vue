@@ -277,7 +277,19 @@ watch(model, function(newValue, oldValue) {
 });
 
 async function init(id: string) {
-  model
+  const isNew = id === "new";
+
+  messages.value = { loading: !isNew, error: null, array: [] };
+  const c = conversationStore.conversations.find(c => c.id === id) ?? null;
+  conversation.value = c;
+  model.value = c?.model ?? modelStore.models[0];
+  error.value = null;
+  showError.value = false;
+
+  if(isNew) {
+    return;
+  }
+
   await fetchMessages(id);
 }
 
@@ -374,7 +386,7 @@ async function sendMessage() {
 
     const decoder = new TextDecoder();
     for await (const chunk of res.body!) {
-      console.log(decoder.decode(chunk));
+      console.log(JSON.parse(decoder.decode(chunk)));
     }
   }
 }

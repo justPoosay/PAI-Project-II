@@ -2,7 +2,7 @@ import { serve, FileSystemRouter } from "bun";
 import * as path from "node:path";
 import type { AppRequest } from "./lib/types";
 import logger from "./lib/logger.ts";
-import EventEmitter from "events";
+import EventEmitter from "node:events";
 import { z } from "zod";
 import type { SSESchema } from "../../shared/schemas";
 
