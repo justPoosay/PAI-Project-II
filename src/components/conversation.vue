@@ -382,8 +382,8 @@ async function sendMessage() {
     });
 
     const decoder = new TextDecoder();
-    for await (const chunk of res.body!) {
-      console.log(JSON.parse(decoder.decode(chunk)));
+    for await (const chunk of res.body! as ReadableStream<Uint8Array> & AsyncIterable<Uint8Array>) {
+      console.log(decoder.decode(chunk));
     }
   }
 }
@@ -476,7 +476,7 @@ function parseMarkdown(text: string) {
   // \`\`\`\n<content>\n\`\`\`
   pre:has(code.hljs)
     code.hljs
-      @apply block bg-white/[2%] shadow-md backdrop-blur-sm text-white/80 p-1 rounded text-sm mb-2
+      @apply block bg-white/[2%] dark:bg-vue-black-darker shadow-md dark:shadow-none backdrop-blur-sm p-1 rounded text-sm mb-2
 
   strong
     @apply font-bold
@@ -486,7 +486,7 @@ function parseMarkdown(text: string) {
 
   // `<content>`
   code:not(.hljs)
-    @apply bg-white/5 backdrop-blur-sm rounded p-1 text-sm
+    @apply bg-white/5 dark:bg-vue-black-darker backdrop-blur-sm rounded p-1 text-sm
 
   // # <content>
   h1
