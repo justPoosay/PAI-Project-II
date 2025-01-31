@@ -1,7 +1,7 @@
 <template>
   <div
     :data-expanded="isExpanded"
-    class="flex flex-col bg-gradient-to-b from-gray-300/5 via-gray-300/[2%] to-gray-300/5 backdrop-blur-md transition-all duration-300 ease-out w-16 max-lg:w-0 shadow-sm data-[expanded=true]:w-64 data-[expanded=true]:rounded-r-xl text-white/75 h-screen z-50 max-lg:fixed"
+    class="flex flex-col bg-gradient-to-b from-gray-300/5 via-gray-300/[2%] to-gray-300/5 dark:bg-none dark:bg-vue-black-darker backdrop-blur-md transition-all duration-300 ease-out w-16 max-lg:w-0 shadow-sm data-[expanded=true]:w-64 data-[expanded=true]:rounded-r-xl text-white/75 dark:text-white h-screen z-50 max-lg:fixed"
   >
     <div class="p-1 pb-3 flex flex-col h-full relative">
       <div
@@ -26,10 +26,10 @@
         </button>
       </div>
       <div :data-expanded="isExpanded" class="w-full h-[2px] bg-white/15 mt-1 data-[expanded=false]:max-lg:hidden"/>
-      <ul class="space-y-1 h-[calc(100vh-4rem)] overflow-y-auto pt-1">
+      <div class="space-y-1 h-[calc(100vh-4rem)] overflow-y-auto pt-1">
         <div v-for="[group, conversations] in Object.entries(groups).filter(v => v[1].length)">
-          <li class="text-white/50 text-sm px-2 py-1" :key="group">{{ group }}</li>
-          <li v-for="c in conversations" :key="c.id">
+          <div class="text-white/50 text-sm px-2 py-1" :key="group">{{ group }}</div>
+          <div v-for="c in conversations" :key="c.id">
             <VMenu
               v-if="editingId !== c.id"
               placement="right"
@@ -37,13 +37,13 @@
               <RouterLink
                 :data-current="router.currentRoute.value.params.id === c.id"
                 :to="`/c/${c.id}`"
-                class="flex-grow block py-2 px-2 rounded transition-all duration-300 ease-out from-white/5 via-white/[2%] to-white/5 data-[current=true]:shadow-md hover:bg-gradient-to-r overflow-hidden hover:pl-4"
+                class="flex-grow block py-2 px-2 rounded transition-all duration-300 ease-out from-white/5 via-white/[2%] to-white/5 data-[current=true]:shadow-md hover:bg-gradient-to-r dark:hover:bg-emerald-500 dark:bg-none overflow-hidden hover:pl-4"
               >
                 <span class="block truncate" :title="c.name ?? undefined">{{ c.name ?? "Untitled" }}</span>
               </RouterLink>
 
               <template #popper>
-                <div class="flex p-2 text-white/75 space-x-2">
+                <div class="flex p-2 text-white/75 dark:text-white space-x-2">
                   <button title="delete" @click="deleteConversation(c.id)">
                     <Trash2Icon class="w-5 h-5"/>
                   </button>
@@ -59,12 +59,12 @@
               @keydown.enter="saveEdit(c.id)"
               @keydown.esc="cancelEdit"
               @blur="cancelEdit"
-              class="flex-grow block py-2 px-2 rounded bg-white/10 text-white focus:outline-none focus:ring-1 focus:ring-white/30 w-full"
+              class="flex-grow block py-2 px-2 rounded bg-white/10 dark:bg-vue-black text-white focus:outline-none focus:ring-0 w-full"
               :ref="el => { if (el) (el as HTMLInputElement).focus() }"
             >
-          </li>
+          </div>
         </div>
-      </ul>
+      </div>
     </div>
   </div>
 </template>
@@ -180,11 +180,11 @@ ul.overflow-y-auto
 
 <style lang="sass">
 .v-popper--theme-dropdown .v-popper__inner
-  @apply bg-white/15 backdrop-blur-md border-none
+  @apply bg-white/15 dark:bg-vue-black-tooltip backdrop-blur-md border-none
 
 .v-popper--theme-dropdown .v-popper__arrow-inner
   @apply hidden
 
 .v-popper--theme-dropdown .v-popper__arrow-outer
-  @apply border-white/15
+  @apply border-white/15 dark:border-vue-black-tooltip
 </style>

@@ -13,6 +13,8 @@ export default {
             "DEFAULT": "#181818",
             "soft": "#222222",
             "mute": "#282828",
+            "darker": "#161616",
+            "tooltip": "#0E0A09"
           },
           "indigo": "#2c3e50",
           "white": {

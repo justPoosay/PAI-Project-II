@@ -25,7 +25,7 @@
             />
             <div
               :data-self="message.role === 'user'"
-              class="max-w-[80%] max-md:max-w-full p-2 data-[self=false]:pb-3 relative backdrop-blur-md bg-clip-padding rounded-tl-2xl rounded-tr-2xl shadow-lg bg-gradient-to-tr from-white/10 via-white/5 to-white/10 data-[self=true]:bg-gradient-to-tl data-[self=true]:from-white/5 data-[self=true]:via-white/[3%] data-[self=true]:to-white/5 data-[self=true]:rounded-bl-2xl data-[self=false]:rounded-br-2xl"
+              class="max-w-[80%] max-md:max-w-full p-2 data-[self=false]:pb-3 relative backdrop-blur-md bg-clip-padding rounded-tl-2xl rounded-tr-2xl data-[self=true]:rounded-bl-2xl data-[self=false]:rounded-br-2xl shadow-lg dark:shadow-md bg-gradient-to-tr from-white/10 via-white/5 to-white/10 data-[self=true]:bg-gradient-to-tl data-[self=true]:from-white/5 data-[self=true]:via-white/[3%] data-[self=true]:to-white/5 dark:bg-none dark:bg-vue-black-mute dark:data-[self=true]:bg-emerald-700"
             >
               <div v-if="getContent(message)" v-html="parseMarkdown(getContent(message))" class="markdown-content"/>
               <!--              <div v-else-if="message.role !== 'user' || !message.attachments?.length"-->
@@ -88,7 +88,7 @@
       @drop.prevent="upload($event.dataTransfer?.files)"
     >
       <div
-        class="flex flex-col items-start max-w-2xl mx-auto bg-gradient-to-br from-vue-black/30 via-vue-black-soft/20 to-vue-black/30 backdrop-blur-md rounded-xl p-2 shadow-lg pointer-events-auto"
+        class="flex flex-col items-start max-w-2xl mx-auto bg-gradient-to-br from-vue-black/30 via-vue-black-soft/20 to-vue-black/30 dark:bg-none dark:bg-vue-black backdrop-blur-md rounded-xl p-2 shadow-lg pointer-events-auto"
       >
         <div v-if="uploads.length" class="flex">
           <div
@@ -125,10 +125,10 @@
             class="hidden"
             id="file"
             @change.prevent="upload(($event.target as HTMLInputElement)?.files ?? undefined)"
-            :disabled="!modelInfo[model].imageInput || true"
+            :disabled="!modelInfo[model].imageInput"
           >
           <label
-            :aria-disabled="!modelInfo[model].imageInput || true"
+            :aria-disabled="!modelInfo[model].imageInput"
             class="p-2 rounded-full aria-[disabled=false]:hover:bg-white/5 transition mt-1 aria-[disabled=false]:cursor-pointer aria-[disabled=true]:text-white/25"
             :title="modelInfo[model].imageInput ? 'Upload File' : 'This model does not support file input'"
             for="file"
@@ -178,13 +178,13 @@ import { onBeforeRouteUpdate, useRoute } from "vue-router";
 import { routes, SSESchema } from "../../shared/schemas.ts";
 import { useConversationStore } from "@/stores/conversations.ts";
 import { errorMessageRegex, modelInfo } from "../../shared/constants.ts";
-import ModelSelector from "@/components/ModelSelector.vue";
+import ModelSelector from "@/components/model-selector.vue";
 import router from "@/router";
 import { useModelStore } from "@/stores/models.ts";
 import type { Conversation } from "@/lib/types.ts";
-import Loader from "@/components/Loader.vue";
+import Loader from "@/components/loader.vue";
 import { z } from "zod";
-import ErrorPopup from "@/components/ErrorPopup.vue";
+import ErrorPopup from "@/components/error-popup.vue";
 
 type FileData = Omit<z.infer<(typeof routes["upload"])>[0], "id"> & { id?: string, href: string }
 

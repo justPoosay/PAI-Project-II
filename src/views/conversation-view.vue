@@ -1,5 +1,5 @@
 <template>
-  <div class="flex h-full selection:bg-white/10 text-white bg-[url('/img/bg/Elarun.webp')] bg-cover bg-center bg-origin-border overflow-hidden">
+  <div class="flex h-full selection:bg-white/10 dark:selection:bg-sky-500/15 text-white dark:bg-vue-black-soft dark:bg-none bg-[url('/img/bg/Elarun.webp')] bg-cover bg-center bg-origin-border overflow-hidden">
     <Suspense>
       <ConversationWrapper/>
 
@@ -26,18 +26,18 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
-import ConversationWrapper from "@/components/ConversationWrapper.vue";
+import ConversationWrapper from "@/components/conversation-wrapper.vue";
 import { useModelStore } from "@/stores/models.ts";
 import { useConversationStore } from "@/stores/conversations.ts";
-import Loader from "@/components/Loader.vue";
+import Loader from "@/components/loader.vue";
 
 const error = ref<string | null>(null);
 
 useModelStore().$subscribe(function(_, { error: e }) {
-  error.value = e!;
+  error.value = e ?? null;
 });
 
 useConversationStore().$subscribe(function(_, { error: e }) {
-  error.value = e!;
+  error.value = e ?? null;
 });
 </script>
