@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div id="model-selector">
     <Transition
       enter-active-class="transition duration-300 ease-out"
       enter-from-class="transform translate-y-4 opacity-0"
@@ -26,7 +26,8 @@
           <div class="flex space-x-2">
             <component
               v-for="capability in getCapabilities(model)"
-              :is="capabilityIndicators[capability]"
+              :is="capabilities[capability][0]"
+              v-tooltip="capabilities[capability][1]"
             />
           </div>
         </div>
@@ -46,7 +47,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { onBeforeUnmount, onMounted, ref } from "vue";
 import { modelInfo } from "../../shared/constants.ts";
 import type { Model } from "../../shared";
 import { useModelStore } from "@/stores/models.ts";
@@ -56,12 +57,12 @@ import ImageInput from "@/components/model-capabilities/image-input.vue";
 import ToolUsage from "@/components/model-capabilities/tool-usage.vue";
 
 function getCapabilities(model: Model) {
-  return Object.keys(capabilityIndicators).filter(c => modelInfo[model][c as keyof typeof capabilityIndicators]) as (keyof typeof capabilityIndicators)[];
+  return Object.keys(capabilities).filter(c => modelInfo[model][c as keyof typeof capabilities]) as (keyof typeof capabilities)[];
 }
 
-const capabilityIndicators = {
-  imageInput: ImageInput,
-  toolUsage: ToolUsage,
+const capabilities = {
+  imageInput: [ImageInput, "Supports image uploads and analysis"],
+  toolUsage: [ToolUsage, "Can use tools"],
 };
 
 const modelStore = useModelStore();
@@ -78,4 +79,20 @@ function selectOption(value: Model) {
   selected.value = value;
   expanded.value = false;
 }
+
+function handleClickOutside(event: MouseEvent) {
+  if(!expanded.value) return;
+  const menu = document.querySelector("#model-selector");
+  if(menu && !menu.contains(event.target as Node)) {
+    expanded.value = false;
+  }
+}
+
+onMounted(() => {
+  document.addEventListener("click", handleClickOutside);
+});
+
+onBeforeUnmount(() => {
+  document.removeEventListener("click", handleClickOutside);
+});
 </script>
