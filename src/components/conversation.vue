@@ -1,12 +1,6 @@
 <template>
   <!-- Chat Area -->
   <div class="flex-1 flex flex-col relative">
-    <div class="absolute top-2 left-1/2 transform -translate-x-1/2 z-10">
-      <ModelSelector
-        v-model="model"
-      />
-    </div>
-
     <!-- Chat Messages -->
     <div v-if="!messages.loading && !messages.error && messages.array.length" class="flex-1 overflow-y-auto p-4 pb-36">
       <div class="max-w-5xl mx-auto">
@@ -127,14 +121,17 @@
             @change.prevent="upload(($event.target as HTMLInputElement)?.files ?? undefined)"
             :disabled="!modelInfo[model].imageInput"
           >
-          <label
-            :aria-disabled="!modelInfo[model].imageInput"
-            class="p-2 rounded-full aria-[disabled=false]:hover:bg-white/5 transition mt-1 aria-[disabled=false]:cursor-pointer aria-[disabled=true]:text-white/25"
-            :title="modelInfo[model].imageInput ? 'Upload File' : 'This model does not support file input'"
-            for="file"
-          >
-            <PaperclipIcon class="w-6 h-6 "/>
-          </label>
+          <div class="flex items-center space-x-2">
+            <label
+              :aria-disabled="!modelInfo[model].imageInput"
+              class="p-2 rounded-full aria-[disabled=false]:hover:bg-white/5 transition mt-1 aria-[disabled=false]:cursor-pointer aria-[disabled=true]:text-white/25"
+              :title="modelInfo[model].imageInput ? 'Upload File' : 'This model does not support file input'"
+              for="file"
+            >
+              <PaperclipIcon class="w-6 h-6 "/>
+            </label>
+            <ModelSelector v-model="model"/>
+          </div>
           <button
             v-if="messages.array[messages.array.length - 1]?.finished ?? true"
             @click="sendMessage"
@@ -586,10 +583,10 @@ function parseMarkdown(text: string) {
 
 .v-popper--theme-tooltip
   .v-popper__inner
-    @apply bg-white/15 backdrop-blur-md
+    @apply bg-white/15 backdrop-blur-md dark:bg-vue-black-tooltip dark:border-[1px] dark:border-[#847A6C]
 
   .v-popper__arrow-outer
-    @apply border-white/15
+    @apply hidden
 
 .v-popper__popper
   transition: none !important

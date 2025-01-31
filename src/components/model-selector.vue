@@ -1,42 +1,46 @@
 <template>
-  <div class="flex flex-col select-none">
+  <div>
+    <Transition
+      enter-active-class="transition duration-300 ease-out"
+      enter-from-class="transform translate-y-4 opacity-0"
+      enter-to-class="transform translate-y-0 opacity-100"
+      leave-active-class="transition duration-300 ease-in"
+      leave-from-class="transform translate-y-0 opacity-100"
+      leave-to-class="transform translate-y-4 opacity-0"
+    >
+      <div
+        v-if="expanded"
+        class="absolute z-50 bg-vue-black-mute/5 dark:bg-vue-black-tooltip backdrop-blur-md border-2 border-vue-black-mute/5 dark:border-none shadow-lg rounded-lg w-96 bottom-12 p-1 flex flex-col space-y-2"
+      >
+        <div
+          v-for="model in models" @click="selectOption(model)"
+          class="select-none cursor-pointer flex justify-between px-1 items-center"
+        >
+          <div class="flex space-x-1 items-center">
+            <p class="font-medium">{{ modelInfo[model].name }}</p>
+            <InfoIcon
+              class="h-4 w-4 cursor-default" v-if="modelInfo[model].description"
+              v-tooltip="{ content: `<div class=&quot;break-words&quot;>${modelInfo[model].description!.replace(/(?<=\.) (?=[A-Z])/g, '<br>')}</div>`, html: true }"
+            />
+          </div>
+          <div class="flex space-x-2">
+            <component
+              v-for="capability in getCapabilities(model)"
+              :is="capabilityIndicators[capability]"
+            />
+          </div>
+        </div>
+      </div>
+    </Transition>
     <div
-      :data-expanded="expanded"
-      class="bg-gradient-to-r from-white/15 via-white/10 to-white/15 backdrop-blur-sm px-3 py-1 rounded-lg data-[expanded=true]:rounded-b-none cursor-pointer transition-all duration-100 ease-out flex justify-center"
+      class="flex items-center space-x-2 cursor-pointer select-none"
       @click="toggleExpanded"
     >
-      <div class="flex space-x-2 items-center">
-        <img
-          :src="modelInfo[selected!].logoSrc"
-          :alt="selected"
-          width="16"
-        />
-        <p>{{ modelInfo[selected!].name }}</p>
-      </div>
-    </div>
-    <div
-      :data-expanded="expanded"
-      class="bg-gradient-to-r from-white/15 via-white/10 to-white/15 backdrop-blur-sm rounded-b-lg shadow-lg p-1 data-[expanded=false]:opacity-0 data-[expanded=false]:pointer-events-none data-[expanded=false]:h-0 duration-100 ease-out"
-    >
-      <div class="h-[1px] bg-white/15 w-full mb-1"/>
-      <ul class="space-y-1">
-        <li
-          v-for="model in models"
-          :key="model"
-          @click="selectOption(model)"
-          :data-current="selected === model"
-          class="px-2 py-1 rounded-lg hover:bg-gradient-to-br cursor-pointer data-[current=true]:bg-gradient-to-br"
-        >
-          <div class="flex space-x-2 items-center">
-            <img
-              :src="modelInfo[model].logoSrc"
-              :alt="model"
-              width="16"
-            />
-            <p>{{ modelInfo[model].name }}</p>
-          </div>
-        </li>
-      </ul>
+      <p>{{ modelInfo[selected].name }}</p>
+      <ChevronUpIcon
+        :data-expanded="expanded"
+        class="h-4 w-4 data-[expanded=true]:rotate-180 transition-all duration-300 ease-out"
+      />
     </div>
   </div>
 </template>
@@ -47,12 +51,24 @@ import { modelInfo } from "../../shared/constants.ts";
 import type { Model } from "../../shared";
 import { useModelStore } from "@/stores/models.ts";
 import { storeToRefs } from "pinia";
+import { ChevronUpIcon, InfoIcon } from "lucide-vue-next";
+import ImageInput from "@/components/model-capabilities/image-input.vue";
+import ToolUsage from "@/components/model-capabilities/tool-usage.vue";
+
+function getCapabilities(model: Model) {
+  return Object.keys(capabilityIndicators).filter(c => modelInfo[model][c as keyof typeof capabilityIndicators]) as (keyof typeof capabilityIndicators)[];
+}
+
+const capabilityIndicators = {
+  imageInput: ImageInput,
+  toolUsage: ToolUsage,
+};
 
 const modelStore = useModelStore();
 const { models } = storeToRefs(modelStore);
 
 const expanded = ref<boolean>(false);
-const selected = defineModel<Model>();
+const selected = defineModel<Model>({ required: true });
 
 function toggleExpanded() {
   expanded.value = !expanded.value;
