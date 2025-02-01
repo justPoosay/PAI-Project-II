@@ -16,7 +16,9 @@ export default {
             "darker": "#161616",
             "tooltip": "#0E0A09"
           },
-          "indigo": "#2c3e50",
+          "indigo": {
+            "DEFAULT": "#2c3e50",
+          },
           "white": {
             "DEFAULT": "#ffffff",
             "soft": "#f8f8f8",

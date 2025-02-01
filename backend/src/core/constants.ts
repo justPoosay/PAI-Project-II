@@ -19,6 +19,11 @@ export const models = {
     model: anthropic("claude-3-5-sonnet-latest"),
     env: "ANTHROPIC_API_KEY",
   },
+  // "o3-mini": {
+  //   ...modelInfo["o3-mini"],
+  //   model: openai("o3-mini"),
+  //   env: "OPENAI_API_KEY",
+  // },
   "gpt-4o": {
     ...modelInfo["gpt-4o"],
     model: openai("gpt-4o"),
@@ -48,7 +53,7 @@ export const models = {
     ...modelInfo["mixtral-8x7b-32768"],
     model: groq("mixtral-8x7b-32768"),
     env: "GROQ_API_KEY",
-  }
+  },
 } as const satisfies Record<TModel, Model>;
 
 export const availableModels = Object.entries(models).filter(v => !!env[v[1].env]).map(v => v[0] as TModel);

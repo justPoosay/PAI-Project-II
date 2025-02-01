@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const ModelSchema = z.enum([
   "gpt-4o", "gpt-4o-mini", "claude-3-5-sonnet", "grok-2", "grok-beta", "llama-3.3-70b-versatile", "mixtral-8x7b-32768",
+  // "o3-mini"
 ]);
 
 export const AttachmentSchema = z.object({

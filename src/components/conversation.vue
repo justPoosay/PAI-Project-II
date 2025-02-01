@@ -11,7 +11,7 @@
           >
             <img
               v-if="message.role === 'assistant'"
-              class="w-6 h-6 max-md:hidden"
+              class="w-6 h-6 max-md:hidden dark:order-first"
               :alt="message.author"
               :src="modelInfo[message.author].logoSrc"
               width="24"
@@ -19,13 +19,15 @@
             />
             <div
               :data-self="message.role === 'user'"
-              class="max-w-[80%] max-md:max-w-full p-2 data-[self=false]:pb-3 relative backdrop-blur-md bg-clip-padding rounded-tl-2xl rounded-tr-2xl data-[self=true]:rounded-bl-2xl data-[self=false]:rounded-br-2xl shadow-lg dark:shadow-md bg-gradient-to-tr from-white/10 via-white/5 to-white/10 data-[self=true]:bg-gradient-to-tl data-[self=true]:from-white/5 data-[self=true]:via-white/[3%] data-[self=true]:to-white/5 dark:bg-none dark:bg-vue-black-mute dark:data-[self=true]:bg-emerald-700"
+              class="max-w-[80%] dark:max-w-[90%] max-md:max-w-full p-2 data-[self=false]:pb-3 relative backdrop-blur-md bg-clip-padding rounded-tl-2xl rounded-tr-2xl data-[self=true]:rounded-bl-2xl data-[self=false]:rounded-br-2xl shadow-lg dark:shadow-none bg-gradient-to-tr from-white/10 via-white/5 to-white/10 data-[self=true]:bg-gradient-to-tl data-[self=true]:from-white/5 data-[self=true]:via-white/[3%] data-[self=true]:to-white/5 dark:bg-none dark:data-[self=true]:bg-[#2A2A2A] dark:rounded-lg dark:data-[self=true]:rounded-bl-lg dark:data-[self=false]:rounded-br-lg"
             >
               <div v-if="getContent(message)" v-html="parseMarkdown(getContent(message))" class="markdown-content"/>
-              <!--              <div v-else-if="message.role !== 'user' || !message.attachments?.length"-->
-              <!--                   class="flex items-center justify-center">-->
-              <!--                <Loader/>-->
-              <!--              </div>-->
+              <div
+                v-else-if="message.role !== 'user' || !message.attachmentIds?.length"
+                class="flex items-center justify-center"
+              >
+                <Loader/>
+              </div>
               <!--              <div v-if="message.role === 'user' && message.attachments?.length" class="flex flex-wrap">-->
               <!--                <a-->
               <!--                  v-for="attachment in message.attachments"-->
@@ -99,7 +101,7 @@
               v-if="file.image"
               :key="file.hash"
               :src="file.href"
-              :data-disabled="!modelInfo[model].imageInput"
+              :data-disabled="!modelInfo[model].capabilities.includes('imageInput')"
               class="w-12 h-12 rounded-lg mr-2 overflow-hidden data-[disabled=true]:grayscale"
               alt="File"
             />
@@ -119,13 +121,13 @@
             class="hidden"
             id="file"
             @change.prevent="upload(($event.target as HTMLInputElement)?.files ?? undefined)"
-            :disabled="!modelInfo[model].imageInput"
+            :disabled="!modelInfo[model].capabilities.includes('imageInput')"
           >
           <div class="flex items-center space-x-2">
             <label
-              :aria-disabled="!modelInfo[model].imageInput"
+              :aria-disabled="!modelInfo[model].capabilities.includes('imageInput')"
               class="p-2 rounded-full aria-[disabled=false]:hover:bg-white/5 transition mt-1 aria-[disabled=false]:cursor-pointer aria-[disabled=true]:text-white/25"
-              :title="modelInfo[model].imageInput ? 'Upload File' : 'This model does not support file input'"
+              :title="modelInfo[model].capabilities.includes('imageInput') ? 'Upload File' : 'This model does not support file input'"
               for="file"
             >
               <PaperclipIcon class="w-6 h-6 "/>
@@ -172,7 +174,7 @@ import DOMPurify from "dompurify";
 import { calculateHash, capitalize, isBackendAlive, omit } from "@/lib/utils.ts";
 import type { ClientMessage as Message } from "../../shared";
 import { onBeforeRouteUpdate, useRoute } from "vue-router";
-import { routes, SSESchema } from "../../shared/schemas.ts";
+import { MessageChunkSchema, routes, SSESchema } from "../../shared/schemas.ts";
 import { useConversationStore } from "@/stores/conversations.ts";
 import { errorMessageRegex, modelInfo } from "../../shared/constants.ts";
 import ModelSelector from "@/components/model-selector.vue";
@@ -217,7 +219,7 @@ function copyToClipboard(text: string) {
 }
 
 async function upload(fileList: FileList | undefined) {
-  if(!fileList?.length || !modelInfo[model.value].imageInput) {
+  if (!fileList?.length || !modelInfo[model.value].capabilities.includes('imageInput')) {
     return;
   }
 
@@ -326,19 +328,30 @@ onBeforeRouteUpdate(async(to, from, next) => {
 onMounted(async() => {
   await init(route.params.id as string);
 
-  const sse = new EventSource("/api/sse");
-  sse.onmessage = (e) => {
-    const data = JSON.parse(e.data);
-    const { data: msg } = SSESchema.safeParse(data);
-    if(msg?.kind === "rename") {
-      conversationStore.$modify({ id: msg.for, requestChange: false, name: msg.newName });
-    }
+  function setupSSE() {
+    const sse = new EventSource("/api/sse");
 
-    if(msg?.kind === "error" && msg?.for === route.params.id) {
-      console.error(msg.title + ": ", msg.message);
-      showErrorPopup(msg);
-    }
-  };
+    sse.onmessage = (e) => {
+      const data = JSON.parse(e.data);
+      const { data: msg } = SSESchema.safeParse(data);
+      if(msg?.kind === "rename") {
+        conversationStore.$modify({ id: msg.for, requestChange: false, name: msg.newName });
+      }
+
+      if(msg?.kind === "error" && msg?.for === route.params.id) {
+        console.error(msg.title + ": ", msg.message);
+        showErrorPopup(msg);
+      }
+    };
+
+    sse.onerror = (e) => {
+      console.error("SSE connection error:", e);
+      sse.close();
+      setTimeout(setupSSE, 1000);
+    };
+  }
+
+  setupSSE();
 });
 
 function getContent(msg: Message) {
@@ -363,7 +376,7 @@ async function sendMessage() {
       await router.push({ name: "c", params: { id } });
     }
 
-    const attachments = modelInfo[model.value].imageInput
+    const attachments = modelInfo[model.value].capabilities.includes('imageInput')
       ? uploads.value.filter(f => !!f.id) as { id: string, image: boolean }[]
       : undefined;
 
@@ -371,6 +384,11 @@ async function sendMessage() {
       role: "user",
       content,
       finished: true,
+    }, {
+      role: "assistant",
+      chunks: [],
+      finished: false,
+      author: model.value,
     });
 
     input.value = "";
@@ -384,10 +402,25 @@ async function sendMessage() {
       body: JSON.stringify({ message: content, model: model.value }),
     });
 
+    const msg = messages.value.array[messages.value.array.length - 1] as Extract<Message, { role: "assistant" }>;
+
     const decoder = new TextDecoder();
     for await (const chunk of res.body! as ReadableStream<Uint8Array> & AsyncIterable<Uint8Array>) {
-      console.log(decoder.decode(chunk));
+      const text = decoder.decode(chunk);
+      const parts = text.trim().split("\n");
+      for(const part of parts) {
+        if(part.trim()) {
+          try {
+            const json = JSON.parse(part);
+            const { data: chunk } = MessageChunkSchema.safeParse(json);
+            if(chunk) msg.chunks.push(chunk);
+          } catch(e) {
+            console.warn("Failed to parse chunk:", part);
+          }
+        }
+      }
     }
+    msg.finished = true;
   }
 }
 
@@ -591,9 +624,10 @@ function parseMarkdown(text: string) {
   .v-popper__arrow-outer
     @apply hidden
 
-.v-popper__popper
-  transition: none !important
-
-  *
+@media (prefers-color-scheme: light)
+  .v-popper__popper
     transition: none !important
+
+    *
+      transition: none !important
 </style>

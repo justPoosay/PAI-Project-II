@@ -32,19 +32,19 @@ export async function POST(req: AppRequest): Promise<Response> {
   let opts: z.infer<typeof Options> = null!;
   try {
     opts = Options.parse(await req.json()); // here either req.json or Options.parse can throw
-  } catch(e) {
+  } catch (e) {
     return new Response(null, { status: 400 });
   }
-  if(!c) {
+  if (!c) {
     return new Response(null, { status: 404 });
   }
-  
+
   c.messages.push({ id: randomUUIDv7(), role: "user", content: opts.message });
   c.model = opts.model ?? c.model;
-  
+
   const stream = new TransformStream();
   const writer = stream.writable.getWriter();
-  
+
   function getMessages() {
     return c!.messages.map(({ role, ...rest }) => ({
       role,
@@ -53,14 +53,14 @@ export async function POST(req: AppRequest): Promise<Response> {
         : rest.chunks.filter(v => v.type === "text-delta").map((v) => v.textDelta).join(""),
     } satisfies CoreMessage));
   }
-  
+
   const date = dayjs().tz("America/Los_Angeles").format("h:mm A on MMMM D, YYYY PST");
   const chunks: Extract<typeof c["messages"] extends (infer U)[] ? U : never, { role: "assistant" }>["chunks"] = [];
-  
+
   const comp = streamText({
     model: models[c.model].model,
     messages: getMessages(),
-    ...(models[c.model].toolUsage && { tools, maxSteps: 128 }),
+    ...(models[c.model].capabilities.includes("toolUsage") && { tools, maxSteps: 128 }),
     system: `
       NEVER invent or improvise information. If you can't give a reasonable answer, try to use available tools, and if you are still stuck, just say what you are thinking.
       ${tools["search"] && tools["scrape"] ? "Remember that when searching the web you don't need to go of only the search result website metadata, you can also get the full view of the website" : ""}
@@ -71,30 +71,30 @@ export async function POST(req: AppRequest): Promise<Response> {
       The current day and time is ${date}.
       `.split("\n").map(line => line.trim()).join("\n").trim(),
     onChunk({ chunk }) {
-      if(["tool-call", "tool-result", "text-delta"].includes(chunk.type)) {
+      if (["tool-call", "tool-result", "text-delta"].includes(chunk.type)) {
         chunks.push(chunk as Extract<typeof chunk, { type: "tool-call" | "tool-result" | "text-delta" }>);
         writer.write(JSON.stringify(chunk));
       }
     },
     abortSignal: req.signal,
   });
-  
+
   const res = new Response(stream.readable, {
     headers: {
       "Content-Type": "application/json",
       "Transfer-Encoding": "chunked",
     },
   });
-  
-  const promise = new Promise<void>(async function(resolve) {
+
+  const promise = new Promise<void>(async function (resolve) {
     let encounteredError: IError | null = null;
     try {
       for await (const _ of comp.textStream) {
       }
-    } catch(e) {
-      if(e instanceof Error && e.name === "AbortError") {
+    } catch (e) {
+      if (e instanceof Error && e.name === "AbortError") {
         // Successfully aborted
-      } else if(e instanceof Error) {
+      } else if (e instanceof Error) {
         encounteredError = {
           title: "Error creating completion",
           message: e.name + ": " + e.message,
@@ -102,18 +102,18 @@ export async function POST(req: AppRequest): Promise<Response> {
         logger.error(encounteredError);
         try {
           await writer.abort(encounteredError);
-        } catch(e) {
+        } catch (e) {
         }
       }
     }
     try {
       await writer.close();
-    } catch(e) {
+    } catch (e) {
     }
-    
+
     c.messages.push({ id: randomUUIDv7(), role: "assistant", chunks, author: c.model });
-    
-    if(!encounteredError && c.messages.length >= 2 && !c.name) {
+
+    if (!encounteredError && c.messages.length >= 2 && !c.name) {
       try {
         const comp = streamText({
           model: openai("gpt-4o-mini"),
@@ -123,15 +123,15 @@ export async function POST(req: AppRequest): Promise<Response> {
         let newName = "";
         for await (const delta of comp.textStream) {
           newName += delta;
-          if(newName !== "null") {
+          if (newName !== "null") {
             emitter.emit("sse", { kind: "rename", for: c.id, newName });
           }
         }
-        if(newName !== "null") {
+        if (newName !== "null") {
           c.name = newName;
         }
-      } catch(e) {
-        if(e instanceof Error) {
+      } catch (e) {
+        if (e instanceof Error) {
           logger.error("Error renaming chat", e.message);
           emitter.emit("sse", {
             kind: "error",
@@ -142,16 +142,16 @@ export async function POST(req: AppRequest): Promise<Response> {
         }
       }
     }
-    
+
     await ConversationService.update(c.id, { messages: c.messages, model: c.model, name: c.name });
-    
+
     resolve();
   });
-  
+
   Promise.allSettled([comp, promise]).catch((e) => void (e instanceof Error && writer.abort({
     title: "Error creating completion",
     message: e.name + ": " + e.message,
   } satisfies IError)));
-  
+
   return res;
 }
