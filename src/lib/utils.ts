@@ -23,3 +23,11 @@ export async function calculateHash(buffer: ArrayBuffer) {
   const base64 = btoa(String.fromCharCode(...array));
   return { hex, base64 };
 }
+
+export function omit<T extends Record<string, unknown>, K extends keyof T>(obj: T, keys: K[]): Omit<T, K> {
+  const copy = { ...obj };
+  for(const key of keys) {
+    delete copy[key];
+  }
+  return copy;
+}

@@ -169,7 +169,7 @@ import { markedHighlight } from "marked-highlight";
 import markedKatex from "marked-katex-extension";
 import hljs from "highlight.js";
 import DOMPurify from "dompurify";
-import { calculateHash, capitalize, isBackendAlive } from "@/lib/utils.ts";
+import { calculateHash, capitalize, isBackendAlive, omit } from "@/lib/utils.ts";
 import type { ClientMessage as Message } from "../../shared";
 import { onBeforeRouteUpdate, useRoute } from "vue-router";
 import { routes, SSESchema } from "../../shared/schemas.ts";
@@ -308,12 +308,19 @@ async function fetchMessages(id: string) {
   }
 }
 
+let skipNextInit = false;
+
 onBeforeRouteUpdate(async(to, from, next) => {
   console.log("Route update", to.params.id, from.params.id);
   if(to.params.id !== from.params.id) {
+    if(skipNextInit) {
+      skipNextInit = false;
+      return next();
+    }
+    console.log("init(" + to.params.id + ")");
     await init(to.params.id as string);
   }
-  next();
+  return next();
 });
 
 onMounted(async() => {
@@ -347,8 +354,12 @@ async function sendMessage() {
 
   const content = input.value.trim();
   if(content || uploads.value.length) {
+    let id: string = route.params.id as string;
+
     if(route.params.id === "new") {
-      const { id } = await conversationStore.$create({ model: model.value });
+      const c = await conversationStore.$create({ model: model.value });
+      id = c.id;
+      skipNextInit = true;
       await router.push({ name: "c", params: { id } });
     }
 
@@ -362,18 +373,10 @@ async function sendMessage() {
       finished: true,
     });
 
-    // send({
-    //   role: "message",
-    //   action: "create",
-    //   content,
-    //   attachments,
-    //   model: model.value,
-    // });
-
     input.value = "";
     if(attachments) uploads.value = [];
 
-    const res = await fetch(`/api/${route.params.id}/completion`, {
+    const res = await fetch(`/api/${id}/completion`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
