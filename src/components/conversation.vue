@@ -461,7 +461,7 @@ function parseMarkdown(text: string) {
   @apply break-words
 
   a
-    @apply text-sky-400 hover:underline
+    @apply text-sky-400 hover:underline dark:text-blue-500
 
   pre:not(:has(code.hljs))
     @apply rounded overflow-x-auto
@@ -483,7 +483,7 @@ function parseMarkdown(text: string) {
 
   // `<content>`
   code:not(.hljs)
-    @apply light:bg-white/[2%] dark:bg-[#0D1117] backdrop-blur-sm rounded p-1 text-sm
+    @apply bg-white/[2%] dark:bg-[#0D1117] backdrop-blur-sm rounded p-1 text-sm
 
   // # <content>
   h1
@@ -576,7 +576,7 @@ function parseMarkdown(text: string) {
       @apply bg-white/5
 
 .hljs
-  @apply dark:bg-[#0d1117] light:bg-white/5
+  @apply bg-white/5 dark:bg-[#0d1117]
 
 .hljs-comment
   @apply font-monaspace_radon text-gray-300/75 italic
