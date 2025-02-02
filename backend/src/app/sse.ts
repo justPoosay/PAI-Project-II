@@ -16,6 +16,9 @@ export async function GET() {
             "Connection: keep-alive\r\n\r\n",
           ),
         );
+
+        controller.enqueue(encoder.encode("event: ping\ndata: connected\n\n"));
+
         listener = data => controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
         emitter.on("sse", listener);
       },

@@ -38,5 +38,8 @@
     "vite": "^6.0.7",
     "vite-plugin-vue-devtools": "^7.7.0",
     "vue-tsc": "^2.2.0"
+  },
+  "patchedDependencies": {
+    "marked-highlight@2.2.1": "patches/marked-highlight@2.2.1.patch"
   }
 }

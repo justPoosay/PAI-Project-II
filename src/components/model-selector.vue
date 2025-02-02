@@ -25,7 +25,7 @@
           </div>
           <div class="flex space-x-2">
             <component
-              v-for="capability in getCapabilities(model)"
+              v-for="capability in modelInfo[model].capabilities"
               :is="capabilities[capability][0]"
               v-tooltip="capabilities[capability][1]"
             />
@@ -47,22 +47,22 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from "vue";
-import { modelInfo } from "../../shared/constants.ts";
+import { onBeforeUnmount, onMounted, ref, type DefineComponent } from "vue";
+import { modelInfo, type ModelInfo } from "../../shared/constants.ts";
 import type { Model } from "../../shared";
 import { useModelStore } from "@/stores/models.ts";
 import { storeToRefs } from "pinia";
 import { ChevronUpIcon, InfoIcon } from "lucide-vue-next";
 import ImageInput from "@/components/model-capabilities/image-input.vue";
 import ToolUsage from "@/components/model-capabilities/tool-usage.vue";
+import Reasoning from "@/components/model-capabilities/reasoning.vue";
 
-function getCapabilities(model: Model) {
-  return Object.keys(capabilities).filter(c => modelInfo[model][c as keyof typeof capabilities]) as (keyof typeof capabilities)[];
-}
+type CapabilityRecord = Record<ModelInfo["capabilities"][number], [DefineComponent<any, any, any, any, any, any, any, any, any, any>, string]>;
 
-const capabilities = {
+const capabilities: CapabilityRecord = {
   imageInput: [ImageInput, "Supports image uploads and analysis"],
   toolUsage: [ToolUsage, "Can use tools"],
+  reasoning: [Reasoning, "Has reasoning capabilities"],
 };
 
 const modelStore = useModelStore();
