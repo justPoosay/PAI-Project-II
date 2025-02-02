@@ -30,50 +30,7 @@
                   <div v-if="unfoldedTools.includes(part.id) && 'result' in part"
                     class="mt-1 border-l-2 border-white/30 pl-2 break-words text-sm">
                     <p class="mb-1">{{ JSON.stringify(part.args) }}</p>
-                    <template v-if="part.result">
-                      <template v-if="['scrape', 'search', 'repo_tree'].includes(part.name)">
-                        <!-- Scrape tool -->
-                        <div v-if="part.name === 'scrape' && typeof part.result === 'object'">
-                          <div v-if="!(part.result.success ?? false)"
-                            class="inline-flex items-center space-x-2 text-red-500">
-                            <CircleAlertIcon class="w-4 h-4" />
-                            <p>{{ part.result.error }}</p>
-                          </div>
-                          <div v-else v-html="parseMarkdown(part.result.markdown)" class="markdown-content" />
-                        </div>
-                        <!-- Search tool -->
-                        <div v-if="part.name === 'search' && typeof part.result === 'object'">
-                          <div v-if="!(part.result.success ?? true)"
-                            class="inline-flex items-center space-x-2 text-red-500">
-                            <CircleAlertIcon class="w-4 h-4" />
-                            <p>{{ part.result.error }}</p>
-                          </div>
-                          <div v-else class="flex flex-col space-y-2">
-                            <div v-if="part.result.zci" class="border-y border-y-white/30 p-2">
-                              <a class="text-xl font-bold hover:underline" :href="part.result.zci.url">{{
-                                part.result.zci.title }}</a>
-                              <p>{{ part.result.zci.text }}</p>
-                            </div>
-                            <div v-for="result in part.result.results" class="inline-flex flex-col">
-                              <div class="inline-block">
-                                <a class="text-lg text-sky-400 hover:underline dark:text-blue-500 -mb-1"
-                                  :href="result.url">{{
-                                  result.title }}</a>
-                              </div>
-                              <div class="inline-block">
-                                <a class="hover:underline text-emerald-400" :href="result.url">{{ result.url }}</a>
-                              </div>
-                              <p>{{ result.snippet }}</p>
-                            </div>
-                          </div>
-                        </div>
-                        <!-- Repo Tree tool -->
-                        <div v-if="part.name === 'repo_tree' && typeof part.result === 'string'">
-                          <pre>{{ part.result }}</pre>
-                        </div>
-                      </template>
-                      <pre v-else><code class="hljs">{{ objectToString(part.result).trim() }}</code></pre>
-                    </template>
+                    <ToolResult v-if="part.result" :tool="part" />
                     <div v-else class="text-white/75">Tool didn't return any data</div>
                   </div>
                 </div>
@@ -185,11 +142,6 @@ import {
   RefreshCwIcon,
   CircleAlertIcon,
 } from "lucide-vue-next";
-import { Marked, Renderer } from "marked";
-import { markedHighlight } from "marked-highlight";
-import markedKatex from "marked-katex-extension";
-import hljs from "highlight.js";
-import DOMPurify from "dompurify";
 import { calculateHash, capitalize, isBackendAlive, omit } from "@/lib/utils.ts";
 import type { MessageSchema } from "../../shared/schemas.ts";
 import { onBeforeRouteUpdate, useRoute } from "vue-router";
@@ -203,6 +155,8 @@ import type { Conversation } from "@/lib/types.ts";
 import Loader from "@/components/loader.vue";
 import { z } from "zod";
 import ErrorPopup from "@/components/error-popup.vue";
+import { parseMarkdown } from "@/lib/markdown.ts";
+import ToolResult from "@/components/tool-result.vue";
 
 type FileData = Omit<z.infer<(typeof routes["upload"])>[0], "id"> & { id?: string, href: string }
 
@@ -228,14 +182,14 @@ const showError = ref(false);
 const abortController = new AbortController();
 const unfoldedTools = ref<FullToolCall["id"][]>([]);
 
-const toolIcons = {
+const toolIcons: Record<string, FunctionalComponent<LucideProps, {}, any, {}>> = {
   weather: SunIcon,
   scrape: GlobeIcon,
   search: SearchIcon,
   repo_tree: FolderTreeIcon,
   repo_file: FileDiffIcon,
   default: HammerIcon
-} satisfies Record<string, FunctionalComponent<LucideProps, {}, any, {}>>;
+};
 
 function showErrorPopup(err: NonNullable<typeof error extends Ref<infer U> ? U : never>) {
   error.value = err;
@@ -388,58 +342,6 @@ onMounted(async () => {
   setupSSE();
 });
 
-function objectToString(obj: unknown, indent = ''): string {
-  if (obj === null || obj === undefined) {
-    return String(obj);
-  }
-
-  if (typeof obj === "string") {
-    return obj;
-  }
-
-  if (typeof obj === "object") {
-    if (Array.isArray(obj)) {
-      if (obj.length === 0) return '[]';
-
-      const items = obj.map(item => {
-        if (Array.isArray(item) || (typeof item === 'object' && item !== null)) {
-          return `${indent}  ${objectToString(item, indent + '  ')}`;
-        }
-        return `${indent}  ${String(item)}`;
-      });
-
-      return `[\n${items.join(',\n')}\n${indent}]`;
-    }
-
-    const entries = Object.entries(obj as Record<string, unknown>);
-    if (entries.length === 0) return '{}';
-
-    return entries
-      .map(([key, value]) => {
-        if (value === null || value === undefined) {
-          return `${indent}${key}: ${String(value)}`;
-        }
-        if (typeof value === "object") {
-          if (Array.isArray(value)) {
-            return `${indent}${key}: ${objectToString(value, indent + '  ')}`;
-          }
-          return `${indent}${key}: {\n${Object.entries(value as Record<string, unknown>)
-            .map(([k, v]) => {
-              if (typeof v === 'object' && v !== null) {
-                return `${indent}  ${k}: ${objectToString(v, indent + '  ')}`;
-              }
-              return `${indent}  ${k}: ${String(v)}`;
-            })
-            .join(',\n')}\n${indent}}`;
-        }
-        return `${indent}${key}: ${value}`;
-      })
-      .join(',\n');
-  }
-
-  return String(obj);
-}
-
 function getContent(msg: Message) {
   return "content" in msg
     ? msg.content
@@ -569,75 +471,6 @@ watch(input, () => {
     if (textarea) autoResize(textarea);
   });
 });
-
-// ---
-const stock = new Marked(); // for parsing blockquotes
-const marked = new Marked(
-  markedHighlight({
-    emptyLangClass: "hljs",
-    langPrefix: "hljs language-",
-    highlight(code, lang) {
-      return lang
-        ? hljs.getLanguage(lang)
-          ? hljs.highlight(code, { language: lang }).value
-          : hljs.highlightAuto(code).value
-        : hljs.highlightAuto(code).value;
-    },
-  }),
-);
-
-const renderer = new Renderer();
-
-renderer.blockquote = function ({ text, raw }) {
-  const match = text.match(/^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION|ERROR)]/);
-  if (match) {
-    const type = match[1].toLowerCase();
-    const title = capitalize(type);
-    return `<blockquote data-type="${type}">${text
-      .replace(match[0], title)
-      .split("\n")
-      .filter(Boolean)
-      .map(v => {
-        const isTitle = v === title;
-        return `<p${isTitle ? " class=\"callout-title\"" : ""}>${isTitle ? v : stock.parse(v, { async: false })}</p>`;
-      })
-      .join("\n")
-      }</blockquote>`;
-  }
-  return stock.parse(raw, { async: false });
-};
-
-marked.use({ renderer });
-marked.use(markedKatex({ throwOnError: false, nonStandard: true, output: "mathml" }));
-
-// ---
-
-const markdownCache = new Map<string, string>();
-
-function parseMarkdown(text: string, strict = true) {
-  if (markdownCache.has(text)) {
-    return markdownCache.get(text);
-  }
-
-  const parsed = DOMPurify.sanitize(
-    marked.parse(
-      text.replace(/^[\u200B\u200C\u200D\u200E\u200F\uFEFF]/, ""),
-      {
-        async: false,
-        breaks: true,
-        gfm: true,
-      },
-    ),
-    strict
-      ? {}
-      : {
-        ADD_ATTR: ["onclick"]
-      }
-  );
-
-  markdownCache.set(text, parsed);
-  return parsed;
-}
 </script>
 
 <style lang="sass">
