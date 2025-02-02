@@ -109,7 +109,7 @@
 
 <script setup lang="ts">
 import "floating-vue/dist/style.css";
-import "highlight.js/styles/github-dark.css";
+import "highlight.js/styles/github-dark.min.css";
 
 import { ref, onMounted, watch, type Ref } from "vue";
 import {
@@ -135,7 +135,7 @@ import router from "@/router";
 import { useModelStore } from "@/stores/models.ts";
 import type { Conversation } from "@/lib/types.ts";
 import Loader from "@/components/loader.vue";
-import { boolean, z } from "zod";
+import { z } from "zod";
 import ErrorPopup from "@/components/error-popup.vue";
 
 type FileData = Omit<z.infer<(typeof routes["upload"])>[0], "id"> & { id?: string, href: string }
@@ -463,7 +463,7 @@ function parseMarkdown(text: string) {
   a
     @apply text-sky-400 hover:underline
 
-  pre
+  pre:not(:has(code.hljs))
     @apply rounded overflow-x-auto
 
   code
@@ -471,9 +471,9 @@ function parseMarkdown(text: string) {
 
   // \`\`\`\n<content>\n\`\`\`
   pre:has(code.hljs)
-    @apply dark:rounded-none dark:rounded-b
-    code.hljs
-      @apply block bg-white/[2%] dark:bg-[#0D1117] shadow-md dark:shadow-none backdrop-blur-sm p-1 rounded dark:rounded-none text-sm mb-2
+    @apply shadow-md dark:shadow-none backdrop-blur-sm text-sm mb-2 rounded-b-md overflow-x-auto max-w-full
+    code
+      @apply block p-2 rounded-b-md whitespace-pre-wrap break-all
 
   strong
     @apply font-bold
@@ -483,7 +483,7 @@ function parseMarkdown(text: string) {
 
   // `<content>`
   code:not(.hljs)
-    @apply bg-white/5 dark:bg-[#0D1117] backdrop-blur-sm rounded p-1 text-sm
+    @apply light:bg-white/[2%] dark:bg-[#0D1117] backdrop-blur-sm rounded p-1 text-sm
 
   // # <content>
   h1
@@ -575,11 +575,14 @@ function parseMarkdown(text: string) {
     tr:nth-child(even)
       @apply bg-white/5
 
+.hljs
+  @apply dark:bg-[#0d1117] light:bg-white/5
+
 .hljs-comment
   @apply font-monaspace_radon text-gray-300/75 italic
 
 .hljs-header
-  @apply bg-vue-black-mute rounded-t-lg flex items-center justify-between py-2 px-3 text-sm
+  @apply bg-white/5 dark:bg-vue-black-mute rounded-t-xl flex items-center justify-between py-2 px-3 text-sm
 
 .v-popper--theme-tooltip
   .v-popper__inner
