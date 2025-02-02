@@ -14,12 +14,11 @@ export default {
     description: "Get website's content",
     parameters: z.object({
       url: z.string().describe("The url to scrape"),
-      format: z.enum(["markdown", "html"]).default("markdown").describe("The format to return the content in")
     }),
-    async execute({ url, format }) {
+    async execute({ url }) {
       const app = new FirecrawlApp({ apiKey: env.FIRECRAWL_API_KEY, apiUrl: env.FIRECRAWL_API_URL });
       try {
-        return await app.scrapeUrl(url, { formats: [format] });
+        return await app.scrapeUrl(url, { formats: ["markdown"] });
       } catch(e: any) {
         logger.error("Encountered an error during execution of the tool", e);
         return e.message;

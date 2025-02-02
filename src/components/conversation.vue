@@ -12,7 +12,29 @@
               v-tooltip="{ content: modelInfo[message.author].name, placement: 'left' }" />
             <div :data-self="message.role === 'user'"
               class="max-w-[80%] dark:max-w-[90%] max-md:max-w-full p-2 data-[self=false]:pb-3 relative backdrop-blur-md bg-clip-padding rounded-tl-2xl rounded-tr-2xl data-[self=true]:rounded-bl-2xl data-[self=false]:rounded-br-2xl shadow-lg dark:shadow-none bg-gradient-to-tr from-white/10 via-white/5 to-white/10 data-[self=true]:bg-gradient-to-tl data-[self=true]:from-white/5 data-[self=true]:via-white/[3%] data-[self=true]:to-white/5 dark:bg-none dark:data-[self=true]:bg-[#2A2A2A] dark:rounded-lg dark:data-[self=true]:rounded-bl-lg dark:data-[self=false]:rounded-br-lg">
-              <div v-if="getContent(message)" v-html="parseMarkdown(getContent(message))" class="markdown-content" />
+              <template v-if="getParts(message).length" v-for="part of getParts(message)">
+                <div v-if="typeof part === 'string'" v-html="parseMarkdown(part)" class="markdown-content" />
+                <div v-else>
+                  <button
+                    class="inline-flex items-center space-x-1 rounded-lg p-1 text-sm bg-white/15 dark:bg-vue-black-mute cursor-pointer"
+                    @click="unfoldedTools.includes(part.id) ? unfoldedTools = unfoldedTools.filter(v => v !== part.id) : unfoldedTools.push(part.id)">
+                    <component :is="toolIcons[part.name] ?? toolIcons.default" class="w-4 h-4" />
+                    <div class="inline-flex items-center space-x-3 select-none">
+                      <p>{{ capitalize(part.name) }}</p>
+                      <LoaderCircleIcon class="w-4 h-4 animate-spin" v-if="!('result' in part)" />
+                      <ChevronUpIcon v-else :data-folded="!unfoldedTools.includes(part.id)"
+                        class="w-4 h-4 data-[folded=false]:rotate-180 transition-all duration-100 ease-in-out" />
+                    </div>
+                  </button>
+                  <div v-if="unfoldedTools.includes(part.id) && 'result' in part"
+                    class="mt-1 border-l-2 border-white/30 pl-2 break-words text-sm">
+                    <div v-if="part.result">
+                      <pre><code class="hljs">{{ objectToString(part.result).trim() }}</code></pre>
+                    </div>
+                    <div v-else class="text-white/75">Tool didn't return any data</div>
+                  </div>
+                </div>
+              </template>
               <div v-else-if="message.role !== 'user' || !message.attachmentIds?.length"
                 class="flex items-center justify-center">
                 <Loader />
@@ -79,7 +101,8 @@
           </div>
         </div>
         <textarea v-model="input" @keydown="handleKeyDown" placeholder="Type a message..."
-          class="bg-transparent p-2 focus:outline-none resize-none w-full" />
+          class="bg-transparent p-2 focus:outline-none w-full resize-none min-h-[4rem] max-h-[10rem] overflow-y-auto"
+          rows="2" />
         <div class="flex justify-between w-full text-white/75">
           <input type="file" multiple accept="image/*" class="hidden" id="file"
             @change.prevent="upload(($event.target as HTMLInputElement)?.files ?? undefined)"
@@ -111,20 +134,29 @@
 import "floating-vue/dist/style.css";
 import "highlight.js/styles/github-dark.min.css";
 
-import { ref, onMounted, watch, type Ref } from "vue";
+import { ref, onMounted, watch, type Ref, type FunctionalComponent, nextTick } from "vue";
 import {
   SendIcon,
   PaperclipIcon,
   CircleStopIcon,
   XIcon,
   CopyIcon,
+  type LucideProps,
+  SunIcon,
+  SearchIcon,
+  GlobeIcon,
+  FolderTreeIcon,
+  FileDiffIcon,
+  HammerIcon,
+  LoaderCircleIcon,
+  ChevronUpIcon,
 } from "lucide-vue-next";
 import { Marked, Renderer } from "marked";
 import { markedHighlight } from "marked-highlight";
 import markedKatex from "marked-katex-extension";
 import hljs from "highlight.js";
 import DOMPurify from "dompurify";
-import { calculateHash, capitalize, isBackendAlive } from "@/lib/utils.ts";
+import { calculateHash, capitalize, isBackendAlive, omit } from "@/lib/utils.ts";
 import type { MessageSchema } from "../../shared/schemas.ts";
 import { onBeforeRouteUpdate, useRoute } from "vue-router";
 import { MessageChunkSchema, routes, SSESchema } from "../../shared/schemas.ts";
@@ -160,6 +192,16 @@ const uploads = ref<FileData[]>([]);
 const error = ref<Omit<Extract<z.infer<typeof SSESchema>, { kind: "error" }>, "kind" | "for"> | null>(null);
 const showError = ref(false);
 const abortController = new AbortController();
+const unfoldedTools = ref<FullToolCall["id"][]>([]);
+
+const toolIcons = {
+  weather: SunIcon,
+  scrape: GlobeIcon,
+  search: SearchIcon,
+  repo_tree: FolderTreeIcon,
+  repo_file: FileDiffIcon,
+  default: HammerIcon
+} satisfies Record<string, FunctionalComponent<LucideProps, {}, any, {}>>;
 
 function showErrorPopup(err: NonNullable<typeof error extends Ref<infer U> ? U : never>) {
   error.value = err;
@@ -312,10 +354,101 @@ onMounted(async () => {
   setupSSE();
 });
 
+function objectToString(obj: unknown, indent = ''): string {
+  if (obj === null || obj === undefined) {
+    return String(obj);
+  }
+
+  if (typeof obj === "string") {
+    return obj;
+  }
+
+  if (typeof obj === "object") {
+    if (Array.isArray(obj)) {
+      if (obj.length === 0) return '[]';
+
+      const items = obj.map(item => {
+        if (Array.isArray(item) || (typeof item === 'object' && item !== null)) {
+          return `${indent}  ${objectToString(item, indent + '  ')}`;
+        }
+        return `${indent}  ${String(item)}`;
+      });
+
+      return `[\n${items.join(',\n')}\n${indent}]`;
+    }
+
+    const entries = Object.entries(obj as Record<string, unknown>);
+    if (entries.length === 0) return '{}';
+
+    return entries
+      .map(([key, value]) => {
+        if (value === null || value === undefined) {
+          return `${indent}${key}: ${String(value)}`;
+        }
+        if (typeof value === "object") {
+          if (Array.isArray(value)) {
+            return `${indent}${key}: ${objectToString(value, indent + '  ')}`;
+          }
+          return `${indent}${key}: {\n${Object.entries(value as Record<string, unknown>)
+            .map(([k, v]) => {
+              if (typeof v === 'object' && v !== null) {
+                return `${indent}  ${k}: ${objectToString(v, indent + '  ')}`;
+              }
+              return `${indent}  ${k}: ${String(v)}`;
+            })
+            .join(',\n')}\n${indent}}`;
+        }
+        return `${indent}${key}: ${value}`;
+      })
+      .join(',\n');
+  }
+
+  return String(obj);
+}
+
 function getContent(msg: Message) {
   return "content" in msg
     ? msg.content
     : msg.chunks.filter(v => v.type === "text-delta").map((v) => v.textDelta).join("");
+}
+
+interface InitialToolCall {
+  id: string;
+  name: string;
+  args: Record<string, unknown>;
+}
+
+type FullToolCall = InitialToolCall & { result: unknown };
+
+function getParts(msg: Message) {
+  const parts: (InitialToolCall | FullToolCall | string)[] = [];
+
+  if (msg.role === "user") {
+    return [msg.content] as typeof parts;
+  }
+
+  for (const chunk of msg.chunks) {
+    const last = parts[parts.length - 1];
+
+    if (chunk.type === "text-delta") {
+      if (typeof last === "string") {
+        parts[parts.length - 1] = last + chunk.textDelta;
+      } else {
+        parts.push(chunk.textDelta);
+      }
+    } else {
+      if (chunk.type === "tool-call") {
+        parts.push({ id: chunk.toolCallId, name: chunk.toolName, args: chunk.args });
+      } else if (typeof last === "object" && "id" in last && last.id === chunk.toolCallId) {
+        parts[parts.length - 1] = {
+          ...last,
+          result: chunk.result
+        };
+      }
+    }
+  }
+
+  return parts;
 }
 
 async function sendMessage() {
@@ -386,7 +519,22 @@ function handleKeyDown(e: KeyboardEvent) {
     e.preventDefault();
     sendMessage();
   }
+  autoResize(e.target as HTMLTextAreaElement);
 }
+
+function autoResize(textarea: HTMLTextAreaElement) {
+  textarea.style.height = '4rem'; // Reset height to min (2 rows)
+  const scrollHeight = textarea.scrollHeight;
+  textarea.style.height = Math.min(scrollHeight, 160) + 'px'; // 160px = 10rem
+}
+
+// Watch for input changes to handle paste events and other modifications
+watch(input, () => {
+  nextTick(() => {
+    const textarea = document.querySelector('textarea');
+    if (textarea) autoResize(textarea);
+  });
+});
 
 // ---
 const stock = new Marked(); // for parsing blockquotes
@@ -472,6 +620,8 @@ function parseMarkdown(text: string) {
   // \`\`\`\n<content>\n\`\`\`
   pre:has(code.hljs)
     @apply shadow-md dark:shadow-none backdrop-blur-sm text-sm mb-2 rounded-b-md overflow-x-auto max-w-full
+    &:last-child
+      @apply mb-0
     code
       @apply block p-2 rounded-b-md whitespace-pre-wrap break-all
 
@@ -582,7 +732,7 @@ function parseMarkdown(text: string) {
   @apply font-monaspace_radon text-gray-300/75 italic
 
 .hljs-header
-  @apply bg-white/5 dark:bg-vue-black-mute rounded-t-xl flex items-center justify-between py-2 px-3 text-sm
+  @apply bg-white/5 dark:bg-vue-black-mute rounded-t-xl flex items-center justify-between py-2 px-3 text-sm mt-1
 
 .v-popper--theme-tooltip
   .v-popper__inner
