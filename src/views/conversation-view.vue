@@ -1,5 +1,5 @@
 <template>
-  <div class="flex h-full selection:bg-white/10 dark:selection:bg-sky-500/15 text-white dark:bg-vue-black-soft dark:bg-none bg-[url('/img/bg/Elarun.webp')] bg-cover bg-center bg-origin-border overflow-hidden">
+  <div class="flex h-full light:selection:bg-white/10 text-white dark:bg-vue-black-soft dark:bg-none bg-[url('/img/bg/Elarun.webp')] bg-cover bg-center bg-origin-border overflow-hidden">
     <Suspense>
       <ConversationWrapper/>
 

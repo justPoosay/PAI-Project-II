@@ -45,8 +45,8 @@
                   class="hover:bg-white/5 transition p-1 rounded-md">
                   <CopyIcon class="w-3 h-3 dark:w-5 dark:h-5" />
                 </button>
-                <button v-tooltip="'Regenerate'" @click="regenerateLastMessage" class="hover:bg-white/5 transition p-1 rounded-md">
-                  <RefreshCwIcon class="w-3 h-3 dark:w-5 dark:h-5 transition-all duration-500 hover:rotate-180" />
+                <button v-tooltip="'Regenerate'" @click="regenerateLastMessage" class="hover:bg-white/5 transition p-1 rounded-md group">
+                  <RefreshCwIcon class="w-3 h-3 dark:w-5 dark:h-5 transition-all duration-500 group-hover:rotate-[360deg]" />
                 </button>
               </div>
             </div>
