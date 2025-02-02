@@ -17,7 +17,7 @@ dayjs.extend(utc);
 dayjs.extend(timezone);
 
 const Options = object({
-  message: string().nonempty(),
+  message: string().nonempty().nullable(),
   model: ModelSchema.optional(),
   attachmentIds: string().array().optional(),
 });
@@ -38,8 +38,17 @@ export async function POST(req: AppRequest): Promise<Response> {
   if (!c) {
     return new Response(null, { status: 404 });
   }
+  // null message and missing attachmentIds indicate regeneration of previous completion, if there are no messages, there is nothing to regenerate
+  if (!opts.message && !opts.attachmentIds && !c?.messages.length) {
+    return new Response(null, { status: 400 });
+  }
 
-  c.messages.push({ id: randomUUIDv7(), role: "user", content: opts.message });
+  if (opts.message /*|| opts.attachmentIds?.lenght */) { 
+    c.messages.push({ id: randomUUIDv7(), role: "user", content: opts.message });
+  } else if (c.messages[c.messages.length - 1].role === "assistant") { // pop only assistant messages
+    c.messages.pop();
+  }
+
   c.model = opts.model ?? c.model;
 
   const stream = new TransformStream();
@@ -73,7 +82,7 @@ export async function POST(req: AppRequest): Promise<Response> {
     onChunk({ chunk }) {
       if (["tool-call", "tool-result", "text-delta"].includes(chunk.type)) {
         chunks.push(chunk as Extract<typeof chunk, { type: "tool-call" | "tool-result" | "text-delta" }>);
-        writer.write(JSON.stringify(chunk));
+        writer.write(JSON.stringify(chunk) + "\n");
       }
     },
     abortSignal: req.signal,

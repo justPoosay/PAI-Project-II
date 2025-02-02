@@ -6,15 +6,15 @@
       <div class="max-w-5xl mx-auto">
         <div v-for="(message, i) in messages.array" :key="i" class="mb-2 relative">
           <div :data-self="message.role === 'user'"
-            class="flex justify-start data-[self=true]:justify-end items-end space-x-2">
-            <img v-if="message.role === 'assistant'" class="w-6 h-6 max-md:hidden dark:order-first"
-              :alt="message.author" :src="modelInfo[message.author].logoSrc" width="24"
+            class="flex justify-start data-[self=true]:justify-end items-end dark:items-start space-x-2">
+            <img v-if="message.role === 'assistant'" class="w-6 h-6 dark:mt-2 max-md:hidden" :alt="message.author"
+              :src="modelInfo[message.author].logoSrc" width="24"
               v-tooltip="{ content: modelInfo[message.author].name, placement: 'left' }" />
             <div :data-self="message.role === 'user'"
               class="max-w-[80%] dark:max-w-[90%] max-md:max-w-full p-2 data-[self=false]:pb-3 relative backdrop-blur-md bg-clip-padding rounded-tl-2xl rounded-tr-2xl data-[self=true]:rounded-bl-2xl data-[self=false]:rounded-br-2xl shadow-lg dark:shadow-none bg-gradient-to-tr from-white/10 via-white/5 to-white/10 data-[self=true]:bg-gradient-to-tl data-[self=true]:from-white/5 data-[self=true]:via-white/[3%] data-[self=true]:to-white/5 dark:bg-none dark:data-[self=true]:bg-[#2A2A2A] dark:rounded-lg dark:data-[self=true]:rounded-bl-lg dark:data-[self=false]:rounded-br-lg">
               <template v-if="getParts(message).length" v-for="part of getParts(message)">
                 <div v-if="typeof part === 'string'" v-html="parseMarkdown(part, false)" class="markdown-content" />
-                <div v-else>
+                <div v-else class="m-1">
                   <button
                     class="inline-flex items-center space-x-1 rounded-lg p-1 text-sm bg-white/15 dark:bg-vue-black-mute cursor-pointer"
                     @click="unfoldedTools.includes(part.id) ? unfoldedTools = unfoldedTools.filter(v => v !== part.id) : unfoldedTools.push(part.id)">
@@ -39,14 +39,13 @@
                 class="flex items-center justify-center">
                 <Loader />
               </div>
-              <div v-if="message.role === 'assistant' && !errorMessageRegex.test(getContent(message))"
-                class="flex p-0.5 rounded-md light:bg-white/15 backdrop-blur-sm absolute -bottom-3 dark:-bottom-5 left-1 light:shadow-md dark:space-x-1.5">
+              <div v-if="message.role === 'assistant'"
+                class="flex p-0.5 dark:pl-0 rounded-md light:bg-white/15 backdrop-blur-sm light:absolute light:-bottom-3 light:left-1 light:shadow-md dark:space-x-1.5">
                 <button v-tooltip="'Copy'" @click="copyToClipboard(getContent(message))"
                   class="hover:bg-white/5 transition p-1 rounded-md">
                   <CopyIcon class="w-3 h-3 dark:w-5 dark:h-5" />
                 </button>
-                <button v-tooltip="'Regenerate'" @click="() => { /*TODO*/ }"
-                  class="hover:bg-white/5 transition p-1 rounded-md">
+                <button v-tooltip="'Regenerate'" @click="regenerateLastMessage" class="hover:bg-white/5 transition p-1 rounded-md">
                   <RefreshCwIcon class="w-3 h-3 dark:w-5 dark:h-5 transition-all duration-500 hover:rotate-180" />
                 </button>
               </div>
@@ -140,14 +139,13 @@ import {
   ChevronUpIcon,
   CheckIcon,
   RefreshCwIcon,
-  CircleAlertIcon,
 } from "lucide-vue-next";
-import { calculateHash, capitalize, isBackendAlive, omit } from "@/lib/utils.ts";
+import { calculateHash, capitalize, isBackendAlive } from "@/lib/utils.ts";
 import type { MessageSchema } from "../../shared/schemas.ts";
 import { onBeforeRouteUpdate, useRoute } from "vue-router";
 import { MessageChunkSchema, routes, SSESchema } from "../../shared/schemas.ts";
 import { useConversationStore } from "@/stores/conversations.ts";
-import { errorMessageRegex, modelInfo } from "../../shared/constants.ts";
+import { modelInfo } from "../../shared/constants.ts";
 import ModelSelector from "@/components/model-selector.vue";
 import router from "@/router";
 import { useModelStore } from "@/stores/models.ts";
@@ -157,6 +155,7 @@ import { z } from "zod";
 import ErrorPopup from "@/components/error-popup.vue";
 import { parseMarkdown } from "@/lib/markdown.ts";
 import ToolResult from "@/components/tool-result.vue";
+import type { Model } from "../../shared/index.ts";
 
 type FileData = Omit<z.infer<(typeof routes["upload"])>[0], "id"> & { id?: string, href: string }
 
@@ -420,34 +419,66 @@ async function sendMessage() {
     input.value = "";
     if (attachments) uploads.value = [];
 
-    const res = await fetch(`/api/${id}/completion`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ message: content, model: model.value }),
+    await requestCompletion({
+      conversationId: id,
+      message: content,
+      model: model.value,
     });
+  }
+}
 
-    const msg = messages.value.array[messages.value.array.length - 1] as Extract<Message, { role: "assistant" }>;
+interface CompletionOptions {
+  conversationId?: string;
+  message: string | null;
+  model?: Model;
+  attachmentIds?: string[];
+}
 
-    const decoder = new TextDecoder();
-    for await (const chunk of res.body! as ReadableStream<Uint8Array> & AsyncIterable<Uint8Array>) {
-      const text = decoder.decode(chunk);
-      const parts = text.trim().split("\n");
-      for (const part of parts) {
-        if (part.trim()) {
-          try {
-            const json = JSON.parse(part);
-            const { data: chunk } = MessageChunkSchema.safeParse(json);
-            if (chunk) msg.chunks.push(chunk);
-          } catch (e) {
-            console.warn("Failed to parse chunk:", part);
-          }
+async function requestCompletion({ conversationId = route.params.id as string, ...opts }: CompletionOptions) {
+  const res = await fetch(`/api/${conversationId}/completion`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(opts),
+  });
+
+  let msg = messages.value.array[messages.value.array.length - 1];
+  if (msg.role === "user" || msg.finished) {
+    const index = messages.value.array.push({
+      role: "assistant",
+      chunks: [],
+      author: model.value,
+      finished: false,
+    }) - 1;
+    msg = messages.value.array[index] as Extract<Message, { role: "assistant" }>;
+  }
+
+  const decoder = new TextDecoder();
+  for await (const chunk of res.body! as ReadableStream<Uint8Array> & AsyncIterable<Uint8Array>) {
+    const text = decoder.decode(chunk);
+    const parts = text.trim().split("\n");
+    for (const part of parts) {
+      if (part.trim()) {
+        try {
+          const json = JSON.parse(part);
+          const { data: chunk } = MessageChunkSchema.safeParse(json);
+          if (chunk) msg.chunks.push(chunk);
+        } catch (e) {
+          console.warn("Failed to parse chunk:", part);
         }
       }
     }
-    msg.finished = true;
   }
+  msg.finished = true;
+}
+
+async function regenerateLastMessage() {
+  const last = messages.value.array[messages.value.array.length - 1];
+  if (last?.role !== 'assistant') return;
+  last.finished = false;
+  last.chunks = [];
+  await requestCompletion({ message: null, model: model.value });
 }
 
 function handleKeyDown(e: KeyboardEvent) {
