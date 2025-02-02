@@ -22,8 +22,9 @@
                     <div class="inline-flex items-center space-x-3 select-none">
                       <p>{{ capitalize(part.name) }}</p>
                       <LoaderCircleIcon class="w-4 h-4 animate-spin" v-if="!('result' in part)" />
-                      <ChevronUpIcon v-else :data-folded="!unfoldedTools.includes(part.id)"
-                        class="w-4 h-4 data-[folded=false]:rotate-180 transition-all duration-100 ease-in-out" />
+                      <ChevronUpIcon v-else-if="part.result" :data-folded="!unfoldedTools.includes(part.id)"
+                        class="w-4 h-4 data-[folded=true]:rotate-180 transition-all duration-100 ease-in-out" />
+                      <CheckIcon v-else class="w-4 h-4 text-green-500" />
                     </div>
                   </button>
                   <div v-if="unfoldedTools.includes(part.id) && 'result' in part"
@@ -31,7 +32,6 @@
                     <div v-if="part.result">
                       <pre><code class="hljs">{{ objectToString(part.result).trim() }}</code></pre>
                     </div>
-                    <div v-else class="text-white/75">Tool didn't return any data</div>
                   </div>
                 </div>
               </template>
@@ -58,10 +58,14 @@
               <!--                </a>-->
               <!--              </div>-->
               <div v-if="message.role === 'assistant' && !errorMessageRegex.test(getContent(message))"
-                class="flex p-0.5 rounded-md bg-white/15 backdrop-blur-sm absolute -bottom-3 left-1 shadow-md">
-                <button title="Copy to Clipboard" @click="copyToClipboard(getContent(message))"
-                  class="hover:bg-white/5 transition p-1 rounded-md">
-                  <CopyIcon class="w-3 h-3" />
+                class="flex p-0.5 rounded-md light:bg-white/15 backdrop-blur-sm absolute -bottom-3 dark:-bottom-5 left-1 light:shadow-md dark:space-x-2">
+                <button v-tooltip="'Copy'" @click="copyToClipboard(getContent(message))"
+                  class="light:hover:bg-white/5 transition light:p-1 light:rounded-md">
+                  <CopyIcon class="w-3 h-3 dark:w-5 dark:h-5" />
+                </button>
+                <button v-tooltip="'Regenerate'" @click="() => { /*TODO*/ }"
+                  class="light:hover:bg-white/5 transition light:p-1 light:rounded-md">
+                  <RefreshCwIcon class="w-3 h-3 dark:w-5 dark:h-5" />
                 </button>
               </div>
             </div>
@@ -103,27 +107,29 @@
         <textarea v-model="input" @keydown="handleKeyDown" placeholder="Type a message..."
           class="bg-transparent p-2 focus:outline-none w-full resize-none min-h-[4rem] max-h-[10rem] overflow-y-auto"
           rows="2" />
-        <div class="flex justify-between w-full text-white/75">
+        <div class="flex justify-between w-full text-white/75 items-end">
           <input type="file" multiple accept="image/*" class="hidden" id="file"
             @change.prevent="upload(($event.target as HTMLInputElement)?.files ?? undefined)"
             :disabled="!modelInfo[model].capabilities.includes('imageInput')">
-          <div class="flex items-center space-x-2">
+          <div class="flex p-1">
+            <ModelSelector v-model="model" />
+          </div>
+          <div class="flex items-center">
             <label :aria-disabled="!modelInfo[model].capabilities.includes('imageInput')"
               class="p-2 rounded-full aria-[disabled=false]:hover:bg-white/5 transition mt-1 aria-[disabled=false]:cursor-pointer aria-[disabled=true]:text-white/25"
               :title="modelInfo[model].capabilities.includes('imageInput') ? 'Upload File' : 'This model does not support file input'"
               for="file">
-              <PaperclipIcon class="w-6 h-6 " />
+              <PaperclipIcon class="w-5 h-5" />
             </label>
-            <ModelSelector v-model="model" />
+            <button
+              v-if="(messages.array[messages.array.length - 1] as Extract<Message, { role: 'assistant' }>)?.finished ?? true"
+              @click="sendMessage" class="p-2 rounded-full hover:bg-white/5 transition mt-1">
+              <SendIcon class="w-5 h-5" />
+            </button>
+            <button v-else @click="abortController.abort()" class="p-2 rounded-full hover:bg-white/5 transition mt-1">
+              <CircleStopIcon class="w-5 h-5" />
+            </button>
           </div>
-          <button
-            v-if="(messages.array[messages.array.length - 1] as Extract<Message, { role: 'assistant' }>)?.finished ?? true"
-            @click="sendMessage" class="p-2 rounded-full hover:bg-white/5 transition mt-1">
-            <SendIcon class="w-6 h-6" />
-          </button>
-          <button v-else @click="abortController.abort()" class="p-2 rounded-full hover:bg-white/5 transition mt-1">
-            <CircleStopIcon class="w-6 h-6" />
-          </button>
         </div>
       </div>
     </div>
@@ -150,6 +156,8 @@ import {
   HammerIcon,
   LoaderCircleIcon,
   ChevronUpIcon,
+  CheckIcon,
+  RefreshCwIcon,
 } from "lucide-vue-next";
 import { Marked, Renderer } from "marked";
 import { markedHighlight } from "marked-highlight";

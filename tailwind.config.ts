@@ -35,5 +35,8 @@ export default {
   },
   plugins: [
     debugScreens,
+    function ({ addVariant }) {
+      addVariant('light', '@media (prefers-color-scheme: light)')
+    }
   ],
 } satisfies import("tailwindcss").Config;
