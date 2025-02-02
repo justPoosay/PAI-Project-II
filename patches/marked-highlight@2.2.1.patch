@@ -1,20 +1,19 @@
 diff --git a/src/index.js b/src/index.js
-index b92a4e2fc76508cadffe6ebe0f4b4eef374002b8..efbfc3b5739b1d1aea53bbf0e9b08f720dbdcc46 100644
+index 7426a98d099cafbc28c0d2ebe01f9042cbf3388e..c40352e6fb280f121eb43dd6ce4d4bc7435f98eb 100644
 --- a/src/index.js
 +++ b/src/index.js
-@@ -51,9 +51,25 @@ export function markedHighlight(options) {
+@@ -51,7 +51,27 @@ export function markedHighlight(options) {
            ? ` class="${classValue}"`
            : '';
          code = code.replace(/\n$/, '');
-+        const uuid = crypto.randomUUID();
-         return `
--          <div>
--            <pre><code${classAttr}>${escaped ? code : escape(code, true)}\n</code></pre>
-+          <div class="flex flex-col">
-+            <div class="hljs-header">
-+              <p>${lang ? escape(lang) : "plaintext"}</p>
-+              <button class="hljs-copy-btn" onclick="
-+                const button = this;
+-        return `<pre><code${classAttr}>${escaped ? code : escape(code, true)}\n</code></pre>`;
++	const uuid = crypto.randomUUID();
++	return `
++	  <div class="flex flex-col">
++	    <div class="hljs-header">
++	      <p>${lang ? escape(lang) : "plaintext"}</p>
++	      <button class="hljs-copy-btn" onclick="
++	        const button = this;
 +                const code = document.getElementById('${uuid}').innerText;
 +                navigator.clipboard.writeText(code).then(function() {
 +                  button.innerText = 'Copied!';
@@ -27,6 +26,8 @@ index b92a4e2fc76508cadffe6ebe0f4b4eef374002b8..efbfc3b5739b1d1aea53bbf0e9b08f72
 +              </button>
 +            </div>
 +            <pre><code${classAttr} id="${uuid}">${escaped ? code : escape(code, true)}\n</code></pre>
-           </div>
-         `;
++          </div>
++        `;
        },
+     },
+   };
