@@ -13,7 +13,7 @@
             <div :data-self="message.role === 'user'"
               class="max-w-[80%] dark:max-w-[90%] max-md:max-w-full p-2 data-[self=false]:pb-3 relative backdrop-blur-md bg-clip-padding rounded-tl-2xl rounded-tr-2xl data-[self=true]:rounded-bl-2xl data-[self=false]:rounded-br-2xl shadow-lg dark:shadow-none bg-gradient-to-tr from-white/10 via-white/5 to-white/10 data-[self=true]:bg-gradient-to-tl data-[self=true]:from-white/5 data-[self=true]:via-white/[3%] data-[self=true]:to-white/5 dark:bg-none dark:data-[self=true]:bg-[#2A2A2A] dark:rounded-lg dark:data-[self=true]:rounded-bl-lg dark:data-[self=false]:rounded-br-lg">
               <template v-if="getParts(message).length" v-for="part of getParts(message)">
-                <div v-if="typeof part === 'string'" v-html="parseMarkdown(part)" class="markdown-content" />
+                <div v-if="typeof part === 'string'" v-html="parseMarkdown(part, false)" class="markdown-content" />
                 <div v-else>
                   <button
                     class="inline-flex items-center space-x-1 rounded-lg p-1 text-sm bg-white/15 dark:bg-vue-black-mute cursor-pointer"
@@ -29,9 +29,52 @@
                   </button>
                   <div v-if="unfoldedTools.includes(part.id) && 'result' in part"
                     class="mt-1 border-l-2 border-white/30 pl-2 break-words text-sm">
-                    <div v-if="part.result">
-                      <pre><code class="hljs">{{ objectToString(part.result).trim() }}</code></pre>
-                    </div>
+                    <p class="mb-1">{{ JSON.stringify(part.args) }}</p>
+                    <template v-if="part.result">
+                      <template v-if="['scrape', 'search', 'repo_tree'].includes(part.name)">
+                        <!-- Scrape tool -->
+                        <div v-if="part.name === 'scrape' && typeof part.result === 'object'">
+                          <div v-if="!(part.result.success ?? false)"
+                            class="inline-flex items-center space-x-2 text-red-500">
+                            <CircleAlertIcon class="w-4 h-4" />
+                            <p>{{ part.result.error }}</p>
+                          </div>
+                          <div v-else v-html="parseMarkdown(part.result.markdown)" class="markdown-content" />
+                        </div>
+                        <!-- Search tool -->
+                        <div v-if="part.name === 'search' && typeof part.result === 'object'">
+                          <div v-if="!(part.result.success ?? true)"
+                            class="inline-flex items-center space-x-2 text-red-500">
+                            <CircleAlertIcon class="w-4 h-4" />
+                            <p>{{ part.result.error }}</p>
+                          </div>
+                          <div v-else class="flex flex-col space-y-2">
+                            <div v-if="part.result.zci" class="border-y border-y-white/30 p-2">
+                              <a class="text-xl font-bold hover:underline" :href="part.result.zci.url">{{
+                                part.result.zci.title }}</a>
+                              <p>{{ part.result.zci.text }}</p>
+                            </div>
+                            <div v-for="result in part.result.results" class="inline-flex flex-col">
+                              <div class="inline-block">
+                                <a class="text-lg text-sky-400 hover:underline dark:text-blue-500 -mb-1"
+                                  :href="result.url">{{
+                                  result.title }}</a>
+                              </div>
+                              <div class="inline-block">
+                                <a class="hover:underline text-emerald-400" :href="result.url">{{ result.url }}</a>
+                              </div>
+                              <p>{{ result.snippet }}</p>
+                            </div>
+                          </div>
+                        </div>
+                        <!-- Repo Tree tool -->
+                        <div v-if="part.name === 'repo_tree' && typeof part.result === 'string'">
+                          <pre>{{ part.result }}</pre>
+                        </div>
+                      </template>
+                      <pre v-else><code class="hljs">{{ objectToString(part.result).trim() }}</code></pre>
+                    </template>
+                    <div v-else class="text-white/75">Tool didn't return any data</div>
                   </div>
                 </div>
               </template>
@@ -39,33 +82,15 @@
                 class="flex items-center justify-center">
                 <Loader />
               </div>
-              <!--              <div v-if="message.role === 'user' && message.attachments?.length" class="flex flex-wrap">-->
-              <!--                <a-->
-              <!--                  v-for="attachment in message.attachments"-->
-              <!--                  :key="attachment.id"-->
-              <!--                  :href="`/api/upload/${attachment.id}`"-->
-              <!--                  :download="attachment.image ? 'image.png' : 'file.txt'"-->
-              <!--                  class="flex items-center p-1 bg-white/5 backdrop-blur-sm rounded-lg"-->
-              <!--                >-->
-              <!--                  <img-->
-              <!--                    v-if="attachment.image"-->
-              <!--                    :src="`/api/upload/${attachment.id}`"-->
-              <!--                    class="rounded-lg"-->
-              <!--                    alt="Attachment"-->
-              <!--                    width="128"-->
-              <!--                  />-->
-              <!--                  <span v-else class="text-white/75">File</span>-->
-              <!--                </a>-->
-              <!--              </div>-->
               <div v-if="message.role === 'assistant' && !errorMessageRegex.test(getContent(message))"
-                class="flex p-0.5 rounded-md light:bg-white/15 backdrop-blur-sm absolute -bottom-3 dark:-bottom-5 left-1 light:shadow-md dark:space-x-2">
+                class="flex p-0.5 rounded-md light:bg-white/15 backdrop-blur-sm absolute -bottom-3 dark:-bottom-5 left-1 light:shadow-md dark:space-x-1.5">
                 <button v-tooltip="'Copy'" @click="copyToClipboard(getContent(message))"
-                  class="light:hover:bg-white/5 transition light:p-1 light:rounded-md">
+                  class="hover:bg-white/5 transition p-1 rounded-md">
                   <CopyIcon class="w-3 h-3 dark:w-5 dark:h-5" />
                 </button>
                 <button v-tooltip="'Regenerate'" @click="() => { /*TODO*/ }"
-                  class="light:hover:bg-white/5 transition light:p-1 light:rounded-md">
-                  <RefreshCwIcon class="w-3 h-3 dark:w-5 dark:h-5" />
+                  class="hover:bg-white/5 transition p-1 rounded-md">
+                  <RefreshCwIcon class="w-3 h-3 dark:w-5 dark:h-5 transition-all duration-500 hover:rotate-180" />
                 </button>
               </div>
             </div>
@@ -105,7 +130,7 @@
           </div>
         </div>
         <textarea v-model="input" @keydown="handleKeyDown" placeholder="Type a message..."
-          class="bg-transparent p-2 focus:outline-none w-full resize-none min-h-[4rem] max-h-[10rem] overflow-y-auto"
+          class="bg-transparent p-1 focus:outline-none w-full resize-none min-h-[4rem] max-h-[10rem] overflow-y-auto"
           rows="2" />
         <div class="flex justify-between w-full text-white/75 items-end">
           <input type="file" multiple accept="image/*" class="hidden" id="file"
@@ -158,6 +183,7 @@ import {
   ChevronUpIcon,
   CheckIcon,
   RefreshCwIcon,
+  CircleAlertIcon,
 } from "lucide-vue-next";
 import { Marked, Renderer } from "marked";
 import { markedHighlight } from "marked-highlight";
@@ -426,7 +452,7 @@ interface InitialToolCall {
   args: Record<string, unknown>;
 }
 
-type FullToolCall = InitialToolCall & { result: unknown };
+type FullToolCall = InitialToolCall & { result: any };
 
 function getParts(msg: Message) {
   const parts: (InitialToolCall | FullToolCall | string)[] = [];
@@ -588,7 +614,7 @@ marked.use(markedKatex({ throwOnError: false, nonStandard: true, output: "mathml
 
 const markdownCache = new Map<string, string>();
 
-function parseMarkdown(text: string) {
+function parseMarkdown(text: string, strict = true) {
   if (markdownCache.has(text)) {
     return markdownCache.get(text);
   }
@@ -602,9 +628,11 @@ function parseMarkdown(text: string) {
         gfm: true,
       },
     ),
-    {
-      ADD_ATTR: ["onclick"]
-    }
+    strict
+      ? {}
+      : {
+        ADD_ATTR: ["onclick"]
+      }
   );
 
   markdownCache.set(text, parsed);

@@ -36,7 +36,7 @@ export default {
           });
           return ((result?.organic_results ?? []) as any[]).map(({ title, link, snippet }) => ({
             title,
-            link,
+            url: link,
             snippet
           }));
         } else {
@@ -47,7 +47,10 @@ export default {
       } catch(e) {
         if(e instanceof Error) {
           logger.error(e.message);
-          return e.message;
+          return {
+            success: false,
+            error: e.message
+          };
         }
       }
     }
