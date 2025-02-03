@@ -2,7 +2,7 @@
   <!-- Chat Area -->
   <div class="flex-1 flex flex-col relative">
     <!-- Chat Messages -->
-    <div v-if="!messages.loading && !messages.error && messages.array.length" class="flex-1 overflow-y-auto p-4 pb-36">
+    <div v-if="!messages.loading && !messages.error && messages.array.length" class="flex-1 overflow-y-auto p-4 pb-36 overflow-x-hidden">
       <div class="max-w-5xl mx-auto">
         <div v-for="(message, i) in messages.array" :key="i" class="mb-2 relative">
           <div :data-self="message.role === 'user'" class="flex justify-start data-[self=true]:justify-end items-end dark:items-start space-x-2">
@@ -44,20 +44,34 @@
                   </div>
                 </div>
               </template>
-              <div v-else-if="!finished(message)" class="flex items-center justify-center">
+              <div v-else-if="!finished(message)" class="flex items-center justify-center p-2">
                 <Loader />
               </div>
-              <div
-                v-if="message.role === 'assistant'"
-                class="flex p-0.5 dark:pl-0 rounded-md light:bg-white/15 backdrop-blur-sm light:absolute light:-bottom-3 light:left-1 light:shadow-md dark:space-x-1.5"
+              <Transition
+                enter-active-class="transition-all duration-300 ease-in-out"
+                enter-from-class="-translate-x-4 opacity-0"
+                enter-to-class="translate-x-0 opacity-100"
               >
-                <button v-tooltip="'Copy'" @click="copyToClipboard(getContent(message))" class="hover:bg-white/5 transition p-1 rounded-md">
-                  <CopyIcon class="w-3 h-3 dark:w-5 dark:h-5" />
-                </button>
-                <button v-if="getLastMessageIfByAssistant() === message" v-tooltip="'Regenerate'" @click="regenerateLastMessage" class="hover:bg-white/5 transition p-1 rounded-md group">
-                  <RefreshCwIcon class="w-3 h-3 dark:w-5 dark:h-5 transition-all duration-500 group-hover:rotate-[360deg]" />
-                </button>
-              </div>
+                <div
+                  v-if="
+                    /* show only if message is by assistant and is finished, or is by assistant and isn't finished, but the abort controller isn't present */
+                    message.role === 'assistant' && (finished(message) || (!finished(message) && !abortController))
+                  "
+                  class="flex p-0.5 dark:pl-0 rounded-md light:bg-white/15 backdrop-blur-sm light:absolute light:-bottom-3 light:left-1 light:shadow-md dark:space-x-1.5"
+                >
+                  <button v-if="finished(message)" v-tooltip="'Copy'" @click="copyToClipboard(getContent(message))" class="hover:bg-white/5 transition p-1 rounded-md">
+                    <CopyIcon class="w-3 h-3 dark:w-5 dark:h-5" />
+                  </button>
+                  <button
+                    v-if="lastMessage === message"
+                    v-tooltip="'Regenerate'"
+                    @click="regenerateLastMessage"
+                    class="hover:bg-white/5 transition p-1 rounded-md group"
+                  >
+                    <RefreshCwIcon class="w-3 h-3 dark:w-5 dark:h-5 transition-all duration-500 group-hover:rotate-[360deg]" />
+                  </button>
+                </div>
+              </Transition>
             </div>
           </div>
         </div>
@@ -127,10 +141,10 @@
             >
               <PaperclipIcon class="w-5 h-5" />
             </label>
-            <button v-if="finished(getLastMessageIfByAssistant())" @click="sendMessage" class="p-2 rounded-full hover:bg-white/5 transition mt-1">
+            <button v-if="!abortController" @click="sendMessage" class="p-2 rounded-full hover:bg-white/5 transition mt-1">
               <SendIcon class="w-5 h-5" />
             </button>
-            <button v-else @click="abortController?.abort()" class="p-2 rounded-full hover:bg-white/5 transition mt-1">
+            <button v-else @click="abortController.abort()" class="p-2 rounded-full hover:bg-white/5 transition mt-1">
               <CircleStopIcon class="w-5 h-5" />
             </button>
           </div>
@@ -144,7 +158,7 @@
 import "floating-vue/dist/style.css";
 import "highlight.js/styles/github-dark.min.css";
 
-import { ref, onMounted, watch, type Ref, type FunctionalComponent, nextTick } from "vue";
+import { ref, onMounted, watch, type Ref, type FunctionalComponent, nextTick, computed } from "vue";
 import {
   SendIcon,
   PaperclipIcon,
@@ -198,6 +212,7 @@ const error = ref<Omit<Extract<z.infer<typeof SSESchema>, { kind: "error" }>, "k
 const showError = ref(false);
 const abortController = ref<AbortController | null>(null);
 const unfoldedTools = ref<FullToolCall["id"][]>([]);
+const lastMessage = computed(() => last(messages.value.array) ?? null);
 
 const toolIcons: Record<string, FunctionalComponent<LucideProps, {}, any, {}>> = {
   weather: SunIcon,
@@ -300,7 +315,15 @@ function init(id: string) {
 }
 
 function fetchMessages(id: string) {
-  messages.value.error = null;
+  function equals(a: Message, b: Message) {
+    if (a.role !== b.role) return false;
+
+    if (a.role === "user") {
+      return a.content === (b as typeof a).content;
+    }
+
+    return a.chunks.length === (b as typeof a).chunks.length && a.chunks.every((v, i) => v === (b as typeof a).chunks[i]);
+  }
 
   fetch(`/api/${id}/messages`)
     .then((res) => {
@@ -316,6 +339,14 @@ function fetchMessages(id: string) {
       res.json().then((data) => {
         const result = routes["[id]"]["messages"].safeParse(data);
         if (result.success) {
+          if (messages.value.array.length > result.data.length) {
+            const lastIndex = result.data.length - 1;
+            const local = messages.value.array[lastIndex];
+            const remote = result.data[lastIndex];
+            // if both messages are the same and the last message is not finished, don't update
+            if (equals(local, remote) && !finished(last(messages.value.array))) return;
+          }
+
           messages.value.array = result.data;
           localStorage.setItem(id, JSON.stringify(result.data));
         } else {
@@ -473,14 +504,10 @@ async function sendMessage() {
   }
 }
 
-function getLastMessageIfByAssistant() {
-  const last = $last(messages.value.array);
-  return last?.role === "assistant" ? last : null;
-}
-
 /** Checks if the message ends with a null chunk */
 function finished(msg: Nullish<Message>) {
-  return last(msg ? ("chunks" in msg ? msg.chunks : [null]) : undefined) === null;
+  const u = undefined;
+  return last(msg ? ("chunks" in msg ? msg.chunks : u) : u) === null;
 }
 
 interface CompletionOptions {

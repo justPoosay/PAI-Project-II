@@ -13,6 +13,7 @@ import logger from "../../lib/logger.ts";
 import { openai } from "@ai-sdk/openai";
 import { emitter } from "../../index";
 import { pick } from "../../lib/utils.ts";
+import type { Message } from "../../../../shared/index.ts";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -54,6 +55,7 @@ export async function POST(req: AppRequest): Promise<Response> {
   }
 
   c.model = opts.model ?? c.model;
+  c.messages.push({ id: randomUUIDv7(), role: "assistant", chunks: [], author: c.model });
   await ConversationService.update(c.id, pick(c, ["messages", "model"]));
 
   const stream = new TransformStream();
@@ -140,14 +142,16 @@ export async function POST(req: AppRequest): Promise<Response> {
         } catch (e) {}
       }
     }
-    
+
     try {
       chunks.push(null);
       writer.write("null\n"); // terminating null
       await writer.close();
     } catch (e) {}
 
-    c.messages.push({ id: randomUUIDv7(), role: "assistant", chunks, author: c.model });
+    if (c.messages[c.messages.length - 1].role === "assistant") {
+      (c.messages[c.messages.length - 1] as Extract<Message, { role: "assistant" }>).chunks = chunks;
+    }
 
     if (!encounteredError && c.messages.length >= 2 && !c.name) {
       try {
