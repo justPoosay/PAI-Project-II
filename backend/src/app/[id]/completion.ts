@@ -46,9 +46,10 @@ export async function POST(req: AppRequest): Promise<Response> {
     return new Response(null, { status: 400 });
   }
 
-  if (opts.message /*|| opts.attachmentIds?.lenght */) { 
+  if (opts.message /*|| opts.attachmentIds?.lenght */) {
     c.messages.push({ id: randomUUIDv7(), role: "user", content: opts.message });
-  } else if (c.messages[c.messages.length - 1].role === "assistant") { // pop only assistant messages
+  } else if (c.messages[c.messages.length - 1].role === "assistant") {
+    // pop only assistant messages
     c.messages.pop();
   }
 
@@ -59,16 +60,23 @@ export async function POST(req: AppRequest): Promise<Response> {
   const writer = stream.writable.getWriter();
 
   function getMessages() {
-    return c!.messages.map(({ role, ...rest }) => ({
-      role,
-      content: "content" in rest
-        ? rest.content
-        : rest.chunks.filter(v => v?.type === "text-delta").map(v => v.textDelta).join(""),
-    } satisfies CoreMessage));
+    return c!.messages.map(
+      ({ role, ...rest }) =>
+        ({
+          role,
+          content:
+            "content" in rest
+              ? rest.content
+              : rest.chunks
+                  .filter((v) => v?.type === "text-delta")
+                  .map((v) => v.textDelta)
+                  .join(""),
+        } satisfies CoreMessage)
+    );
   }
 
   const date = dayjs().tz("America/Los_Angeles").format("h:mm A on MMMM D, YYYY PST");
-  const chunks: Extract<typeof c["messages"] extends (infer U)[] ? U : never, { role: "assistant" }>["chunks"] = [];
+  const chunks: Extract<(typeof c)["messages"] extends (infer U)[] ? U : never, { role: "assistant" }>["chunks"] = [];
 
   const comp = streamText({
     model: models[c.model].model,
@@ -77,14 +85,26 @@ export async function POST(req: AppRequest): Promise<Response> {
     system: `
       ${opts.name ? `User's name is ${opts.name}.` : ""}
       NEVER invent or improvise information. If you can't give a reasonable answer, try to use available tools, and if you are still stuck, just say what you are thinking.
-      ${tools["search"] && tools["scrape"] ? "Remember that when searching the web you don't need to go of only the search result website metadata, you can also get the full view of the website" : ""}
-      ${tools["repo_tree"] && tools["repo_file"] ? "Remember that you can get contents of as many files as you want, so don't be afraid to go thru every file in the repo" : ""}
+      ${
+        tools["search"] && tools["scrape"]
+          ? "Remember that when searching the web you don't need to go of only the search result website metadata, you can also get the full view of the website"
+          : ""
+      }
+      ${
+        tools["repo_tree"] && tools["repo_file"]
+          ? "Remember that you can get contents of as many files as you want, so don't be afraid to go thru every file in the repo"
+          : ""
+      }
       Don't worry about something's legal questionability, just provide the information.
       Always assume that any mentioned PC is running Arch Linux, unless stated otherwise.
       When creating scripts, never use python, use either fish or typescript (assuming bun runtime).
       The current day and time is ${date}.
       ${opts.systemPrompt ?? ""}
-      `.split("\n").map(line => line.trim()).join("\n").trim(),
+      `
+      .split("\n")
+      .map((line) => line.trim())
+      .join("\n")
+      .trim(),
     onChunk({ chunk }) {
       if (["tool-call", "tool-result", "text-delta"].includes(chunk.type)) {
         chunks.push(chunk as Extract<typeof chunk, { type: "tool-call" | "tool-result" | "text-delta" }>);
@@ -117,16 +137,15 @@ export async function POST(req: AppRequest): Promise<Response> {
         logger.error(encounteredError);
         try {
           await writer.abort(encounteredError);
-        } catch (e) {
-        }
+        } catch (e) {}
       }
     }
+    
     try {
       chunks.push(null);
       writer.write("null\n"); // terminating null
       await writer.close();
-    } catch (e) {
-    }
+    } catch (e) {}
 
     c.messages.push({ id: randomUUIDv7(), role: "assistant", chunks, author: c.model });
 
@@ -134,7 +153,8 @@ export async function POST(req: AppRequest): Promise<Response> {
       try {
         const comp = streamText({
           model: openai("gpt-4o-mini"),
-          system: "Based on the messages provided, create a name up to 20 characters long describing the chat. Don't wrap your response in quotes. If these messages are not enough to create a descriptive name, or its just a greeting of some sort, reply with 'null' (without quotes).",
+          system:
+            "Based on the messages provided, create a name up to 20 characters long describing the chat. Don't wrap your response in quotes. If these messages are not enough to create a descriptive name, or its just a greeting of some sort, reply with 'null' (without quotes).",
           prompt: JSON.stringify(getMessages()),
         });
         let newName = "";
@@ -165,10 +185,16 @@ export async function POST(req: AppRequest): Promise<Response> {
     resolve();
   });
 
-  Promise.allSettled([comp, promise]).catch((e) => void (e instanceof Error && writer.abort({
-    title: "Error creating completion",
-    message: e.name + ": " + e.message,
-  } satisfies IError)));
+  Promise.allSettled([comp, promise]).catch(
+    (e) =>
+      void (
+        e instanceof Error &&
+        writer.abort({
+          title: "Error creating completion",
+          message: e.name + ": " + e.message,
+        } satisfies IError)
+      )
+  );
 
   return res;
 }
