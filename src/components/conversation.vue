@@ -44,7 +44,7 @@
                   </div>
                 </div>
               </template>
-              <div v-else-if="message.role !== 'user' || !message.attachmentIds?.length" class="flex items-center justify-center">
+              <div v-else-if="!finished(message)" class="flex items-center justify-center">
                 <Loader />
               </div>
               <div
@@ -54,7 +54,7 @@
                 <button v-tooltip="'Copy'" @click="copyToClipboard(getContent(message))" class="hover:bg-white/5 transition p-1 rounded-md">
                   <CopyIcon class="w-3 h-3 dark:w-5 dark:h-5" />
                 </button>
-                <button v-tooltip="'Regenerate'" @click="regenerateLastMessage" class="hover:bg-white/5 transition p-1 rounded-md group">
+                <button v-if="getLastMessageIfByAssistant() === message" v-tooltip="'Regenerate'" @click="regenerateLastMessage" class="hover:bg-white/5 transition p-1 rounded-md group">
                   <RefreshCwIcon class="w-3 h-3 dark:w-5 dark:h-5 transition-all duration-500 group-hover:rotate-[360deg]" />
                 </button>
               </div>
@@ -300,29 +300,33 @@ function init(id: string) {
 }
 
 function fetchMessages(id: string) {
-  fetch(`/api/${id}/messages`).then((res) => {
-    messages.value.loading = false;
+  messages.value.error = null;
 
-    if (!res.ok) {
-      return isBackendAlive().then((alive) => {
-        if (!alive) return (messages.value.error = "Backend seems to be dead");
-        messages.value.error = res.statusText;
-      });
-    }
+  fetch(`/api/${id}/messages`)
+    .then((res) => {
+      messages.value.loading = false;
 
-    res.json().then((data) => {
-      const result = routes["[id]"]["messages"].safeParse(data);
-      if (result.success) {
-        messages.value.array = result.data;
-        localStorage.setItem(id, JSON.stringify(result.data));
-      } else {
-        messages.value.error = "Backend provided bogus data";
+      if (!res.ok) {
+        return isBackendAlive().then((alive) => {
+          if (!alive) return (messages.value.error = "Backend seems to be dead");
+          messages.value.error = res.statusText;
+        });
       }
+
+      res.json().then((data) => {
+        const result = routes["[id]"]["messages"].safeParse(data);
+        if (result.success) {
+          messages.value.array = result.data;
+          localStorage.setItem(id, JSON.stringify(result.data));
+        } else {
+          messages.value.error = "Backend provided bogus data";
+        }
+      });
+    })
+    .catch((e) => {
+      messages.value.loading = false;
+      messages.value.error = e.message;
     });
-  }).catch((e) => {
-    messages.value.loading = false;
-    messages.value.error = e.message;
-  });
 
   const { data: fromLocalStorage } = MessageSchema.array().safeParse(safeParse(localStorage.getItem(id)));
   if (fromLocalStorage) {
@@ -475,8 +479,8 @@ function getLastMessageIfByAssistant() {
 }
 
 /** Checks if the message ends with a null chunk */
-function finished(msg: Nullish<Pick<AssistantMessage, "chunks">>) {
-  return last(msg?.chunks) === null;
+function finished(msg: Nullish<Message>) {
+  return last(msg ? ("chunks" in msg ? msg.chunks : [null]) : undefined) === null;
 }
 
 interface CompletionOptions {
