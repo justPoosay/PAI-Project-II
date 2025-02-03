@@ -12,6 +12,7 @@ import tools from "../../core/tools";
 import logger from "../../lib/logger.ts";
 import { openai } from "@ai-sdk/openai";
 import { emitter } from "../../index";
+import { pick } from "../../lib/utils.ts";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -52,6 +53,7 @@ export async function POST(req: AppRequest): Promise<Response> {
   }
 
   c.model = opts.model ?? c.model;
+  await ConversationService.update(c.id, pick(c, ["messages", "model"]));
 
   const stream = new TransformStream();
   const writer = stream.writable.getWriter();
@@ -156,7 +158,7 @@ export async function POST(req: AppRequest): Promise<Response> {
       }
     }
 
-    await ConversationService.update(c.id, { messages: c.messages, model: c.model, name: c.name });
+    await ConversationService.update(c.id, pick(c, ["messages", "model", "name"]));
 
     resolve();
   });

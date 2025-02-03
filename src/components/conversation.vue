@@ -128,13 +128,13 @@
               <PaperclipIcon class="w-5 h-5" />
             </label>
             <button
-              v-if="(messages.array[messages.array.length - 1] as Extract<Message, { role: 'assistant' }>)?.finished ?? true"
+              v-if="(l(messages.array) as Extract<Message, { role: 'assistant' }>)?.finished ?? true"
               @click="sendMessage"
               class="p-2 rounded-full hover:bg-white/5 transition mt-1"
             >
               <SendIcon class="w-5 h-5" />
             </button>
-            <button v-else @click="abortController.abort()" class="p-2 rounded-full hover:bg-white/5 transition mt-1">
+            <button v-else @click="abortController?.abort()" class="p-2 rounded-full hover:bg-white/5 transition mt-1">
               <CircleStopIcon class="w-5 h-5" />
             </button>
           </div>
@@ -167,7 +167,7 @@ import {
   CheckIcon,
   RefreshCwIcon,
 } from "lucide-vue-next";
-import { calculateHash, capitalize, isBackendAlive } from "@/lib/utils.ts";
+import { calculateHash, capitalize, isBackendAlive, last as l } from "@/lib/utils.ts";
 import type { MessageSchema } from "../../shared/schemas.ts";
 import { onBeforeRouteUpdate, useRoute } from "vue-router";
 import { MessageChunkSchema, routes, SSESchema } from "../../shared/schemas.ts";
@@ -208,7 +208,7 @@ const input = ref("");
 const uploads = ref<FileData[]>([]);
 const error = ref<Omit<Extract<z.infer<typeof SSESchema>, { kind: "error" }>, "kind" | "for"> | null>(null);
 const showError = ref(false);
-const abortController = new AbortController();
+const abortController = ref<AbortController | null>(null);
 const unfoldedTools = ref<FullToolCall["id"][]>([]);
 
 const toolIcons: Record<string, FunctionalComponent<LucideProps, {}, any, {}>> = {
@@ -396,7 +396,7 @@ function getParts(msg: Message) {
   }
 
   for (const chunk of msg.chunks) {
-    const last = parts[parts.length - 1];
+    const last = l(parts);
 
     if (chunk.type === "text-delta") {
       if (typeof last === "string") {
@@ -420,7 +420,7 @@ function getParts(msg: Message) {
 }
 
 async function sendMessage() {
-  if (messages.value.array[messages.value.array.length - 1]?.role === "user") {
+  if (l(messages.value.array)?.role === "user") {
     return;
   }
 
@@ -471,15 +471,17 @@ interface CompletionOptions {
 }
 
 async function requestCompletion({ conversationId = route.params.id as string, ...opts }: CompletionOptions) {
+  abortController.value = new AbortController();
   const res = await fetch(`/api/${conversationId}/completion`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify(opts),
+    signal: abortController.value.signal,
   });
 
-  let msg = messages.value.array[messages.value.array.length - 1];
+  let msg = l(messages.value.array)!;
   if (msg.role === "user" || msg.finished) {
     const index =
       messages.value.array.push({
@@ -500,6 +502,7 @@ async function requestCompletion({ conversationId = route.params.id as string, .
         try {
           const json = JSON.parse(part);
           const { data: chunk } = MessageChunkSchema.safeParse(json);
+          console.log("Chunk:", chunk);
           if (chunk) msg.chunks.push(chunk);
         } catch (e) {
           console.warn("Failed to parse chunk:", part);
@@ -508,10 +511,11 @@ async function requestCompletion({ conversationId = route.params.id as string, .
     }
   }
   msg.finished = true;
+  abortController.value = null;
 }
 
 async function regenerateLastMessage() {
-  const last = messages.value.array[messages.value.array.length - 1];
+  const last = l(messages.value.array);
   if (last?.role !== "assistant") return;
   last.finished = false;
   last.chunks = [];
