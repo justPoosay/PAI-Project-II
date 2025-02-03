@@ -128,7 +128,7 @@
               <PaperclipIcon class="w-5 h-5" />
             </label>
             <button
-              v-if="(l(messages.array) as Extract<Message, { role: 'assistant' }>)?.finished ?? true"
+              v-if="finished(getLastMessageIfByAssistant())"
               @click="sendMessage"
               class="p-2 rounded-full hover:bg-white/5 transition mt-1"
             >
@@ -167,8 +167,7 @@ import {
   CheckIcon,
   RefreshCwIcon,
 } from "lucide-vue-next";
-import { calculateHash, capitalize, isBackendAlive, last as l } from "@/lib/utils.ts";
-import type { MessageSchema } from "../../shared/schemas.ts";
+import { calculateHash, capitalize, isBackendAlive, last } from "@/lib/utils.ts";
 import { onBeforeRouteUpdate, useRoute } from "vue-router";
 import { MessageChunkSchema, routes, SSESchema } from "../../shared/schemas.ts";
 import { useConversationStore } from "@/stores/conversations.ts";
@@ -176,28 +175,21 @@ import { modelInfo } from "../../shared/constants.ts";
 import ModelSelector from "@/components/model-selector.vue";
 import router from "@/router";
 import { useModelStore } from "@/stores/models.ts";
-import type { Conversation } from "@/lib/types.ts";
+import type { Conversation, Nullish } from "@/lib/types.ts";
 import Loader from "@/components/loader.vue";
 import { z } from "zod";
 import ErrorPopup from "@/components/error-popup.vue";
 import { parseMarkdown } from "@/lib/markdown.ts";
 import ToolResult from "@/components/tool-result.vue";
-import type { Model } from "../../shared/index.ts";
+import type { Message, Model } from "../../shared/index.ts";
 
 type FileData = Omit<z.infer<(typeof routes)["upload"]>[0], "id"> & { id?: string; href: string };
+type AssistantMessage = Extract<Message, { role: "assistant" }>;
 
 const route = useRoute();
 const conversationStore = useConversationStore();
 const modelStore = useModelStore();
 
-type Message =
-  | Extract<z.infer<typeof MessageSchema>, { role: "user" }>
-  | (Extract<
-      z.infer<typeof MessageSchema>,
-      {
-        role: "assistant";
-      }
-    > & { finished: boolean });
 const messages = ref<{ loading: boolean; error: string | null; array: Message[] }>({
   loading: true,
   error: null,
@@ -219,6 +211,8 @@ const toolIcons: Record<string, FunctionalComponent<LucideProps, {}, any, {}>> =
   repo_file: FileDiffIcon,
   default: HammerIcon,
 };
+
+const $last = last; // alias
 
 function showErrorPopup(err: NonNullable<typeof error extends Ref<infer U> ? U : never>) {
   error.value = err;
@@ -375,7 +369,7 @@ function getContent(msg: Message) {
   return "content" in msg
     ? msg.content
     : msg.chunks
-        .filter((v) => v.type === "text-delta")
+        .filter((v): v is Extract<z.infer<typeof MessageChunkSchema>, { type: "text-delta" }> => v?.type === "text-delta")
         .map((v) => v.textDelta)
         .join("");
 }
@@ -396,7 +390,8 @@ function getParts(msg: Message) {
   }
 
   for (const chunk of msg.chunks) {
-    const last = l(parts);
+    if (!chunk) continue;
+    const last = $last(parts);
 
     if (chunk.type === "text-delta") {
       if (typeof last === "string") {
@@ -420,7 +415,7 @@ function getParts(msg: Message) {
 }
 
 async function sendMessage() {
-  if (l(messages.value.array)?.role === "user") {
+  if (last(messages.value.array)?.role === "user") {
     return;
   }
 
@@ -448,7 +443,6 @@ async function sendMessage() {
         role: "assistant",
         chunks: [],
         author: model.value,
-        finished: false,
       }
     );
 
@@ -461,6 +455,16 @@ async function sendMessage() {
       model: model.value,
     });
   }
+}
+
+function getLastMessageIfByAssistant() {
+  const last = $last(messages.value.array);
+  return last?.role === "assistant" ? last : null;
+}
+
+/** Checks if the message ends with a null chunk */
+function finished(msg: Nullish<Pick<AssistantMessage, "chunks">>) {
+  return last(msg?.chunks) === null;
 }
 
 interface CompletionOptions {
@@ -481,16 +485,15 @@ async function requestCompletion({ conversationId = route.params.id as string, .
     signal: abortController.value.signal,
   });
 
-  let msg = l(messages.value.array)!;
-  if (msg.role === "user" || msg.finished) {
+  let msg = last(messages.value.array)!;
+  if (msg.role === "user" || finished(msg)) {
     const index =
       messages.value.array.push({
         role: "assistant",
         chunks: [],
         author: model.value,
-        finished: false,
       }) - 1;
-    msg = messages.value.array[index] as Extract<Message, { role: "assistant" }>;
+    msg = messages.value.array[index] as AssistantMessage;
   }
 
   const decoder = new TextDecoder();
@@ -502,22 +505,19 @@ async function requestCompletion({ conversationId = route.params.id as string, .
         try {
           const json = JSON.parse(part);
           const { data: chunk } = MessageChunkSchema.safeParse(json);
-          console.log("Chunk:", chunk);
-          if (chunk) msg.chunks.push(chunk);
+          if (chunk !== undefined) msg.chunks.push(chunk);
         } catch (e) {
           console.warn("Failed to parse chunk:", part);
         }
       }
     }
   }
-  msg.finished = true;
   abortController.value = null;
 }
 
 async function regenerateLastMessage() {
-  const last = l(messages.value.array);
+  const last = $last(messages.value.array);
   if (last?.role !== "assistant") return;
-  last.finished = false;
   last.chunks = [];
   await requestCompletion({ message: null, model: model.value });
 }

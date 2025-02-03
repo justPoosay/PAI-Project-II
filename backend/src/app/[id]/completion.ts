@@ -63,7 +63,7 @@ export async function POST(req: AppRequest): Promise<Response> {
       role,
       content: "content" in rest
         ? rest.content
-        : rest.chunks.filter(v => v.type === "text-delta").map((v) => v.textDelta).join(""),
+        : rest.chunks.filter(v => v?.type === "text-delta").map(v => v.textDelta).join(""),
     } satisfies CoreMessage));
   }
 
@@ -122,6 +122,8 @@ export async function POST(req: AppRequest): Promise<Response> {
       }
     }
     try {
+      chunks.push(null);
+      writer.write("null\n"); // terminating null
       await writer.close();
     } catch (e) {
     }

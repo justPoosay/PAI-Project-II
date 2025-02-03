@@ -21,7 +21,7 @@ export default class ConversationService {
   
   async find(where?: Omit<Partial<ConversationDTO>, "id">) {
     const entities = await this.#collection.find({ ...where }).toArray();
-    return entities.map(ConversationDTO.convertFromEntity);
+    return entities.map(ConversationDTO.convertFromEntity).filter((v) => v !== null);
   }
   
   async create(dto: Omit<ConversationDTO, "id" | "created_at" | "updated_at">) {
@@ -34,7 +34,7 @@ export default class ConversationService {
   
   async update(id: ConversationDTO["id"], dto: Omit<Partial<ConversationDTO>, "id" | "created_at" | "updated_at">) {
     const now = new Date();
-    const obj = { ...dto, created_at: now, updated_at: now };
+    const obj = { ...dto, updated_at: now };
     const candidate = conversationEntitySchema.partial().parse(obj);
     
     const value = await this.#collection.findOneAndUpdate(

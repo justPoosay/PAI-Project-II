@@ -28,6 +28,7 @@ export const MessageChunkSchema = z.union([
     type: z.literal("text-delta"),
     textDelta: z.string(),
   }),
+  z.null(), // terminator (the last chunk in the message, it's absence indicates the fact that the completion isn't fully completed yet)
 ]);
 
 export const MessageSchema = z.union([
@@ -63,45 +64,6 @@ export const routes = {
     image: z.boolean(),
   }).array(),
 } as const;
-
-/** @description message sent from the server to the client */
-export const ClientBoundWebSocketMessageSchema = z.union([
-  MessageChunkSchema.transform((val) => ({ role: "chunk" as const, ...val })),
-  z.object({
-    role: z.literal("finish"),
-  }),
-  z.object({
-    role: z.literal("rename"),
-    name: z.string(),
-  }),
-  z.object({
-    role: z.literal("pong"),
-  }),
-  z.object({
-    role: z.literal("error"),
-    title: z.string(),
-    message: z.string(),
-    pof: z.string().optional(), // Point of failure
-  }),
-]);
-
-/** @description message sent from the client to the server */
-export const ServerBoundWebSocketMessageSchema = z.union([
-  z.object({
-    role: z.literal("message"),
-    action: z.literal("create"),
-    content: z.string(),
-    attachments: z.array(AttachmentSchema).optional(),
-    model: ModelSchema.optional(),
-  }),
-  z.object({
-    role: z.literal("action"),
-    action: z.literal("abort"),
-  }),
-  z.object({
-    role: z.literal("ping"),
-  }),
-]);
 
 export const SSESchema = z.union([
   z.object({

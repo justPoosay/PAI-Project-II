@@ -16,7 +16,8 @@ export type ConversationEntity = z.infer<typeof conversationEntitySchema>;
 export type ConversationDTO = z.infer<typeof conversationDTOSchema>;
 
 export const ConversationDTO = {
-  convertFromEntity(entity: ConversationEntity): ConversationDTO {
-    return conversationDTOSchema.parse(entity);
+  convertFromEntity(entity: ConversationEntity) {
+    const { data } = conversationDTOSchema.safeParse(entity);
+    return data ?? null;
   },
-};
+} as const;

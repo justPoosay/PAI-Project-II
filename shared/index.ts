@@ -1,17 +1,7 @@
 import { z } from "zod";
-import {
-  ClientBoundWebSocketMessageSchema,
-  ServerBoundWebSocketMessageSchema,
-  ModelSchema,
-  MessageSchema
-} from "./schemas";
+import { ModelSchema, MessageSchema } from "./schemas";
 
 /** @description conversation message as held by the client */
-export type ClientMessage = z.infer<typeof MessageSchema> & {
-  finished: boolean;
-}
+export type Message = z.infer<typeof MessageSchema>;
 
-export type ClientBoundWebSocketMessage = z.infer<typeof ClientBoundWebSocketMessageSchema>
-export type ServerBoundWebSocketMessage = z.infer<typeof ServerBoundWebSocketMessageSchema>
-
-export type Model = z.infer<typeof ModelSchema>
+export type Model = z.infer<typeof ModelSchema>;

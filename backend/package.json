@@ -3,7 +3,8 @@
   "module": "src/index.ts",
   "type": "module",
   "scripts": {
-    "dev": "bun run src/index.ts --watch"
+    "dev": "bun run src/index.ts --watch",
+    "db:addTerminatingNullChunk": "bun run src/scripts/addTerminatingNullChunk.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",
