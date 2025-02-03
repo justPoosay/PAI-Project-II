@@ -5,44 +5,53 @@
     <div v-if="!messages.loading && !messages.error && messages.array.length" class="flex-1 overflow-y-auto p-4 pb-36">
       <div class="max-w-5xl mx-auto">
         <div v-for="(message, i) in messages.array" :key="i" class="mb-2 relative">
-          <div :data-self="message.role === 'user'"
-            class="flex justify-start data-[self=true]:justify-end items-end dark:items-start space-x-2">
-            <img v-if="message.role === 'assistant'" class="w-6 h-6 dark:mt-2 max-md:hidden" :alt="message.author"
-              :src="modelInfo[message.author].logoSrc" width="24"
-              v-tooltip="{ content: modelInfo[message.author].name, placement: 'left' }" />
-            <div :data-self="message.role === 'user'"
-              class="max-w-[80%] dark:max-w-[90%] max-md:max-w-full p-2 data-[self=false]:pb-3 relative backdrop-blur-md bg-clip-padding rounded-tl-2xl rounded-tr-2xl data-[self=true]:rounded-bl-2xl data-[self=false]:rounded-br-2xl shadow-lg dark:shadow-none bg-gradient-to-tr from-white/10 via-white/5 to-white/10 data-[self=true]:bg-gradient-to-tl data-[self=true]:from-white/5 data-[self=true]:via-white/[3%] data-[self=true]:to-white/5 dark:bg-none dark:data-[self=true]:bg-[#2A2A2A] dark:rounded-lg dark:data-[self=true]:rounded-bl-lg dark:data-[self=false]:rounded-br-lg">
+          <div :data-self="message.role === 'user'" class="flex justify-start data-[self=true]:justify-end items-end dark:items-start space-x-2">
+            <img
+              v-if="message.role === 'assistant'"
+              class="w-6 h-6 dark:mt-2 max-md:hidden"
+              :alt="message.author"
+              :src="modelInfo[message.author].logoSrc"
+              width="24"
+              v-tooltip="{ content: modelInfo[message.author].name, placement: 'left' }"
+            />
+            <div
+              :data-self="message.role === 'user'"
+              class="max-w-[80%] dark:max-w-[90%] max-md:max-w-full p-2 data-[self=false]:pb-3 relative backdrop-blur-md bg-clip-padding rounded-tl-2xl rounded-tr-2xl data-[self=true]:rounded-bl-2xl data-[self=false]:rounded-br-2xl shadow-lg dark:shadow-none bg-gradient-to-tr from-white/10 via-white/5 to-white/10 data-[self=true]:bg-gradient-to-tl data-[self=true]:from-white/5 data-[self=true]:via-white/[3%] data-[self=true]:to-white/5 dark:bg-none dark:data-[self=true]:bg-[#2A2A2A] dark:rounded-lg dark:data-[self=true]:rounded-bl-lg dark:data-[self=false]:rounded-br-lg"
+            >
               <template v-if="getParts(message).length" v-for="part of getParts(message)">
                 <div v-if="typeof part === 'string'" v-html="parseMarkdown(part, false)" class="markdown-content" />
-                <div v-else class="m-1">
+                <div v-else class="m-1 ml-0">
                   <button
                     class="inline-flex items-center space-x-1 rounded-lg p-1 text-sm bg-white/15 dark:bg-vue-black-mute cursor-pointer"
-                    @click="unfoldedTools.includes(part.id) ? unfoldedTools = unfoldedTools.filter(v => v !== part.id) : unfoldedTools.push(part.id)">
+                    @click="unfoldedTools.includes(part.id) ? (unfoldedTools = unfoldedTools.filter((v) => v !== part.id)) : unfoldedTools.push(part.id)"
+                  >
                     <component :is="toolIcons[part.name] ?? toolIcons.default" class="w-4 h-4" />
                     <div class="inline-flex items-center space-x-3 select-none">
                       <p>{{ capitalize(part.name) }}</p>
                       <LoaderCircleIcon class="w-4 h-4 animate-spin" v-if="!('result' in part)" />
-                      <ChevronUpIcon v-else-if="part.result" :data-folded="!unfoldedTools.includes(part.id)"
-                        class="w-4 h-4 data-[folded=true]:rotate-180 transition-all duration-100 ease-in-out" />
+                      <ChevronUpIcon
+                        v-else-if="part.result"
+                        :data-folded="!unfoldedTools.includes(part.id)"
+                        class="w-4 h-4 data-[folded=true]:rotate-180 transition-all duration-100 ease-in-out"
+                      />
                       <CheckIcon v-else class="w-4 h-4 text-green-500" />
                     </div>
                   </button>
-                  <div v-if="unfoldedTools.includes(part.id) && 'result' in part"
-                    class="mt-1 border-l-2 border-white/30 pl-2 break-words text-sm">
+                  <div v-if="unfoldedTools.includes(part.id) && 'result' in part" class="mt-1 border-l-2 border-white/30 pl-2 break-words text-sm">
                     <p class="mb-1">{{ JSON.stringify(part.args) }}</p>
                     <ToolResult v-if="part.result" :tool="part" />
                     <div v-else class="text-white/75">Tool didn't return any data</div>
                   </div>
                 </div>
               </template>
-              <div v-else-if="message.role !== 'user' || !message.attachmentIds?.length"
-                class="flex items-center justify-center">
+              <div v-else-if="message.role !== 'user' || !message.attachmentIds?.length" class="flex items-center justify-center">
                 <Loader />
               </div>
-              <div v-if="message.role === 'assistant'"
-                class="flex p-0.5 dark:pl-0 rounded-md light:bg-white/15 backdrop-blur-sm light:absolute light:-bottom-3 light:left-1 light:shadow-md dark:space-x-1.5">
-                <button v-tooltip="'Copy'" @click="copyToClipboard(getContent(message))"
-                  class="hover:bg-white/5 transition p-1 rounded-md">
+              <div
+                v-if="message.role === 'assistant'"
+                class="flex p-0.5 dark:pl-0 rounded-md light:bg-white/15 backdrop-blur-sm light:absolute light:-bottom-3 light:left-1 light:shadow-md dark:space-x-1.5"
+              >
+                <button v-tooltip="'Copy'" @click="copyToClipboard(getContent(message))" class="hover:bg-white/5 transition p-1 rounded-md">
                   <CopyIcon class="w-3 h-3 dark:w-5 dark:h-5" />
                 </button>
                 <button v-tooltip="'Regenerate'" @click="regenerateLastMessage" class="hover:bg-white/5 transition p-1 rounded-md group">
@@ -70,41 +79,59 @@
 
     <ErrorPopup :show="showError" :error="error" />
     <!-- Input Area -->
-    <div class="absolute bottom-4 left-4 right-4 z-10 pointer-events-none"
-      @drop.prevent="upload($event.dataTransfer?.files)">
+    <div class="absolute bottom-4 left-4 right-4 z-10 pointer-events-none" @drop.prevent="upload($event.dataTransfer?.files)">
       <div
-        class="flex flex-col items-start max-w-2xl mx-auto bg-gradient-to-br from-vue-black/30 via-vue-black-soft/20 to-vue-black/30 dark:bg-none dark:bg-vue-black backdrop-blur-md rounded-xl p-2 shadow-lg pointer-events-auto">
+        class="flex flex-col items-start max-w-2xl mx-auto bg-gradient-to-br from-vue-black/30 via-vue-black-soft/20 to-vue-black/30 dark:bg-none dark:bg-vue-black backdrop-blur-md rounded-xl p-2 shadow-lg pointer-events-auto"
+      >
         <div v-if="uploads.length" class="flex">
           <div v-for="file in uploads" class="relative">
-            <button class="absolute -top-1.5 right-0 rounded-full bg-vue-black/75 p-[1px]"
-              @click="uploads = uploads.filter(f => f.hash !== file.hash)">
+            <button class="absolute -top-1.5 right-0 rounded-full bg-vue-black/75 p-[1px]" @click="uploads = uploads.filter((f) => f.hash !== file.hash)">
               <XIcon class="w-4 h-4" />
             </button>
-            <img v-if="file.image" :key="file.hash" :src="file.href"
+            <img
+              v-if="file.image"
+              :key="file.hash"
+              :src="file.href"
               :data-disabled="!modelInfo[model].capabilities.includes('imageInput')"
-              class="w-12 h-12 rounded-lg mr-2 overflow-hidden data-[disabled=true]:grayscale" alt="File" />
+              class="w-12 h-12 rounded-lg mr-2 overflow-hidden data-[disabled=true]:grayscale"
+              alt="File"
+            />
           </div>
         </div>
-        <textarea v-model="input" @keydown="handleKeyDown" placeholder="Type a message..."
+        <textarea
+          v-model="input"
+          @keydown="handleKeyDown"
+          placeholder="Type a message..."
           class="bg-transparent p-1 focus:outline-none w-full resize-none min-h-[4rem] max-h-[10rem] overflow-y-auto"
-          rows="2" />
+          rows="2"
+        />
         <div class="flex justify-between w-full text-white/75 items-end">
-          <input type="file" multiple accept="image/*" class="hidden" id="file"
+          <input
+            type="file"
+            multiple
+            accept="image/*"
+            class="hidden"
+            id="file"
             @change.prevent="upload(($event.target as HTMLInputElement)?.files ?? undefined)"
-            :disabled="!modelInfo[model].capabilities.includes('imageInput')">
+            :disabled="!modelInfo[model].capabilities.includes('imageInput')"
+          />
           <div class="flex p-1">
             <ModelSelector v-model="model" />
           </div>
           <div class="flex items-center">
-            <label :aria-disabled="!modelInfo[model].capabilities.includes('imageInput')"
+            <label
+              :aria-disabled="!modelInfo[model].capabilities.includes('imageInput')"
               class="p-2 rounded-full aria-[disabled=false]:hover:bg-white/5 transition mt-1 aria-[disabled=false]:cursor-pointer aria-[disabled=true]:text-white/25"
               :title="modelInfo[model].capabilities.includes('imageInput') ? 'Upload File' : 'This model does not support file input'"
-              for="file">
+              for="file"
+            >
               <PaperclipIcon class="w-5 h-5" />
             </label>
             <button
               v-if="(messages.array[messages.array.length - 1] as Extract<Message, { role: 'assistant' }>)?.finished ?? true"
-              @click="sendMessage" class="p-2 rounded-full hover:bg-white/5 transition mt-1">
+              @click="sendMessage"
+              class="p-2 rounded-full hover:bg-white/5 transition mt-1"
+            >
               <SendIcon class="w-5 h-5" />
             </button>
             <button v-else @click="abortController.abort()" class="p-2 rounded-full hover:bg-white/5 transition mt-1">
@@ -157,7 +184,7 @@ import { parseMarkdown } from "@/lib/markdown.ts";
 import ToolResult from "@/components/tool-result.vue";
 import type { Model } from "../../shared/index.ts";
 
-type FileData = Omit<z.infer<(typeof routes["upload"])>[0], "id"> & { id?: string, href: string }
+type FileData = Omit<z.infer<(typeof routes)["upload"]>[0], "id"> & { id?: string; href: string };
 
 const route = useRoute();
 const conversationStore = useConversationStore();
@@ -165,10 +192,13 @@ const modelStore = useModelStore();
 
 type Message =
   | Extract<z.infer<typeof MessageSchema>, { role: "user" }>
-  | (Extract<z.infer<typeof MessageSchema>, {
-    role: "assistant"
-  }> & { finished: boolean });
-const messages = ref<{ loading: boolean, error: string | null, array: Message[] }>({
+  | (Extract<
+      z.infer<typeof MessageSchema>,
+      {
+        role: "assistant";
+      }
+    > & { finished: boolean });
+const messages = ref<{ loading: boolean; error: string | null; array: Message[] }>({
   loading: true,
   error: null,
   array: [],
@@ -187,7 +217,7 @@ const toolIcons: Record<string, FunctionalComponent<LucideProps, {}, any, {}>> =
   search: SearchIcon,
   repo_tree: FolderTreeIcon,
   repo_file: FileDiffIcon,
-  default: HammerIcon
+  default: HammerIcon,
 };
 
 function showErrorPopup(err: NonNullable<typeof error extends Ref<infer U> ? U : never>) {
@@ -211,15 +241,15 @@ async function upload(fileList: FileList | undefined) {
   }
 
   const files = Array.from<File>(fileList);
-  const fileData = (await Promise.all(
-    files.map<Promise<FileData>>(
-      async file => ({
+  const fileData = (
+    await Promise.all(
+      files.map<Promise<FileData>>(async (file) => ({
         hash: (await calculateHash(await file.arrayBuffer())).hex,
         href: URL.createObjectURL(file),
         image: file.type.startsWith("image/"),
-      }),
-    ),
-  )).filter(f => !uploads.value.find(u => u.hash === f.hash));
+      }))
+    )
+  ).filter((f) => !uploads.value.find((u) => u.hash === f.hash));
 
   if (!fileData.length) {
     return;
@@ -227,7 +257,7 @@ async function upload(fileList: FileList | undefined) {
 
   uploads.value.push(...fileData);
   const formData = new FormData();
-  files.forEach(file => formData.append("file", file));
+  files.forEach((file) => formData.append("file", file));
 
   const res = await fetch("/api/upload", {
     method: "POST",
@@ -236,14 +266,14 @@ async function upload(fileList: FileList | undefined) {
 
   if (!res.ok) {
     console.log("Failed to upload files");
-    uploads.value = uploads.value.filter(file => !fileData.find(f => f.hash === file.hash));
+    uploads.value = uploads.value.filter((file) => !fileData.find((f) => f.hash === file.hash));
     return;
   }
 
   const result = routes["upload"].safeParse(await res.json());
   if (result.success) {
-    uploads.value.forEach(file => {
-      const data = result.data.find(f => f.hash === file.hash);
+    uploads.value.forEach((file) => {
+      const data = result.data.find((f) => f.hash === file.hash);
       if (data) {
         file.id = data.id;
         URL.revokeObjectURL(file.href);
@@ -251,7 +281,7 @@ async function upload(fileList: FileList | undefined) {
       }
     });
   } else {
-    uploads.value = uploads.value.filter(file => !fileData.find(f => f.hash === file.hash));
+    uploads.value = uploads.value.filter((file) => !fileData.find((f) => f.hash === file.hash));
   }
 }
 
@@ -266,7 +296,7 @@ async function init(id: string) {
   const isNew = id === "new";
 
   messages.value = { loading: !isNew, error: null, array: [] };
-  const c = conversationStore.conversations.find(c => c.id === id) ?? null;
+  const c = conversationStore.conversations.find((c) => c.id === id) ?? null;
   conversation.value = c;
   model.value = c?.model ?? modelStore.models[0];
   error.value = null;
@@ -344,7 +374,10 @@ onMounted(async () => {
 function getContent(msg: Message) {
   return "content" in msg
     ? msg.content
-    : msg.chunks.filter(v => v.type === "text-delta").map((v) => v.textDelta).join("");
+    : msg.chunks
+        .filter((v) => v.type === "text-delta")
+        .map((v) => v.textDelta)
+        .join("");
 }
 
 interface InitialToolCall {
@@ -377,7 +410,7 @@ function getParts(msg: Message) {
       } else if (typeof last === "object" && "id" in last && last.id === chunk.toolCallId) {
         parts[parts.length - 1] = {
           ...last,
-          result: chunk.result
+          result: chunk.result,
         };
       }
     }
@@ -403,18 +436,21 @@ async function sendMessage() {
     }
 
     const attachments = modelInfo[model.value].capabilities.includes("imageInput")
-      ? uploads.value.filter(f => !!f.id) as { id: string, image: boolean }[]
+      ? (uploads.value.filter((f) => !!f.id) as { id: string; image: boolean }[])
       : undefined;
 
-    messages.value.array.push({
-      role: "user",
-      content,
-    }, {
-      role: "assistant",
-      chunks: [],
-      author: model.value,
-      finished: false,
-    });
+    messages.value.array.push(
+      {
+        role: "user",
+        content,
+      },
+      {
+        role: "assistant",
+        chunks: [],
+        author: model.value,
+        finished: false,
+      }
+    );
 
     input.value = "";
     if (attachments) uploads.value = [];
@@ -445,12 +481,13 @@ async function requestCompletion({ conversationId = route.params.id as string, .
 
   let msg = messages.value.array[messages.value.array.length - 1];
   if (msg.role === "user" || msg.finished) {
-    const index = messages.value.array.push({
-      role: "assistant",
-      chunks: [],
-      author: model.value,
-      finished: false,
-    }) - 1;
+    const index =
+      messages.value.array.push({
+        role: "assistant",
+        chunks: [],
+        author: model.value,
+        finished: false,
+      }) - 1;
     msg = messages.value.array[index] as Extract<Message, { role: "assistant" }>;
   }
 
@@ -475,7 +512,7 @@ async function requestCompletion({ conversationId = route.params.id as string, .
 
 async function regenerateLastMessage() {
   const last = messages.value.array[messages.value.array.length - 1];
-  if (last?.role !== 'assistant') return;
+  if (last?.role !== "assistant") return;
   last.finished = false;
   last.chunks = [];
   await requestCompletion({ message: null, model: model.value });
@@ -490,15 +527,15 @@ function handleKeyDown(e: KeyboardEvent) {
 }
 
 function autoResize(textarea: HTMLTextAreaElement) {
-  textarea.style.height = '4rem'; // Reset height to min (2 rows)
+  textarea.style.height = "4rem"; // Reset height to min (2 rows)
   const scrollHeight = textarea.scrollHeight;
-  textarea.style.height = Math.min(scrollHeight, 160) + 'px'; // 160px = 10rem
+  textarea.style.height = Math.min(scrollHeight, 160) + "px"; // 160px = 10rem
 }
 
 // Watch for input changes to handle paste events and other modifications
 watch(input, () => {
   nextTick(() => {
-    const textarea = document.querySelector('textarea');
+    const textarea = document.querySelector("textarea");
     if (textarea) autoResize(textarea);
   });
 });

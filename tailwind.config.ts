@@ -1,3 +1,4 @@
+import type { Config } from "tailwindcss";
 import debugScreens from "tailwindcss-debug-screens";
 
 export default {
@@ -39,4 +40,4 @@ export default {
       addVariant('light', '@media (prefers-color-scheme: light)')
     }
   ],
-} satisfies import("tailwindcss").Config;
+} satisfies Config;

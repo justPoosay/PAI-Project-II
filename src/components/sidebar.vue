@@ -1,26 +1,31 @@
 <template>
-  <div :data-expanded="isExpanded"
-    class="flex flex-col bg-gradient-to-b from-gray-300/5 via-gray-300/[2%] to-gray-300/5 dark:bg-none dark:bg-vue-black-darker backdrop-blur-md transition-all duration-300 ease-out w-16 max-lg:w-0 shadow-sm data-[expanded=true]:w-64 data-[expanded=true]:rounded-r-xl text-white/75 dark:text-white h-screen z-50 max-lg:fixed">
+  <div
+    :data-expanded="isExpanded"
+    class="flex flex-col bg-gradient-to-b from-gray-300/5 via-gray-300/[2%] to-gray-300/5 dark:bg-none dark:bg-vue-black-darker backdrop-blur-md transition-all duration-300 ease-out w-16 max-lg:w-0 shadow-sm data-[expanded=true]:w-64 light:data-[expanded=true]:rounded-r-xl text-white/75 dark:text-white h-screen z-50 max-lg:fixed"
+  >
     <div class="p-1 pb-0 flex flex-col h-full relative">
-      <div :data-expanded="isExpanded"
-        class="flex data-[expanded=false]:max-lg:flex-col-reverse justify-center data-[expanded=true]:justify-between lg:justify-between data-[expanded=true]:items-center data-[expanded=false]:max-lg:absolute data-[expanded=false]:max-lg:p-1 data-[expanded=false]:max-lg:bg-white/10 data-[expanded=false]:max-lg:backdrop-blur-sm data-[expanded=false]:max-lg:rounded-full">
-        <RouterLink to="/c/new" class="p-2 rounded-full hover:bg-white/5 transition"
-          :title="isExpanded ? 'New Chat' : ''">
+      <div
+        :data-expanded="isExpanded"
+        class="flex data-[expanded=false]:max-lg:flex-col-reverse justify-center data-[expanded=true]:justify-between lg:justify-between data-[expanded=true]:items-center data-[expanded=false]:max-lg:absolute data-[expanded=false]:max-lg:p-1 data-[expanded=false]:max-lg:bg-white/10 data-[expanded=false]:max-lg:backdrop-blur-sm data-[expanded=false]:max-lg:rounded-full"
+      >
+        <RouterLink to="/c/new" class="p-2 rounded-full hover:bg-white/5 transition" :title="isExpanded ? 'New Chat' : ''">
           <PlusIcon class="w-5 h-5" />
         </RouterLink>
         <button @click="toggleSidebar" class="p-2 rounded-full hover:bg-white/5 transition">
-          <ChevronLeftIcon :data-expanded="isExpanded"
-            class="w-5 h-5 data-[expanded=true]: data-[expanded=false]:rotate-180 transition-all duration-300 ease-out" />
+          <ChevronLeftIcon :data-expanded="isExpanded" class="w-5 h-5 data-[expanded=true]: data-[expanded=false]:rotate-180 transition-all duration-300 ease-out" />
         </button>
       </div>
       <div :data-expanded="isExpanded" class="w-full h-[2px] bg-white/15 mt-1 data-[expanded=false]:max-lg:hidden" />
-      <div class="space-y-1 overflow-y-auto pt-1">
-        <div v-for="[group, conversations] in Object.entries(groups).filter(v => v[1].length)">
+      <div class="flex-1 space-y-1 overflow-y-auto pt-1">
+        <div v-for="[group, conversations] in Object.entries(groups).filter((v) => v[1].length)">
           <div class="text-white/50 text-sm px-2 py-1" :key="group">{{ group }}</div>
           <div v-for="c in conversations" :key="c.id">
             <VMenu v-if="editingId !== c.id" placement="right">
-              <RouterLink :data-current="router.currentRoute.value.params.id === c.id" :to="`/c/${c.id}`"
-                class="flex-grow block py-2 px-2 rounded transition-all duration-300 ease-out from-white/5 via-white/[2%] to-white/5 data-[current=true]:shadow-md dark:data-[current=true]:shadow-none dark:data-[current=true]:bg-vue-black-mute hover:bg-gradient-to-r dark:hover:bg-emerald-500 dark:hover:bg-none overflow-hidden hover:pl-4">
+              <RouterLink
+                :data-current="router.currentRoute.value.params.id === c.id"
+                :to="`/c/${c.id}`"
+                class="flex-grow block py-2 px-2 rounded transition-all duration-300 ease-out from-white/5 via-white/[2%] to-white/5 data-[current=true]:shadow-md dark:data-[current=true]:shadow-none dark:data-[current=true]:bg-vue-black-mute hover:bg-gradient-to-r dark:hover:bg-emerald-500 dark:hover:bg-none overflow-hidden hover:pl-4"
+              >
                 <span class="block truncate" :title="c.name ?? undefined">{{ c.name ?? "Untitled" }}</span>
               </RouterLink>
 
@@ -35,10 +40,15 @@
                 </div>
               </template>
             </VMenu>
-            <input v-else v-model="editedName" @keydown.enter="saveEdit(c.id)" @keydown.esc="cancelEdit"
+            <input
+              v-else
+              v-model="editedName"
+              @keydown.enter="saveEdit(c.id)"
+              @keydown.esc="cancelEdit"
               @blur="cancelEdit"
               class="flex-grow block py-2 px-2 rounded bg-white/10 dark:bg-vue-black text-white focus:outline-none focus:ring-0 w-full"
-              :ref="el => { if (el) (el as HTMLInputElement).focus() }">
+              :ref="el => { if (el) (el as HTMLInputElement).focus() }"
+            />
           </div>
         </div>
       </div>
@@ -72,11 +82,11 @@ type Conversations = typeof conversations extends Ref<infer U> ? U : never;
 
 const groups = computed(function () {
   const groups = {
-    "Today"(date) {
+    Today(date) {
       const today = new Date();
       return date.getDate() === today.getDate() && date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear();
     },
-    "Yesterday"(date) {
+    Yesterday(date) {
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
       return date.getDate() === yesterday.getDate() && date.getMonth() === yesterday.getMonth() && date.getFullYear() === yesterday.getFullYear();
@@ -86,21 +96,16 @@ const groups = computed(function () {
       lastWeek.setDate(lastWeek.getDate() - 7);
       return date >= lastWeek;
     },
-    "Older"(_) {
+    Older(_) {
       return true;
     },
   } as const satisfies Record<string, (date: Date) => boolean>;
 
-  return conversations.value.reduce(
-    function (acc, v) {
-      const group = Object.keys(groups).find(g => groups[g as keyof typeof groups](v.updated_at)) ?? "Older";
-      acc[group as keyof typeof acc].push(v);
-      return acc;
-    },
-    Object.fromEntries(
-      Object.keys(groups).map(v => [v, [] as Conversations]),
-    ) as Record<keyof typeof groups, Conversations>,
-  );
+  return conversations.value.reduce(function (acc, v) {
+    const group = Object.keys(groups).find((g) => groups[g as keyof typeof groups](v.updated_at)) ?? "Older";
+    acc[group as keyof typeof acc].push(v);
+    return acc;
+  }, Object.fromEntries(Object.keys(groups).map((v) => [v, [] as Conversations])) as Record<keyof typeof groups, Conversations>);
 });
 
 function toggleSidebar() {
@@ -127,7 +132,7 @@ async function deleteConversation(id: string) {
   try {
     const res = await fetch(`/api/${id}/modify`, { method: "DELETE" });
     if (!res.ok) throw new Error("Failed to delete conversation");
-    conversationStore.conversations = conversationStore.conversations.filter(c => c.id !== id);
+    conversationStore.conversations = conversationStore.conversations.filter((c) => c.id !== id);
     if (router.currentRoute.value.params.id === id) {
       await router.push({ name: "c", params: { id: "new" } });
     }

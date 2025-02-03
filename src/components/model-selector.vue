@@ -10,38 +10,26 @@
     >
       <div
         v-if="expanded"
-        class="absolute z-50 bg-vue-black-mute/5 dark:bg-vue-black-tooltip backdrop-blur-md border-2 border-vue-black-mute/5 dark:border-none shadow-lg rounded-lg w-96 bottom-12 p-1 flex flex-col space-y-2"
+        class="absolute z-50 bg-vue-black-mute/5 dark:bg-vue-black-tooltip backdrop-blur-md border-2 border-vue-black-mute/5 dark:border-none shadow-lg rounded-lg w-full max-w-96 bottom-12 p-1 flex flex-col space-y-2"
       >
-        <div
-          v-for="model in models" @click="selectOption(model)"
-          class="select-none cursor-pointer flex justify-between px-1 items-center"
-        >
+        <div v-for="model in models" @click="selectOption(model)" class="select-none cursor-pointer flex justify-between px-1 items-center">
           <div class="flex space-x-1 items-center">
             <p class="font-medium">{{ modelInfo[model].name }}</p>
             <InfoIcon
-              class="h-4 w-4 cursor-default" v-if="modelInfo[model].description"
+              class="h-4 w-4 cursor-default"
+              v-if="modelInfo[model].description"
               v-tooltip="{ content: `<div class=&quot;break-words&quot;>${modelInfo[model].description!.replace(/(?<=\.) (?=[A-Z])/g, '<br>')}</div>`, html: true }"
             />
           </div>
           <div class="flex space-x-2">
-            <component
-              v-for="capability in modelInfo[model].capabilities"
-              :is="capabilities[capability][0]"
-              v-tooltip="capabilities[capability][1]"
-            />
+            <component v-for="capability in modelInfo[model].capabilities" :is="capabilities[capability][0]" v-tooltip="capabilities[capability][1]" />
           </div>
         </div>
       </div>
     </Transition>
-    <div
-      class="flex items-center space-x-2 cursor-pointer select-none"
-      @click="toggleExpanded"
-    >
+    <div class="flex items-center space-x-2 cursor-pointer select-none" @click="toggleExpanded">
       <p>{{ modelInfo[selected].name }}</p>
-      <ChevronUpIcon
-        :data-expanded="expanded"
-        class="h-4 w-4 data-[expanded=true]:rotate-180 transition-all duration-300 ease-out"
-      />
+      <ChevronUpIcon :data-expanded="expanded" class="h-4 w-4 data-[expanded=true]:rotate-180 transition-all duration-300 ease-out" />
     </div>
   </div>
 </template>
@@ -81,9 +69,9 @@ function selectOption(value: Model) {
 }
 
 function handleClickOutside(event: MouseEvent) {
-  if(!expanded.value) return;
+  if (!expanded.value) return;
   const menu = document.querySelector("#model-selector");
-  if(menu && !menu.contains(event.target as Node)) {
+  if (menu && !menu.contains(event.target as Node)) {
     expanded.value = false;
   }
 }
