@@ -127,11 +127,7 @@
             >
               <PaperclipIcon class="w-5 h-5" />
             </label>
-            <button
-              v-if="finished(getLastMessageIfByAssistant())"
-              @click="sendMessage"
-              class="p-2 rounded-full hover:bg-white/5 transition mt-1"
-            >
+            <button v-if="finished(getLastMessageIfByAssistant())" @click="sendMessage" class="p-2 rounded-full hover:bg-white/5 transition mt-1">
               <SendIcon class="w-5 h-5" />
             </button>
             <button v-else @click="abortController?.abort()" class="p-2 rounded-full hover:bg-white/5 transition mt-1">
@@ -167,9 +163,9 @@ import {
   CheckIcon,
   RefreshCwIcon,
 } from "lucide-vue-next";
-import { calculateHash, capitalize, isBackendAlive, last } from "@/lib/utils.ts";
+import { calculateHash, capitalize, isBackendAlive, last, safeParse } from "@/lib/utils.ts";
 import { onBeforeRouteUpdate, useRoute } from "vue-router";
-import { MessageChunkSchema, routes, SSESchema } from "../../shared/schemas.ts";
+import { MessageChunkSchema, MessageSchema, routes, SSESchema } from "../../shared/schemas.ts";
 import { useConversationStore } from "@/stores/conversations.ts";
 import { modelInfo } from "../../shared/constants.ts";
 import ModelSelector from "@/components/model-selector.vue";
@@ -286,7 +282,7 @@ watch(model, function (newValue, oldValue) {
   }
 });
 
-async function init(id: string) {
+function init(id: string) {
   const isNew = id === "new";
 
   messages.value = { loading: !isNew, error: null, array: [] };
@@ -300,30 +296,44 @@ async function init(id: string) {
     return;
   }
 
-  await fetchMessages(id);
+  fetchMessages(id);
 }
 
-async function fetchMessages(id: string) {
-  try {
-    const res = await fetch(`/api/${id}/messages`);
+function fetchMessages(id: string) {
+  fetch(`/api/${id}/messages`).then((res) => {
+    messages.value.loading = false;
+
     if (!res.ok) {
-      const alive = await isBackendAlive();
-      if (!alive) throw new Error("Backend seems to be dead");
-      throw new Error(res.statusText);
+      return isBackendAlive().then((alive) => {
+        if (!alive) return (messages.value.error = "Backend seems to be dead");
+        messages.value.error = res.statusText;
+      });
     }
-    const result = routes["[id]"]["messages"].safeParse(await res.json());
-    if (!result.success) throw new Error("Backend provided bogus data");
-    messages.value = { loading: false, error: null, array: result.data.map((msg) => ({ ...msg, finished: true })) };
-  } catch (e) {
-    if (e instanceof Error) {
-      messages.value = { loading: false, error: e.message, array: [] };
-    }
+
+    res.json().then((data) => {
+      const result = routes["[id]"]["messages"].safeParse(data);
+      if (result.success) {
+        messages.value.array = result.data;
+        localStorage.setItem(id, JSON.stringify(result.data));
+      } else {
+        messages.value.error = "Backend provided bogus data";
+      }
+    });
+  }).catch((e) => {
+    messages.value.loading = false;
+    messages.value.error = e.message;
+  });
+
+  const { data: fromLocalStorage } = MessageSchema.array().safeParse(safeParse(localStorage.getItem(id)));
+  if (fromLocalStorage) {
+    messages.value.array = fromLocalStorage;
+    messages.value.loading = false;
   }
 }
 
 let skipNextInit = false;
 
-onBeforeRouteUpdate(async (to, from, next) => {
+onBeforeRouteUpdate((to, from, next) => {
   console.log("Route update", to.params.id, from.params.id);
   if (to.params.id !== from.params.id) {
     if (skipNextInit) {
@@ -331,13 +341,13 @@ onBeforeRouteUpdate(async (to, from, next) => {
       return next();
     }
     console.log("init(" + to.params.id + ")");
-    await init(to.params.id as string);
+    init(to.params.id as string);
   }
   return next();
 });
 
-onMounted(async () => {
-  await init(route.params.id as string);
+onMounted(() => {
+  init(route.params.id as string);
 
   function setupSSE() {
     const sse = new EventSource("/api/sse");
@@ -446,6 +456,8 @@ async function sendMessage() {
       }
     );
 
+    localStorage.setItem(id, JSON.stringify(messages.value.array));
+
     input.value = "";
     if (attachments) uploads.value = [];
 
@@ -513,12 +525,14 @@ async function requestCompletion({ conversationId = route.params.id as string, .
     }
   }
   abortController.value = null;
+  localStorage.setItem(conversationId, JSON.stringify(messages.value.array));
 }
 
 async function regenerateLastMessage() {
   const last = $last(messages.value.array);
   if (last?.role !== "assistant") return;
   last.chunks = [];
+  last.author = model.value;
   await requestCompletion({ message: null, model: model.value });
 }
 

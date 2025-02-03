@@ -9,6 +9,15 @@ export function isValidJSON(str: string): boolean {
   }
 }
 
+export function safeParse<T = any, F = null>(str: Nullish<string>, fallback = null as F): T | F {
+  if (!str) return fallback;
+  try {
+    return JSON.parse(str);
+  } catch (e) {
+    return fallback;
+  }
+}
+
 export function capitalize(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
