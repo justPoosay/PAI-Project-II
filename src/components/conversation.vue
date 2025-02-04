@@ -300,7 +300,7 @@ watch(model, function (newValue, oldValue) {
 function init(id: string) {
   const isNew = id === "new";
 
-  messages.value = { loading: !isNew, error: null, array: [] };
+  messages.value = { loading: false, error: null, array: [] };
   const c = conversationStore.conversations.find((c) => c.id === id) ?? null;
   conversation.value = c;
   model.value = c?.model ?? modelStore.models[0];
@@ -362,8 +362,10 @@ function fetchMessages(id: string) {
   const { data: fromLocalStorage } = MessageSchema.array().safeParse(safeParse(localStorage.getItem(id)));
   if (fromLocalStorage) {
     messages.value.array = fromLocalStorage;
-    messages.value.loading = false;
+    return (messages.value.loading = false);
   }
+
+  messages.value.loading = true;
 }
 
 let skipNextInit = false;

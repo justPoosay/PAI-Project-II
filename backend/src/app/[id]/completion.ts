@@ -62,19 +62,21 @@ export async function POST(req: AppRequest): Promise<Response> {
   const writer = stream.writable.getWriter();
 
   function getMessages() {
-    return c!.messages.map(
-      ({ role, ...rest }) =>
-        ({
-          role,
-          content:
-            "content" in rest
-              ? rest.content
-              : rest.chunks
-                  .filter((v) => v?.type === "text-delta")
-                  .map((v) => v.textDelta)
-                  .join(""),
-        } satisfies CoreMessage)
-    );
+    return c!.messages
+      .map(
+        ({ role, ...rest }) =>
+          ({
+            role,
+            content:
+              "content" in rest
+                ? rest.content
+                : rest.chunks
+                    .filter((v) => v?.type === "text-delta")
+                    .map((v) => v.textDelta)
+                    .join(""),
+          } satisfies CoreMessage)
+      )
+      .filter((msg) => msg.content);
   }
 
   const date = dayjs().tz("America/Los_Angeles").format("h:mm A on MMMM D, YYYY PST");
