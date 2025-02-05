@@ -1,5 +1,5 @@
 diff --git a/src/index.js b/src/index.js
-index 7426a98d099cafbc28c0d2ebe01f9042cbf3388e..0e60f2e03b4d0f668b059d6b5e306af992a11db7 100644
+index 7426a98d099cafbc28c0d2ebe01f9042cbf3388e..57969b28988a59f9c3d82d1e2ae0516accdd173f 100644
 --- a/src/index.js
 +++ b/src/index.js
 @@ -51,7 +51,27 @@ export function markedHighlight(options) {
@@ -9,7 +9,7 @@ index 7426a98d099cafbc28c0d2ebe01f9042cbf3388e..0e60f2e03b4d0f668b059d6b5e306af9
 -        return `<pre><code${classAttr}>${escaped ? code : escape(code, true)}\n</code></pre>`;
 +	      const uuid = crypto.randomUUID();
 +	      return `
-+	        <div class="flex flex-col">
++	        <div class="hljs-container">
 +	          <div class="hljs-header">
 +	            <p>${lang ? escape(lang) : "plaintext"}</p>
 +	            <button class="hljs-copy-btn" onclick="

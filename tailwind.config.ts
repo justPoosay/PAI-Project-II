@@ -28,8 +28,7 @@ export default {
         },
       },
       fontFamily: {
-        "monaspace_neon": ["Monaspace Neon", "Monaspace Radon", "monospace"],
-        "monaspace_radon": ["Monaspace Radon", "Monaspace Neon", "monospace"],
+        "sf_mono": ["SF Mono", "monospace"],
         "sf_pro_rounded": ["SF Pro Rounded", "Arial", "sans-serif"],
       },
     },

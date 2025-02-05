@@ -603,15 +603,13 @@ watch(input, () => {
     @apply rounded overflow-x-auto
 
   code
-    @apply font-monaspace_neon
+    @apply font-sf_mono
 
   // \`\`\`\n<content>\n\`\`\`
   pre:has(code.hljs)
-    @apply shadow-md dark:shadow-none backdrop-blur-sm text-sm mb-2 rounded-b-md overflow-x-auto max-w-full
-    &:last-child
-      @apply mb-0
+    @apply backdrop-blur-sm text-sm overflow-x-auto max-w-full
     code
-      @apply block p-2 rounded-b-md whitespace-pre-wrap break-all
+      @apply block p-2 whitespace-pre-wrap break-all
 
   strong
     @apply font-bold
@@ -621,7 +619,7 @@ watch(input, () => {
 
   // `<content>`
   code:not(.hljs)
-    @apply bg-white/[2%] dark:bg-[#0D1117] backdrop-blur-sm rounded p-1 text-sm
+    @apply bg-white/[2%] dark:bg-[#101010] backdrop-blur-sm rounded px-1 py-0.5 text-sm
 
   // # <content>
   h1
@@ -714,13 +712,17 @@ watch(input, () => {
       @apply bg-white/5
 
 .hljs
-  @apply bg-white/5 dark:bg-[#0d1117]
+  @apply bg-white/5 dark:bg-[#101010] border-[2px] border-t-0 border-white/10 dark:border-[#303030] rounded-b-xl
 
-.hljs-comment
-  @apply font-monaspace_radon text-gray-300/75 italic
+.hljs-container
+  @apply flex flex-col light:shadow-md rounded-b-xl
+  &:not(:last-child)
+    @apply mb-1
+  &:not(:first-child)
+    @apply mt-1
 
 .hljs-header
-  @apply bg-white/5 dark:bg-vue-black-mute rounded-t-xl flex items-center justify-between py-2 px-3 text-sm mt-1
+  @apply bg-white/10 dark:bg-[#181818] flex items-center justify-between py-2 px-3 text-sm mt-1 border-[2px] border-b-0 border-white/10 dark:border-[#303030] rounded-t-xl
 
 .v-popper--theme-tooltip
   .v-popper__inner
