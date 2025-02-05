@@ -1,8 +1,9 @@
-FROM oven/bun:latest AS build
+FROM oven/bun:1.2.2 AS build
 WORKDIR /usr/src/app
 
 COPY package.json bun.lockb ./
 COPY shared shared/
+COPY patches patches/
 RUN bun install --frozen-lockfile
 
 COPY . .
