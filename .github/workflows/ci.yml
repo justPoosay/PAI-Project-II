@@ -1,0 +1,42 @@
+name: Continuous Integration
+
+on: [push, pull_request]
+
+jobs:
+  types-frontend:
+    name: Check Types on the Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: canary
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Check types
+        run: bun type-check
+
+  types-backend:
+    name: Check Types on the Backend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: canary
+
+      - name: Install dependencies
+        working-directory: ./backend
+        run: bun install
+
+      - name: Check types
+        working-directory: ./backend
+        run: bun type-check
