@@ -1,4 +1,4 @@
-import type { ClientBoundWebSocketMessage, Model } from "./index";
+import type { Model } from "./index";
 
 export interface ModelInfo {
   capabilities: Array<"toolUsage" | "imageInput" | "reasoning" | string>;
@@ -25,41 +25,36 @@ export const modelInfo = {
     capabilities: ["toolUsage", "imageInput"],
     name: "ChatGPT 4o",
     logoSrc: "/img/openai.svg",
-    description: "OpenAI's flagship model. Excellent general-purpose model. Relatively fast."
+    description: "OpenAI's flagship model. Excellent general-purpose model. Relatively fast.",
   },
   "gpt-4o-mini": {
     capabilities: ["toolUsage", "imageInput"],
     name: "ChatGPT 4o Mini",
     logoSrc: "/img/openai.svg",
-    description: "A smaller, faster version of GPT-4. Pretty good at general tasks and coding."
+    description: "A smaller, faster version of GPT-4. Pretty good at general tasks and coding.",
   },
   "grok-2": {
     capabilities: ["toolUsage"],
     name: "Grok 2",
     logoSrc: "/img/xai.svg",
-    description: null
+    description: null,
   },
   "grok-beta": {
     capabilities: ["toolUsage"],
     name: "Grok Beta",
     logoSrc: "/img/xai.svg",
-    description: null
+    description: null,
   },
   "llama-3.3-70b-versatile": {
     capabilities: ["toolUsage"],
     name: "Llama 3.3 70b",
     logoSrc: "/img/meta.svg",
-    description: "Extremely fast open-source model running on Groq hardware. Great for quick responses and coding tasks. Not as accurate as Claude or GPT-4o."
+    description: "Extremely fast open-source model running on Groq hardware. Great for quick responses and coding tasks. Not as accurate as Claude or GPT-4o.",
   },
   "mixtral-8x7b-32768": {
     capabilities: ["toolUsage"],
     name: "Mixtral 8x7b",
     logoSrc: "/img/mistral.svg",
-    description: null
-  }
+    description: null,
+  },
 } satisfies Record<Model, ModelInfo>;
-
-export const errorMessageRegex = /^> \[!ERROR]\n> \*\*(?<title>.+)\*\*\n> (?<message>.+)$/;
-export const errorMessage = (error: Omit<Extract<ClientBoundWebSocketMessage, { role: "error" }>, "role">) => `> [!ERROR]
-> **${error.title}**
-> ${error.message}`;

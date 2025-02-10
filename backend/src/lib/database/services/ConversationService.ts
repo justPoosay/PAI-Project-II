@@ -29,7 +29,7 @@ export default class ConversationService {
     const obj = { ...dto, created_at: now, updated_at: now, id: randomUUIDv7() };
     const candidate = conversationEntitySchema.parse(obj);
     await this.#collection.insertOne(candidate);
-    return ConversationDTO.convertFromEntity(obj);
+    return ConversationDTO.convertFromEntity(obj)!;
   }
   
   async update(id: ConversationDTO["id"], dto: Omit<Partial<ConversationDTO>, "id" | "created_at" | "updated_at">) {

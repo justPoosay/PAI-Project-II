@@ -11,22 +11,22 @@ export async function POST(req: AppRequest): Promise<Response> {
   let model: Model = availableModels[0];
   const data = await req.text();
   logger.trace("/create", { data });
-  if(isValidJSON(data)) {
-    const result = z.object({
-      model: ModelSchema,
-    }).safeParse(JSON.parse(data));
-    if(result.success) {
+  if (isValidJSON(data)) {
+    const result = z
+      .object({
+        model: ModelSchema,
+      })
+      .safeParse(JSON.parse(data));
+    if (result.success) {
       model = result.data.model;
     }
   }
   // const result = await db.chat.create({ data: { model } });
   const c = await ConversationService.create({ model, name: null, messages: [], archived: false });
   return Response.json(
-    routes["create"].parse(
-      {
-        ...c,
-        updated_at: c.updated_at.toISOString()
-      } satisfies z.infer<typeof routes["create"]>
-    )
+    routes["create"].parse({
+      ...c,
+      updated_at: c.updated_at.toISOString(),
+    } satisfies z.infer<(typeof routes)["create"]>)
   );
 }
