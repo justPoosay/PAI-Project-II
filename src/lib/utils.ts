@@ -30,7 +30,7 @@ export async function isBackendAlive(): Promise<boolean> {
 export async function calculateHash(buffer: ArrayBuffer) {
   const hash = await crypto.subtle.digest("SHA-256", buffer);
   const array = Array.from(new Uint8Array(hash));
-  const hex = array.map(b => b.toString(16).padStart(2, "0")).join("");
+  const hex = array.map((b) => b.toString(16).padStart(2, "0")).join("");
   const base64 = btoa(String.fromCharCode(...array));
   return { hex, base64 };
 }

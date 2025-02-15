@@ -29,11 +29,23 @@ export const server = serve({
     async function get(this: Server) {
       const match = router.match(url.pathname);
 
-      if (!match) return Response.json({ success: false, error: "Not Found" }, { status: 404 });
+      if (!match) return new Response(null, { status: 404 });
 
       try {
         const appRequest = Object.assign(req, { route: match });
-        const module = await import(match.filePath);
+
+        let module: any;
+
+        try {
+          module = await import(match.filePath);
+        } catch (e) {
+          module = null;
+        }
+
+        if (!module) {
+          return new Response(null, { status: 404 });
+        }
+
         const preMethod = module.pre;
         if (preMethod && typeof preMethod === "function") {
           const result = await preMethod.call(this, appRequest);
@@ -46,10 +58,10 @@ export const server = serve({
         }
       } catch (e) {
         logger.error(e);
-        return Response.json({ success: false, error: "Internal Server Error" }, { status: 500 });
+        return new Response(null, { status: 500 });
       }
 
-      return Response.json({ success: false, error: "Not Found" }, { status: 404 });
+      return new Response(null, { status: 405 });
     }
 
     const res = await get.call(this);

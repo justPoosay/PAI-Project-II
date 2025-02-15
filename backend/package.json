@@ -22,6 +22,7 @@
     "@mendable/firecrawl-js": "^1.16.0",
     "@types/mongodb": "^4.0.7",
     "ai": "^4.1.16",
+    "arktype": "^2.0.4",
     "cheerio": "^1.0.0",
     "dayjs": "^1.11.13",
     "mongodb": "^6.13.0",

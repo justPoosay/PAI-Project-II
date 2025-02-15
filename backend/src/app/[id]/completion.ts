@@ -1,6 +1,5 @@
 import type { AppRequest } from "~/lib/types";
-import { object, string, z } from "zod";
-import { ModelSchema } from "/shared/schemas";
+import { modelSchema } from "/shared/schemas";
 import { ConversationService } from "~/lib/database";
 import { randomUUIDv7 } from "bun";
 import dayjs from "dayjs";
@@ -14,14 +13,16 @@ import { openai } from "@ai-sdk/openai";
 import { emitter } from "~";
 import { pick } from "~/lib/utils";
 import type { Message } from "/shared/";
+import { type } from "arktype";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-const Options = object({
-  message: string().nonempty(),
-  model: ModelSchema.optional(),
-  attachmentIds: string().array().optional(),
+const options = type({
+  message: "string>0 | null",
+  "model?": modelSchema,
+  "attachmentIds?": "string[]",
+  "plainText?": "boolean",
 });
 
 interface IError {
@@ -31,24 +32,36 @@ interface IError {
 
 export async function POST(req: AppRequest): Promise<Response> {
   const c = await ConversationService.findOne(req.route.params.id, { archived: false });
-  let opts: z.infer<typeof Options> = null!;
-  try {
-    opts = Options.parse(await req.json()); // here either req.json or Options.parse can throw
-  } catch (e) {
-    return new Response(null, { status: 400 });
-  }
+  let opts: typeof options.infer;
+
   if (!c) {
     return new Response(null, { status: 404 });
   }
-  // null message and missing attachmentIds indicate regeneration of previous completion, if there are no messages, there is nothing to regenerate
-  if (!opts.message && !opts.attachmentIds && !c?.messages.length) {
-    return new Response(null, { status: 400 });
+
+  try {
+    const json = await req.json();
+    const out = options(json);
+    if (out instanceof type.errors) {
+      throw new Error(out.summary);
+    }
+    opts = out;
+  } catch (e) {
+    let message: string | null = null;
+
+    if (e instanceof Error) {
+      message = e.message;
+    }
+
+    return new Response(message, { status: 400 });
   }
 
-  if (opts.message /*|| opts.attachmentIds?.lenght */) {
+  if (!opts.message && !opts.attachmentIds?.length && !c.messages.length) {
+    return new Response("nothing to regenerate", { status: 400 });
+  }
+
+  if (opts.message /*|| opts.attachmentIds?.length*/) {
     c.messages.push({ id: randomUUIDv7(), role: "user", content: opts.message });
-  } else if (c.messages[c.messages.length - 1].role === "assistant") {
-    // pop only assistant messages
+  } else if (c.messages.at(-1)?.role === "assistant") {
     c.messages.pop();
   }
 
@@ -58,6 +71,11 @@ export async function POST(req: AppRequest): Promise<Response> {
 
   const stream = new TransformStream();
   const writer = stream.writable.getWriter();
+
+  const abortController = new AbortController();
+  req.signal.addEventListener("abort", () => {
+    abortController.abort();
+  });
 
   function getMessages() {
     return c!.messages
@@ -105,13 +123,15 @@ export async function POST(req: AppRequest): Promise<Response> {
       .map((line) => line.trim())
       .join("\n")
       .trim(),
-    onChunk({ chunk }) {
-      if (["tool-call", "tool-result", "text-delta"].includes(chunk.type)) {
-        chunks.push(chunk as Extract<typeof chunk, { type: "tool-call" | "tool-result" | "text-delta" }>);
-        writer.write(JSON.stringify(chunk) + "\n");
+    async onChunk({ chunk }) {
+      if (["tool-call", "tool-result", "text-delta", "reasoning"].includes(chunk.type)) {
+        chunks.push(chunk as Extract<typeof chunk, { type: "tool-call" | "tool-result" | "text-delta" | "reasoning" }>);
+        if (!opts.plainText) {
+          await writer.write(JSON.stringify(chunk) + "\n");
+        }
       }
     },
-    abortSignal: req.signal,
+    abortSignal: abortController.signal,
   });
 
   const res = new Response(stream.readable, {
@@ -124,7 +144,10 @@ export async function POST(req: AppRequest): Promise<Response> {
   const promise = new Promise<void>(async function (resolve) {
     let encounteredError: IError | null = null;
     try {
-      for await (const _ of comp.textStream) {
+      for await (const delta of comp.textStream) {
+        if (opts.plainText) {
+          await writer.write(delta);
+        }
       }
     } catch (e) {
       if (e instanceof Error && e.name === "AbortError") {
@@ -135,20 +158,22 @@ export async function POST(req: AppRequest): Promise<Response> {
           message: e.name + ": " + e.message,
         };
         logger.error(encounteredError);
-        try {
-          await writer.abort(encounteredError);
-        } catch (e) {}
+        await writer.abort(encounteredError);
       }
     }
 
-    try {
-      chunks.push(null);
-      writer.write("null\n"); // terminating null
-      await writer.close();
-    } catch (e) {}
+    chunks.push(null);
+    if (!encounteredError) {
+      try {
+        if (!opts.plainText) {
+          await writer.write("null\n");
+        }
+        await writer.close();
+      } catch (e) {}
+    }
 
-    if (c.messages[c.messages.length - 1].role === "assistant") {
-      (c.messages[c.messages.length - 1] as Extract<Message, { role: "assistant" }>).chunks = chunks;
+    if (c.messages.at(-1)?.role === "assistant") {
+      (c.messages.at(-1) as Extract<Message, { role: "assistant" }>).chunks = chunks;
     }
 
     if (!encounteredError && c.messages.length >= 2 && !c.name) {
@@ -187,16 +212,7 @@ export async function POST(req: AppRequest): Promise<Response> {
     resolve();
   });
 
-  Promise.allSettled([comp, promise]).catch(
-    (e) =>
-      void (
-        e instanceof Error &&
-        writer.abort({
-          title: "Error creating completion",
-          message: e.name + ": " + e.message,
-        } satisfies IError)
-      )
-  );
+  Promise.allSettled([comp, promise]).catch(writer.abort);
 
   return res;
 }

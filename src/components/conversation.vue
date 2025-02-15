@@ -144,7 +144,15 @@
             <button v-if="!abortController" @click="sendMessage" class="p-2 rounded-full hover:bg-white/5 transition mt-1">
               <SendIcon class="w-5 h-5" />
             </button>
-            <button v-else @click="abortController.abort()" class="p-2 rounded-full hover:bg-white/5 transition mt-1">
+            <button
+              v-else
+              @click="
+                abortController.abort();
+                (messages.array[messages.array.length - 1] as AssistantMessage).chunks.push(null);
+                abortController = null;
+              "
+              class="p-2 rounded-full hover:bg-white/5 transition mt-1"
+            >
               <CircleStopIcon class="w-5 h-5" />
             </button>
           </div>
@@ -440,21 +448,28 @@ function getParts(msg: Message) {
     if (!chunk) continue;
     const last = $last(parts);
 
-    if (chunk.type === "text-delta") {
-      if (typeof last === "string") {
-        parts[parts.length - 1] = last + chunk.textDelta;
-      } else {
-        parts.push(chunk.textDelta);
-      }
-    } else {
-      if (chunk.type === "tool-call") {
+    switch (chunk.type) {
+      case "text-delta":
+        if (typeof last === "string") {
+          parts[parts.length - 1] = last + chunk.textDelta;
+        } else {
+          parts.push(chunk.textDelta);
+        }
+        break;
+      case "tool-call":
         parts.push({ id: chunk.toolCallId, name: chunk.toolName, args: chunk.args });
-      } else if (typeof last === "object" && "id" in last && last.id === chunk.toolCallId) {
-        parts[parts.length - 1] = {
-          ...last,
-          result: chunk.result,
-        };
-      }
+        break;
+      case "reasoning":
+        // TODO
+        break;
+      case "tool-result":
+        if (typeof last === "object" && "id" in last && last.id === chunk.toolCallId) {
+          parts[parts.length - 1] = {
+            ...last,
+            result: chunk.result,
+          };
+        }
+        break;
     }
   }
 
@@ -542,19 +557,36 @@ async function requestCompletion({ conversationId = route.params.id as string, .
   }
 
   const decoder = new TextDecoder();
+  let buffer = "";
   for await (const chunk of res.body! as ReadableStream<Uint8Array> & AsyncIterable<Uint8Array>) {
-    const text = decoder.decode(chunk);
-    const parts = text.trim().split("\n");
-    for (const part of parts) {
-      if (part.trim()) {
-        try {
-          const json = JSON.parse(part);
-          const { data: chunk } = MessageChunkSchema.safeParse(json);
-          if (chunk !== undefined) msg.chunks.push(chunk);
-        } catch (e) {
-          console.warn("Failed to parse chunk:", part);
+    buffer += decoder.decode(chunk);
+    const lastNewlineIndex = buffer.lastIndexOf("\n");
+    if (lastNewlineIndex !== -1) {
+      const completeChunks = buffer.slice(0, lastNewlineIndex);
+      buffer = buffer.slice(lastNewlineIndex + 1);
+
+      const parts = completeChunks.split("\n");
+      for (const part of parts) {
+        if (part.trim()) {
+          try {
+            const json = JSON.parse(part);
+            const { data: chunk } = MessageChunkSchema.safeParse(json);
+            if (chunk !== undefined) msg.chunks.push(chunk);
+          } catch (e) {
+            console.warn("Failed to parse chunk:", part);
+          }
         }
       }
+    }
+  }
+  // Handle any remaining data in buffer
+  if (buffer.trim()) {
+    try {
+      const json = JSON.parse(buffer);
+      const { data: chunk } = MessageChunkSchema.safeParse(json);
+      if (chunk !== undefined) msg.chunks.push(chunk);
+    } catch (e) {
+      console.warn("Failed to parse chunk:", buffer);
     }
   }
   abortController.value = null;

@@ -1,9 +1,17 @@
+import { type } from "arktype";
 import { z } from "zod";
 
 export const ModelSchema = z.enum([
-  "gpt-4o", "gpt-4o-mini", "claude-3-5-sonnet", "grok-2", "grok-beta", "llama-3.3-70b-versatile", "mixtral-8x7b-32768",
+  "gpt-4o",
+  "gpt-4o-mini",
+  "claude-3-5-sonnet",
+  "grok-2",
+  "grok-beta",
+  "llama-3.3-70b-versatile",
+  "mixtral-8x7b-32768",
   // "o3-mini"
 ]);
+export const modelSchema = type("'gpt-4o' | 'gpt-4o-mini' | 'claude-3-5-sonnet' | 'grok-2' | 'grok-beta' | 'llama-3.3-70b-versatile' | 'mixtral-8x7b-32768'");
 
 export const AttachmentSchema = z.object({
   id: z.string(),
@@ -26,6 +34,10 @@ export const MessageChunkSchema = z.union([
   }),
   z.object({
     type: z.literal("text-delta"),
+    textDelta: z.string(),
+  }),
+  z.object({
+    type: z.literal("reasoning"),
     textDelta: z.string(),
   }),
   z.null(), // terminator (the last chunk in the message, it's absence indicates the fact that the completion isn't fully completed yet)
@@ -53,16 +65,18 @@ export const ConversationSchema = z.object({
 
 export const routes = {
   "[id]": {
-    "messages": z.array(MessageSchema),
+    messages: z.array(MessageSchema),
   },
-  "conversations": z.array(ConversationSchema),
-  "create": ConversationSchema,
-  "models": z.array(ModelSchema),
-  "upload": z.object({
-    id: z.string(),
-    hash: z.string(),
-    image: z.boolean(),
-  }).array(),
+  conversations: z.array(ConversationSchema),
+  create: ConversationSchema,
+  models: z.array(ModelSchema),
+  upload: z
+    .object({
+      id: z.string(),
+      hash: z.string(),
+      image: z.boolean(),
+    })
+    .array(),
 } as const;
 
 export const SSESchema = z.union([
