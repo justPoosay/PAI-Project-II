@@ -1,7 +1,6 @@
 import type { AppRequest } from "~/lib/types";
 import { modelSchema } from "/shared/schemas";
 import { ConversationService } from "~/lib/database";
-import { randomUUIDv7 } from "bun";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
@@ -60,13 +59,13 @@ export async function POST(req: AppRequest): Promise<Response> {
   }
 
   if (opts.message /*|| opts.attachmentIds?.length*/) {
-    c.messages.push({ id: randomUUIDv7(), role: "user", content: opts.message });
+    c.messages.push({ role: "user", content: opts.message });
   } else if (c.messages.at(-1)?.role === "assistant") {
     c.messages.pop();
   }
 
   c.model = opts.model ?? c.model;
-  c.messages.push({ id: randomUUIDv7(), role: "assistant", chunks: [], author: c.model });
+  c.messages.push({ role: "assistant", chunks: [], author: c.model });
   await ConversationService.update(c.id, pick(c, ["messages", "model"]));
 
   const stream = new TransformStream();

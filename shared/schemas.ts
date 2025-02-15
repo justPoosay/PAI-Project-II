@@ -65,7 +65,7 @@ export const ConversationSchema = z.object({
 
 export const routes = {
   "[id]": {
-    messages: z.array(MessageSchema),
+    messages: MessageSchema.array(),
   },
   conversations: z.array(ConversationSchema),
   create: ConversationSchema,
