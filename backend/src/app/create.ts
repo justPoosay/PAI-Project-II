@@ -1,11 +1,11 @@
-import type { AppRequest } from "../lib/types.ts";
-import { ModelSchema, routes } from "../../../shared/schemas.ts";
+import type { AppRequest } from "~/lib/types";
+import { ModelSchema, routes } from "/shared/schemas";
 import { z } from "zod";
-import type { Model } from "../../../shared";
-import { isValidJSON } from "../lib/utils.ts";
-import logger from "../lib/logger.ts";
-import { ConversationService } from "../lib/database";
-import { availableModels } from "../core/constants.ts";
+import type { Model } from "/shared/";
+import { isValidJSON } from "~/lib/utils";
+import logger from "~/lib/logger";
+import { ConversationService } from "~/lib/database";
+import { availableModels } from "~/core/constants";
 
 export async function POST(req: AppRequest): Promise<Response> {
   let model: Model = availableModels[0];

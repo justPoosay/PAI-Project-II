@@ -1,29 +1,27 @@
-import type { AppRequest } from "../../lib/types.ts";
+import type { AppRequest } from "~/lib/types";
 import { object, string, z } from "zod";
-import { ModelSchema } from "../../../../shared/schemas.ts";
-import { ConversationService } from "../../lib/database";
+import { ModelSchema } from "/shared/schemas";
+import { ConversationService } from "~/lib/database";
 import { randomUUIDv7 } from "bun";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import { type CoreMessage, streamText } from "ai";
-import { models } from "../../core/constants.ts";
-import tools from "../../core/tools";
-import logger from "../../lib/logger.ts";
+import { models } from "~/core/constants";
+import tools from "~/core/tools";
+import logger from "~/lib/logger";
 import { openai } from "@ai-sdk/openai";
-import { emitter } from "../../index";
-import { pick } from "../../lib/utils.ts";
-import type { Message } from "../../../../shared/index.ts";
+import { emitter } from "~";
+import { pick } from "~/lib/utils";
+import type { Message } from "/shared/";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
 const Options = object({
-  message: string().nonempty().nullable(),
+  message: string().nonempty(),
   model: ModelSchema.optional(),
   attachmentIds: string().array().optional(),
-  systemPrompt: string().optional(),
-  name: string().optional(),
 });
 
 interface IError {
@@ -87,7 +85,6 @@ export async function POST(req: AppRequest): Promise<Response> {
     messages: getMessages(),
     ...(models[c.model].capabilities.includes("toolUsage") && { tools, maxSteps: 128 }),
     system: `
-      ${opts.name ? `User's name is ${opts.name}.` : ""}
       NEVER invent or improvise information. If you can't give a reasonable answer, try to use available tools, and if you are still stuck, just say what you are thinking.
       ${
         tools["search"] && tools["scrape"]
@@ -103,7 +100,6 @@ export async function POST(req: AppRequest): Promise<Response> {
       Always assume that any mentioned PC is running Arch Linux, unless stated otherwise.
       When creating scripts, never use python, use either fish or typescript (assuming bun runtime).
       The current day and time is ${date}.
-      ${opts.systemPrompt ?? ""}
       `
       .split("\n")
       .map((line) => line.trim())

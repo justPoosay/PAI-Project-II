@@ -14,6 +14,7 @@ interface SearchResults {
   }>;
 }
 
+// TODO: Captcha handling
 export const search = {
   async duckduckgo(query: string, page: number) {
     const res = await fetch(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}&t=h_&ia=web&p=${page}`);
@@ -26,27 +27,32 @@ export const search = {
     zero_click_abstract.find("a").remove();
 
     const result_zci_text = zero_click_abstract.text().trim();
-    const result_zci = result_zci_text ? {
-      title: title.text(),
-      text: result_zci_text,
-      url: title.attr("href")!,
-    } satisfies SearchResults["zci"] : null;
+    const result_zci = result_zci_text
+      ? ({
+          title: title.text(),
+          text: result_zci_text,
+          url: title.attr("href")!,
+        } satisfies SearchResults["zci"])
+      : null;
 
-    const results = $("#links").find(".links_main.links_deep.result__body").get().map(el => {
-      const title = $(el).find(".result__a");
-      const url = new URL(`https:${title.attr("href")}`).searchParams.get("uddg")!;
-      const snippet = $(el).find(".result__snippet");
-      return {
-        title: title.text(),
-        url,
-        snippet: snippet.text(),
-      } satisfies SearchResults["results"] extends Array<infer T> | undefined ? T : never;
-    });
+    const results = $("#links")
+      .find(".links_main.links_deep.result__body")
+      .get()
+      .map((el) => {
+        const title = $(el).find(".result__a");
+        const url = new URL(`https:${title.attr("href")}`).searchParams.get("uddg")!;
+        const snippet = $(el).find(".result__snippet");
+        return {
+          title: title.text(),
+          url,
+          snippet: snippet.text(),
+        } satisfies SearchResults["results"] extends Array<infer T> | undefined ? T : never;
+      });
 
     return {
       success: true,
       zci: result_zci,
       results,
     } satisfies SearchResults;
-  }
+  },
 } as const;

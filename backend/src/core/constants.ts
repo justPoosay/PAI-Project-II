@@ -1,16 +1,16 @@
 import type { LanguageModelV1 } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { anthropic } from "@ai-sdk/anthropic";
-import type { Model as TModel } from "../../../shared";
-import { type ModelInfo, modelInfo } from "../../../shared/constants.ts";
+import type { Model as TModel } from "/shared/";
+import { type ModelInfo, modelInfo } from "/shared/constants";
 import { xai } from "@ai-sdk/xai";
-import { env } from "../lib/utils.ts";
+import { env } from "~/lib/utils.ts";
 import { groq } from "@ai-sdk/groq";
 
 type Model = ModelInfo & {
   model: LanguageModelV1;
   env: string;
-}
+};
 
 /** @description model info, useful only for back-end */
 export const models = {
@@ -56,4 +56,6 @@ export const models = {
   },
 } as const satisfies Record<TModel, Model>;
 
-export const availableModels = Object.entries(models).filter(v => !!env[v[1].env]).map(v => v[0] as TModel);
+export const availableModels = Object.entries(models)
+  .filter((v) => !!env[v[1].env])
+  .map((v) => v[0] as TModel);

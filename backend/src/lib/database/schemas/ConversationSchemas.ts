@@ -1,6 +1,6 @@
 import { date, intersection, object, string, z } from "zod";
-import { ConversationSchema, MessageSchema } from "../../../../../shared/schemas";
-import { omit } from "../../utils";
+import { ConversationSchema, MessageSchema } from "/shared/schemas";
+import { omit } from "~/lib/utils";
 
 export const conversationEntitySchema = object({
   messages: intersection(object({ id: string() }), MessageSchema).array(),

@@ -1,10 +1,10 @@
-import type { Tool } from "../index.ts";
-import { env } from "../../../lib/utils.ts";
+import { env } from "~/lib/utils";
 import { tool } from "ai";
 import { Octokit } from "octokit";
 import { z } from "zod";
-import logger from "../../../lib/logger.ts";
-import { getFileContent, getRepositoryTree } from "../utils/github.ts";
+import logger from "~/lib/logger";
+import { getFileContent, getRepositoryTree } from "~/core/tools/utils/github";
+import type { Tool } from "~/core/tools";
 
 export const repo_tree = {
   dependency() {
@@ -24,8 +24,8 @@ export const repo_tree = {
           auth: env.GITHUB_PAT,
         });
         return await getRepositoryTree(octokit, owner, repo, branch);
-      } catch(e) {
-        if(e instanceof Error) {
+      } catch (e) {
+        if (e instanceof Error) {
           logger.error("Encountered an error during execution of the tool", e);
           return e.message;
         }
@@ -52,8 +52,8 @@ export const repo_file = {
           auth: env.GITHUB_PAT,
         });
         return await getFileContent(octokit, owner, repo, path, branch);
-      } catch(e) {
-        if(e instanceof Error) {
+      } catch (e) {
+        if (e instanceof Error) {
           logger.error("Encountered an error during execution of the tool", e);
           return e.message;
         }

@@ -52,11 +52,6 @@
           </div>
         </div>
       </div>
-      <div class="p-1 flex border-t-2 border-white/15 dark:border-vue-black-soft">
-        <button @click="showSettingModal = true" class="p-2 rounded-full hover:bg-white/5 transition group" v-tooltip="'Settings'">
-          <SettingsIcon class="w-5 h-5 transition-all duration-500 group-hover:rotate-[360deg]" />
-        </button>
-      </div>
     </div>
   </div>
 </template>

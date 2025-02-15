@@ -1,4 +1,4 @@
-import { emitter } from "..";
+import { emitter } from "~";
 
 const encoder = new TextEncoder();
 
