@@ -1,4 +1,4 @@
-import { date, object, z, union } from "zod";
+import { date, object, z } from "zod";
 import { ConversationSchema, MessageSchema } from "/shared/schemas";
 import { omit } from "~/lib/utils";
 

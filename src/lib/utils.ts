@@ -42,7 +42,3 @@ export function omit<T extends Record<string, unknown>, K extends keyof T>(obj: 
   }
   return copy;
 }
-
-export function last<T>(arr: Nullish<T[]>): T | undefined {
-  return arr ? arr[arr.length - 1] : undefined;
-}

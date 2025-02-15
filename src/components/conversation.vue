@@ -185,7 +185,7 @@ import {
   CheckIcon,
   RefreshCwIcon,
 } from "lucide-vue-next";
-import { calculateHash, capitalize, isBackendAlive, last, safeParse } from "@/lib/utils.ts";
+import { calculateHash, capitalize, isBackendAlive, safeParse } from "@/lib/utils.ts";
 import { onBeforeRouteUpdate, useRoute } from "vue-router";
 import { MessageChunkSchema, MessageSchema, routes, SSESchema } from "../../shared/schemas.ts";
 import { useConversationStore } from "@/stores/conversations.ts";
@@ -220,7 +220,7 @@ const error = ref<Omit<Extract<z.infer<typeof SSESchema>, { kind: "error" }>, "k
 const showError = ref(false);
 const abortController = ref<AbortController | null>(null);
 const unfoldedTools = ref<FullToolCall["id"][]>([]);
-const lastMessage = computed(() => last(messages.value.array) ?? null);
+const lastMessage = computed(() => messages.value.array?.at(-1) ?? null);
 
 const toolIcons: Record<string, FunctionalComponent<LucideProps, {}, any, {}>> = {
   weather: SunIcon,
@@ -230,8 +230,6 @@ const toolIcons: Record<string, FunctionalComponent<LucideProps, {}, any, {}>> =
   repo_file: FileDiffIcon,
   default: HammerIcon,
 };
-
-const $last = last; // alias
 
 function showErrorPopup(err: NonNullable<typeof error extends Ref<infer U> ? U : never>) {
   error.value = err;
@@ -352,7 +350,7 @@ function fetchMessages(id: string) {
             const local = messages.value.array[lastIndex];
             const remote = result.data[lastIndex];
             // if both messages are the same and the last message is not finished, don't update
-            if (equals(local, remote) && !finished(last(messages.value.array))) return;
+            if (equals(local, remote) && !finished(messages.value.array.at(-1))) return;
           }
 
           messages.value.array = result.data;
@@ -446,7 +444,7 @@ function getParts(msg: Message) {
 
   for (const chunk of msg.chunks) {
     if (!chunk) continue;
-    const last = $last(parts);
+    const last = parts.at(-1);
 
     switch (chunk.type) {
       case "text-delta":
@@ -477,7 +475,7 @@ function getParts(msg: Message) {
 }
 
 async function sendMessage() {
-  if (last(messages.value.array)?.role === "user") {
+  if (messages.value.array.at(-1)?.role === "user") {
     return;
   }
 
@@ -524,7 +522,7 @@ async function sendMessage() {
 /** Checks if the message ends with a null chunk */
 function finished(msg: Nullish<Message>) {
   const u = undefined;
-  return last(msg ? ("chunks" in msg ? msg.chunks : u) : u) === null;
+  return (msg ? ("chunks" in msg ? msg.chunks : u) : u)?.at(-1) === null;
 }
 
 interface CompletionOptions {
@@ -545,7 +543,7 @@ async function requestCompletion({ conversationId = route.params.id as string, .
     signal: abortController.value.signal,
   });
 
-  let msg = last(messages.value.array)!;
+  let msg = messages.value.array.at(-1)!;
   if (msg.role === "user" || finished(msg)) {
     const index =
       messages.value.array.push({
@@ -594,7 +592,7 @@ async function requestCompletion({ conversationId = route.params.id as string, .
 }
 
 async function regenerateLastMessage() {
-  const last = $last(messages.value.array);
+  const last = messages.value.array.at(-1);
   if (last?.role !== "assistant") return;
   last.chunks = [];
   last.author = model.value;

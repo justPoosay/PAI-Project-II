@@ -40,7 +40,12 @@ export const MessageChunkSchema = z.union([
     type: z.literal("reasoning"),
     textDelta: z.string(),
   }),
-  z.null(), // terminator (the last chunk in the message, it's absence indicates the fact that the completion isn't fully completed yet)
+  // terminators (the last chunk in the message, it's absence indicates the fact that the completion isn't fully completed yet)
+  z.object({
+    type: z.literal("error"),
+    message: z.string(),
+  }),
+  z.null(),
 ]);
 
 export const MessageSchema = z.union([
