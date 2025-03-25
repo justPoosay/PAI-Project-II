@@ -1,5 +1,6 @@
 {
-  "name": "chat-app",
+  "name": "ai-chat-app",
+  "author": "averithefox",
   "private": true,
   "scripts": {
     "type-check": "bun run --filter '*' type-check",
