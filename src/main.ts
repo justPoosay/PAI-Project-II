@@ -1,12 +1,12 @@
-import "./assets/main.css";
+import './assets/main.css';
 
-import { createApp } from "vue";
-import { createPinia } from "pinia";
-import { Menu, vTooltip } from "floating-vue";
-import FloatingVue from "floating-vue";
+import { createApp } from 'vue';
+import { createPinia } from 'pinia';
+import { Menu, vTooltip } from 'floating-vue';
+import FloatingVue from 'floating-vue';
 
-import App from "./app.vue";
-import router from "./router";
+import App from './app.vue';
+import router from './router';
 
 const app = createApp(App);
 
@@ -14,7 +14,7 @@ FloatingVue.options.distance = 10;
 app.use(createPinia());
 app.use(router);
 
-app.directive("tooltip", vTooltip);
-app.component("VMenu", Menu);
+app.directive('tooltip', vTooltip);
+app.component('VMenu', Menu);
 
-app.mount("#app");
+app.mount('#app');

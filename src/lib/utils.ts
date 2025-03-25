@@ -1,4 +1,4 @@
-import type { Nullish } from "./types";
+import type { Nullish } from './types';
 
 export function isValidJSON(str: string): boolean {
   try {
@@ -23,19 +23,22 @@ export function capitalize(str: string): string {
 }
 
 export async function isBackendAlive(): Promise<boolean> {
-  const res = await fetch("/api/alive");
+  const res = await fetch('/api/alive');
   return res.ok;
 }
 
 export async function calculateHash(buffer: ArrayBuffer) {
-  const hash = await crypto.subtle.digest("SHA-256", buffer);
+  const hash = await crypto.subtle.digest('SHA-256', buffer);
   const array = Array.from(new Uint8Array(hash));
-  const hex = array.map((b) => b.toString(16).padStart(2, "0")).join("");
+  const hex = array.map(b => b.toString(16).padStart(2, '0')).join('');
   const base64 = btoa(String.fromCharCode(...array));
   return { hex, base64 };
 }
 
-export function omit<T extends Record<string, unknown>, K extends keyof T>(obj: T, keys: K[]): Omit<T, K> {
+export function omit<T extends Record<string, unknown>, K extends keyof T>(
+  obj: T,
+  keys: K[]
+): Omit<T, K> {
   const copy = { ...obj };
   for (const key of keys) {
     delete copy[key];

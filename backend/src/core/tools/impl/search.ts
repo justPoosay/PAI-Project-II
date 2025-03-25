@@ -1,10 +1,10 @@
-import type { Tool } from "~/core/tools";
-import { env } from "~/lib/utils";
-import { tool } from "ai";
-import { z } from "zod";
-import { getJson, getAccount } from "serpapi";
-import logger from "~/lib/logger";
-import { search } from "~/core/tools/utils/search";
+import type { Tool } from '~/core/tools';
+import { env } from '~/lib/utils';
+import { tool } from 'ai';
+import { z } from 'zod';
+import { getJson, getAccount } from 'serpapi';
+import logger from '~/lib/logger';
+import { search } from '~/core/tools/utils/search';
 
 let thirdPartySearchAPIAvailable = false;
 
@@ -19,11 +19,18 @@ export default {
     return null;
   },
   core: tool({
-    description: "Search the web",
+    description: 'Search the web',
     parameters: z.object({
-      query: z.string().describe("The query to search for, supports all the stuff you'd expect from a search engine"),
-      engine: z.enum(["google", "bing", "duckduckgo"]).default("duckduckgo").describe("The search engine to use"),
-      page: z.number().default(0).describe("The page of results to get"),
+      query: z
+        .string()
+        .describe(
+          "The query to search for, supports all the stuff you'd expect from a search engine"
+        ),
+      engine: z
+        .enum(['google', 'bing', 'duckduckgo'])
+        .default('duckduckgo')
+        .describe('The search engine to use'),
+      page: z.number().default(0).describe('The page of results to get')
     }),
     async execute({ query, engine, page }) {
       try {
@@ -32,12 +39,12 @@ export default {
             q: query,
             engine,
             api_key: env.SERP_API_KEY,
-            page,
+            page
           });
           return ((result?.organic_results ?? []) as any[]).map(({ title, link, snippet }) => ({
             title,
             link,
-            snippet,
+            snippet
           }));
         } else {
           let searchFunction = search[engine as keyof typeof search];
@@ -49,10 +56,10 @@ export default {
           logger.error(e.message);
           return {
             success: false,
-            error: e.message,
+            error: e.message
           };
         }
       }
-    },
-  }),
+    }
+  })
 } satisfies Tool;

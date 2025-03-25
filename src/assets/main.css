@@ -4,171 +4,171 @@
 
 @layer base {
   @font-face {
-    font-family: "SF Pro Rounded";
+    font-family: 'SF Pro Rounded';
     font-style: normal;
     font-weight: 900;
     font-display: swap;
-    src: url("/fonts/SF-Pro-Rounded/SF-Pro-Rounded-Black.woff2") format("woff2");
+    src: url('/fonts/SF-Pro-Rounded/SF-Pro-Rounded-Black.woff2') format('woff2');
   }
 
   @font-face {
-    font-family: "SF Pro Rounded";
+    font-family: 'SF Pro Rounded';
     font-style: normal;
     font-weight: 700;
     font-display: swap;
-    src: url("/fonts/SF-Pro-Rounded/SF-Pro-Rounded-Bold.woff2") format("woff2");
+    src: url('/fonts/SF-Pro-Rounded/SF-Pro-Rounded-Bold.woff2') format('woff2');
   }
 
   @font-face {
-    font-family: "SF Pro Rounded";
+    font-family: 'SF Pro Rounded';
     font-style: normal;
     font-weight: 800;
     font-display: swap;
-    src: url("/fonts/SF-Pro-Rounded/SF-Pro-Rounded-Heavy.woff2") format("woff2");
+    src: url('/fonts/SF-Pro-Rounded/SF-Pro-Rounded-Heavy.woff2') format('woff2');
   }
 
   @font-face {
-    font-family: "SF Pro Rounded";
+    font-family: 'SF Pro Rounded';
     font-style: normal;
     font-weight: 300;
     font-display: swap;
-    src: url("/fonts/SF-Pro-Rounded/SF-Pro-Rounded-Light.woff2") format("woff2");
+    src: url('/fonts/SF-Pro-Rounded/SF-Pro-Rounded-Light.woff2') format('woff2');
   }
 
   @font-face {
-    font-family: "SF Pro Rounded";
+    font-family: 'SF Pro Rounded';
     font-style: normal;
     font-weight: 500;
     font-display: swap;
-    src: url("/fonts/SF-Pro-Rounded/SF-Pro-Rounded-Medium.woff2") format("woff2");
+    src: url('/fonts/SF-Pro-Rounded/SF-Pro-Rounded-Medium.woff2') format('woff2');
   }
 
   @font-face {
-    font-family: "SF Pro Rounded";
+    font-family: 'SF Pro Rounded';
     font-style: normal;
     font-weight: 400;
     font-display: swap;
-    src: url("/fonts/SF-Pro-Rounded/SF-Pro-Rounded-Regular.woff2") format("woff2");
+    src: url('/fonts/SF-Pro-Rounded/SF-Pro-Rounded-Regular.woff2') format('woff2');
   }
 
   @font-face {
-    font-family: "SF Pro Rounded";
+    font-family: 'SF Pro Rounded';
     font-style: normal;
     font-weight: 600;
     font-display: swap;
-    src: url("/fonts/SF-Pro-Rounded/SF-Pro-Rounded-Semibold.woff2") format("woff2");
+    src: url('/fonts/SF-Pro-Rounded/SF-Pro-Rounded-Semibold.woff2') format('woff2');
   }
 
   @font-face {
-    font-family: "SF Pro Rounded";
+    font-family: 'SF Pro Rounded';
     font-style: normal;
     font-weight: 100;
     font-display: swap;
-    src: url("/fonts/SF-Pro-Rounded/SF-Pro-Rounded-Thin.woff2") format("woff2");
+    src: url('/fonts/SF-Pro-Rounded/SF-Pro-Rounded-Thin.woff2') format('woff2');
   }
 
   @font-face {
-    font-family: "SF Pro Rounded";
+    font-family: 'SF Pro Rounded';
     font-style: normal;
     font-weight: 200;
     font-display: swap;
-    src: url("/fonts/SF-Pro-Rounded/SF-Pro-Rounded-Ultralight.woff2") format("woff2");
+    src: url('/fonts/SF-Pro-Rounded/SF-Pro-Rounded-Ultralight.woff2') format('woff2');
   }
 
   @font-face {
-    font-family: "SF Mono";
+    font-family: 'SF Mono';
     font-style: italic;
     font-weight: 700;
     font-display: swap;
-    src: url("/fonts/SF-Mono/SF-Mono-BoldItalic.woff2") format("woff2");
+    src: url('/fonts/SF-Mono/SF-Mono-BoldItalic.woff2') format('woff2');
   }
 
   @font-face {
-    font-family: "SF Mono";
+    font-family: 'SF Mono';
     font-style: normal;
     font-weight: 700;
     font-display: swap;
-    src: url("/fonts/SF-Mono/SF-Mono-Bold.woff2") format("woff2");
+    src: url('/fonts/SF-Mono/SF-Mono-Bold.woff2') format('woff2');
   }
 
   @font-face {
-    font-family: "SF Mono";
+    font-family: 'SF Mono';
     font-style: italic;
     font-weight: 800;
     font-display: swap;
-    src: url("/fonts/SF-Mono/SF-Mono-HeavyItalic.woff2") format("woff2");
+    src: url('/fonts/SF-Mono/SF-Mono-HeavyItalic.woff2') format('woff2');
   }
 
   @font-face {
-    font-family: "SF Mono";
+    font-family: 'SF Mono';
     font-style: normal;
     font-weight: 800;
     font-display: swap;
-    src: url("/fonts/SF-Mono/SF-Mono-Heavy.woff2") format("woff2");
+    src: url('/fonts/SF-Mono/SF-Mono-Heavy.woff2') format('woff2');
   }
 
   @font-face {
-    font-family: "SF Mono";
+    font-family: 'SF Mono';
     font-style: italic;
     font-weight: 300;
     font-display: swap;
-    src: url("/fonts/SF-Mono/SF-Mono-LightItalic.woff2") format("woff2");
+    src: url('/fonts/SF-Mono/SF-Mono-LightItalic.woff2') format('woff2');
   }
 
   @font-face {
-    font-family: "SF Mono";
+    font-family: 'SF Mono';
     font-style: normal;
     font-weight: 300;
     font-display: swap;
-    src: url("/fonts/SF-Mono/SF-Mono-Light.woff2") format("woff2");
+    src: url('/fonts/SF-Mono/SF-Mono-Light.woff2') format('woff2');
   }
 
   @font-face {
-    font-family: "SF Mono";
+    font-family: 'SF Mono';
     font-style: italic;
     font-weight: 500;
     font-display: swap;
-    src: url("/fonts/SF-Mono/SF-Mono-MediumItalic.woff2") format("woff2");
+    src: url('/fonts/SF-Mono/SF-Mono-MediumItalic.woff2') format('woff2');
   }
 
   @font-face {
-    font-family: "SF Mono";
+    font-family: 'SF Mono';
     font-style: normal;
     font-weight: 500;
     font-display: swap;
-    src: url("/fonts/SF-Mono/SF-Mono-Medium.woff2") format("woff2");
+    src: url('/fonts/SF-Mono/SF-Mono-Medium.woff2') format('woff2');
   }
 
   @font-face {
-    font-family: "SF Mono";
+    font-family: 'SF Mono';
     font-style: italic;
     font-weight: 400;
     font-display: swap;
-    src: url("/fonts/SF-Mono/SF-Mono-RegularItalic.woff2") format("woff2");
+    src: url('/fonts/SF-Mono/SF-Mono-RegularItalic.woff2') format('woff2');
   }
 
   @font-face {
-    font-family: "SF Mono";
+    font-family: 'SF Mono';
     font-style: normal;
     font-weight: 400;
     font-display: swap;
-    src: url("/fonts/SF-Mono/SF-Mono-Regular.woff2") format("woff2");
+    src: url('/fonts/SF-Mono/SF-Mono-Regular.woff2') format('woff2');
   }
 
   @font-face {
-    font-family: "SF Mono";
+    font-family: 'SF Mono';
     font-style: italic;
     font-weight: 600;
     font-display: swap;
-    src: url("/fonts/SF-Mono/SF-Mono-SemiboldItalic.woff2") format("woff2");
+    src: url('/fonts/SF-Mono/SF-Mono-SemiboldItalic.woff2') format('woff2');
   }
 
   @font-face {
-    font-family: "SF Mono";
+    font-family: 'SF Mono';
     font-style: normal;
     font-weight: 600;
     font-display: swap;
-    src: url("/fonts/SF-Mono/SF-Mono-Semibold.woff2") format("woff2");
+    src: url('/fonts/SF-Mono/SF-Mono-Semibold.woff2') format('woff2');
   }
 }
 

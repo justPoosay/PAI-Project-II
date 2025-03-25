@@ -1,5 +1,5 @@
-import { z } from "zod";
-import { LogLevelSchema } from "~/lib/schemas";
+import { z } from 'zod';
+import { LogLevelSchema } from '~/lib/schemas';
 
 export function isValidJSON(str: string): boolean {
   try {
@@ -10,7 +10,10 @@ export function isValidJSON(str: string): boolean {
   }
 }
 
-export function omit<T extends Record<string, unknown>, K extends keyof T>(obj: T, keys: K[]): Omit<T, K> {
+export function omit<T extends Record<string, unknown>, K extends keyof T>(
+  obj: T,
+  keys: K[]
+): Omit<T, K> {
   const copy = { ...obj };
   for (const key of keys) {
     delete copy[key];
@@ -18,7 +21,10 @@ export function omit<T extends Record<string, unknown>, K extends keyof T>(obj: 
   return copy;
 }
 
-export function pick<T extends Record<string, unknown>, K extends keyof T>(obj: T, keys: K[]): Pick<T, K> {
+export function pick<T extends Record<string, unknown>, K extends keyof T>(
+  obj: T,
+  keys: K[]
+): Pick<T, K> {
   const copy = {} as Pick<T, K>;
   for (const key of keys) {
     copy[key] = obj[key];
@@ -42,13 +48,19 @@ export const env = z
 
     GITHUB_PAT: z.string().optional(),
 
-    LOG_LEVEL: LogLevelSchema.default("info"),
+    LOG_LEVEL: LogLevelSchema.default('info')
   })
   .superRefine((data, ctx) => {
-    if (!data.OPENAI_API_KEY && !data.ANTHROPIC_API_KEY && !data.XAI_API_KEY && !data.GROQ_API_KEY) {
+    if (
+      !data.OPENAI_API_KEY &&
+      !data.ANTHROPIC_API_KEY &&
+      !data.XAI_API_KEY &&
+      !data.GROQ_API_KEY
+    ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "At least one of OPENAI_API_KEY, ANTHROPIC_API_KEY, XAI_API_KEY or GROQ_API_KEY must be set",
+        message:
+          'At least one of OPENAI_API_KEY, ANTHROPIC_API_KEY, XAI_API_KEY or GROQ_API_KEY must be set'
       });
     }
   })

@@ -12,45 +12,62 @@
         v-if="expanded"
         class="absolute z-50 bg-vue-black-mute/5 dark:bg-vue-black-tooltip backdrop-blur-md border-2 border-vue-black-mute/5 dark:border-none shadow-lg rounded-lg w-full max-w-96 bottom-12 p-1 flex flex-col space-y-2"
       >
-        <div v-for="model in models" @click="selectOption(model)" class="select-none cursor-pointer flex justify-between px-1 items-center">
+        <div
+          v-for="model in models"
+          @click="selectOption(model)"
+          class="select-none cursor-pointer flex justify-between px-1 items-center"
+        >
           <div class="flex space-x-1 items-center">
             <p class="font-medium">{{ modelInfo[model].name }}</p>
             <InfoIcon
               class="h-4 w-4 cursor-default"
               v-if="modelInfo[model].description"
-              v-tooltip="{ content: `<div class=&quot;break-words&quot;>${modelInfo[model].description!.replace(/(?<=\.) (?=[A-Z])/g, '<br>')}</div>`, html: true }"
+              v-tooltip="{
+                content: `<div class=&quot;break-words&quot;>${modelInfo[model].description!.replace(/(?<=\.) (?=[A-Z])/g, '<br>')}</div>`,
+                html: true
+              }"
             />
           </div>
           <div class="flex space-x-2">
-            <component v-for="capability in modelInfo[model].capabilities" :is="capabilities[capability][0]" v-tooltip="capabilities[capability][1]" />
+            <component
+              v-for="capability in modelInfo[model].capabilities"
+              :is="capabilities[capability][0]"
+              v-tooltip="capabilities[capability][1]"
+            />
           </div>
         </div>
       </div>
     </Transition>
     <div class="flex items-center space-x-2 cursor-pointer select-none" @click="toggleExpanded">
       <p>{{ modelInfo[selected].name }}</p>
-      <ChevronUpIcon :data-expanded="expanded" class="h-4 w-4 data-[expanded=true]:rotate-180 transition-all duration-300 ease-out" />
+      <ChevronUpIcon
+        :data-expanded="expanded"
+        class="h-4 w-4 data-[expanded=true]:rotate-180 transition-all duration-300 ease-out"
+      />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, type DefineComponent } from "vue";
-import { modelInfo, type ModelInfo } from "../../shared/constants.ts";
-import type { Model } from "../../shared";
-import { useModelStore } from "@/stores/models.ts";
-import { storeToRefs } from "pinia";
-import { ChevronUpIcon, InfoIcon } from "lucide-vue-next";
-import ImageInput from "@/components/model-capabilities/image-input.vue";
-import ToolUsage from "@/components/model-capabilities/tool-usage.vue";
-import Reasoning from "@/components/model-capabilities/reasoning.vue";
+import { onBeforeUnmount, onMounted, ref, type DefineComponent } from 'vue';
+import { modelInfo, type ModelInfo } from '../../shared/constants.ts';
+import type { Model } from '../../shared';
+import { useModelStore } from '@/stores/models.ts';
+import { storeToRefs } from 'pinia';
+import { ChevronUpIcon, InfoIcon } from 'lucide-vue-next';
+import ImageInput from '@/components/model-capabilities/image-input.vue';
+import ToolUsage from '@/components/model-capabilities/tool-usage.vue';
+import Reasoning from '@/components/model-capabilities/reasoning.vue';
 
-type CapabilityRecord = Record<ModelInfo["capabilities"][number], [DefineComponent<any, any, any, any, any, any, any, any, any, any>, string]>;
+type CapabilityRecord = Record<
+  ModelInfo['capabilities'][number],
+  [DefineComponent<any, any, any, any, any, any, any, any, any, any>, string]
+>;
 
 const capabilities: CapabilityRecord = {
-  imageInput: [ImageInput, "Supports image uploads and analysis"],
-  toolUsage: [ToolUsage, "Can use tools"],
-  reasoning: [Reasoning, "Has reasoning capabilities"],
+  imageInput: [ImageInput, 'Supports image uploads and analysis'],
+  toolUsage: [ToolUsage, 'Can use tools'],
+  reasoning: [Reasoning, 'Has reasoning capabilities']
 };
 
 const modelStore = useModelStore();
@@ -70,17 +87,17 @@ function selectOption(value: Model) {
 
 function handleClickOutside(event: MouseEvent) {
   if (!expanded.value) return;
-  const menu = document.querySelector("#model-selector");
+  const menu = document.querySelector('#model-selector');
   if (menu && !menu.contains(event.target as Node)) {
     expanded.value = false;
   }
 }
 
 onMounted(() => {
-  document.addEventListener("click", handleClickOutside);
+  document.addEventListener('click', handleClickOutside);
 });
 
 onBeforeUnmount(() => {
-  document.removeEventListener("click", handleClickOutside);
+  document.removeEventListener('click', handleClickOutside);
 });
 </script>

@@ -17,13 +17,14 @@ The router matches incoming requests to these files based on the URL path.
 - Each file should export HTTP method functions (e.g., `GET`, `POST`, `PUT`, `DELETE`) that correspond to the HTTP
   methods you want to handle for that route.
 - Example:
+
   ```javascript
   export async function GET(req) {
-    return new Response("Hello, GET!");
+    return new Response('Hello, GET!');
   }
 
   export async function POST(req) {
-    return new Response("Hello, POST!");
+    return new Response('Hello, POST!');
   }
   ```
 
@@ -37,7 +38,7 @@ The router matches incoming requests to these files based on the URL path.
   export async function pre(req) {
     // Perform some checks or modifications
     if (someCondition) {
-      return new Response("Pre-condition failed", { status: 400 });
+      return new Response('Pre-condition failed', { status: 400 });
     }
     return null; // Continue to the main method
   }
@@ -62,9 +63,8 @@ To create a simple route that responds to GET requests at `/greet`, create a fil
 directory with the following content:
 
 ```javascript
-export async function GET( req )
-{
-  return new Response("Hello, World!");
+export async function GET(req) {
+  return new Response('Hello, World!');
 }
 ```
 

@@ -1,5 +1,8 @@
 <template>
-  <div class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[66] flex justify-center items-center" v-if="show" />
+  <div
+    class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[66] flex justify-center items-center"
+    v-if="show"
+  />
   <Transition>
     <div
       v-if="show"
@@ -49,21 +52,21 @@
 </template>
 
 <script setup lang="ts">
-import { usePreferenceStore, type Preferences } from "@/stores/preferences";
-import { useForm } from "@tanstack/vue-form";
-import { XIcon } from "lucide-vue-next";
+import { usePreferenceStore, type Preferences } from '@/stores/preferences';
+import { useForm } from '@tanstack/vue-form';
+import { XIcon } from 'lucide-vue-next';
 
 const preferenceStore = usePreferenceStore();
 const show = defineModel<boolean>({ required: true });
 
 const form = useForm({
   onSubmit({ value: { name, systemPrompt } }) {
-    localStorage.setItem("name", name);
-    localStorage.setItem("systemPrompt", systemPrompt);
+    localStorage.setItem('name', name);
+    localStorage.setItem('systemPrompt', systemPrompt);
   },
   defaultValues: {
-    name: preferenceStore.preferences.name ?? "",
-    systemPrompt: preferenceStore.preferences.systemPrompt ?? "",
-  } satisfies Preferences,
+    name: preferenceStore.preferences.name ?? '',
+    systemPrompt: preferenceStore.preferences.systemPrompt ?? ''
+  } satisfies Preferences
 });
 </script>

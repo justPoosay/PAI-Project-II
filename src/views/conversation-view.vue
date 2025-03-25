@@ -1,19 +1,15 @@
 <template>
-  <div class="flex h-full light:selection:bg-white/10 text-white dark:bg-vue-black-soft dark:bg-none bg-[url('/img/bg/Elarun.webp')] bg-cover bg-center bg-origin-border overflow-hidden">
+  <div
+    class="flex h-full light:selection:bg-white/10 text-white dark:bg-vue-black-soft dark:bg-none bg-[url('/img/bg/Elarun.webp')] bg-cover bg-center bg-origin-border overflow-hidden"
+  >
     <Suspense>
-      <ConversationWrapper/>
+      <ConversationWrapper />
 
       <template #fallback>
-        <div
-          v-if="!error"
-          class="w-full h-full flex items-center justify-center"
-        >
-          <Loader/>
+        <div v-if="!error" class="w-full h-full flex items-center justify-center">
+          <Loader />
         </div>
-        <div
-          v-else
-          class="w-full h-full flex items-center justify-center"
-        >
+        <div v-else class="w-full h-full flex items-center justify-center">
           <div class="text-center text-white/75">
             <h1 class="text-2xl font-bold">Encountered error while fetching vital data</h1>
             <p class="text-lg">{{ error }}</p>
@@ -25,19 +21,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
-import ConversationWrapper from "@/components/conversation-wrapper.vue";
-import { useModelStore } from "@/stores/models.ts";
-import { useConversationStore } from "@/stores/conversations.ts";
-import Loader from "@/components/loader.vue";
+import { ref } from 'vue';
+import ConversationWrapper from '@/components/conversation-wrapper.vue';
+import { useModelStore } from '@/stores/models.ts';
+import { useConversationStore } from '@/stores/conversations.ts';
+import Loader from '@/components/loader.vue';
 
 const error = ref<string | null>(null);
 
-useModelStore().$subscribe(function(_, { error: e }) {
+useModelStore().$subscribe(function (_, { error: e }) {
   error.value = e ?? null;
 });
 
-useConversationStore().$subscribe(function(_, { error: e }) {
+useConversationStore().$subscribe(function (_, { error: e }) {
   error.value = e ?? null;
 });
 </script>

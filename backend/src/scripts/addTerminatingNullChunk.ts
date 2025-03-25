@@ -1,14 +1,18 @@
-import { closeDB, ConversationService } from "~/lib/database";
-import { pick } from "~/lib/utils";
+import { closeDB, ConversationService } from '~/lib/database';
+import { pick } from '~/lib/utils';
 
 export default async function addTerminatingNullChunk() {
   const conversations = await ConversationService.find();
-  const updated = conversations.map((c) => ({
+  const updated = conversations.map(c => ({
     ...c,
-    messages: c.messages.map((m) => (m.role === "assistant" ? { ...m, chunks: m.chunks[m.chunks.length - 1] === null ? m.chunks : [...m.chunks, null] } : m)),
+    messages: c.messages.map(m =>
+      m.role === 'assistant'
+        ? { ...m, chunks: m.chunks[m.chunks.length - 1] === null ? m.chunks : [...m.chunks, null] }
+        : m
+    )
   }));
 
-  await Promise.all(updated.map((c) => ConversationService.update(c.id, pick(c, ["messages"]))));
+  await Promise.all(updated.map(c => ConversationService.update(c.id, pick(c, ['messages']))));
 
   await closeDB();
 }

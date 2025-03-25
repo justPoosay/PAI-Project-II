@@ -1,7 +1,11 @@
-import { MongoClient, Db } from "mongodb";
-import { ConversationDTO, type ConversationEntity, conversationEntitySchema } from "~/lib/database/schemas/ConversationSchemas";
-import { randomUUIDv7 } from "bun";
-import { dbName } from "~/lib/database";
+import { MongoClient, Db } from 'mongodb';
+import {
+  ConversationDTO,
+  type ConversationEntity,
+  conversationEntitySchema
+} from '~/lib/database/schemas/ConversationSchemas';
+import { randomUUIDv7 } from 'bun';
+import { dbName } from '~/lib/database';
 
 export default class ConversationService {
   #db: Db;
@@ -11,20 +15,20 @@ export default class ConversationService {
   }
 
   get #collection() {
-    return this.#db.collection<ConversationEntity>("conversations");
+    return this.#db.collection<ConversationEntity>('conversations');
   }
 
-  async findOne(id: ConversationDTO["id"], where?: Omit<Partial<ConversationDTO>, "id">) {
+  async findOne(id: ConversationDTO['id'], where?: Omit<Partial<ConversationDTO>, 'id'>) {
     const entity = await this.#collection.findOne({ id, ...where });
     return entity ? ConversationDTO.convertFromEntity(entity) : null;
   }
 
-  async find(where?: Omit<Partial<ConversationDTO>, "id">) {
+  async find(where?: Omit<Partial<ConversationDTO>, 'id'>) {
     const entities = await this.#collection.find({ ...where }).toArray();
-    return entities.map(ConversationDTO.convertFromEntity).filter((v) => v !== null);
+    return entities.map(ConversationDTO.convertFromEntity).filter(v => v !== null);
   }
 
-  async create(dto: Omit<ConversationDTO, "id" | "created_at" | "updated_at">) {
+  async create(dto: Omit<ConversationDTO, 'id' | 'created_at' | 'updated_at'>) {
     const now = new Date();
     const obj = { ...dto, created_at: now, updated_at: now, id: randomUUIDv7() };
     const candidate = conversationEntitySchema.parse(obj);
@@ -32,16 +36,23 @@ export default class ConversationService {
     return ConversationDTO.convertFromEntity(obj)!;
   }
 
-  async update(id: ConversationDTO["id"], dto: Omit<Partial<ConversationDTO>, "id" | "created_at" | "updated_at">) {
+  async update(
+    id: ConversationDTO['id'],
+    dto: Omit<Partial<ConversationDTO>, 'id' | 'created_at' | 'updated_at'>
+  ) {
     const now = new Date();
     const obj = { ...dto, updated_at: now };
     const candidate = conversationEntitySchema.partial().parse(obj);
 
-    const value = await this.#collection.findOneAndUpdate({ id }, { $set: candidate }, { returnDocument: "after" });
+    const value = await this.#collection.findOneAndUpdate(
+      { id },
+      { $set: candidate },
+      { returnDocument: 'after' }
+    );
     return value ? ConversationDTO.convertFromEntity(value) : null;
   }
 
-  async delete(id: ConversationDTO["id"]) {
+  async delete(id: ConversationDTO['id']) {
     await this.#collection.deleteOne({ id });
   }
 }
