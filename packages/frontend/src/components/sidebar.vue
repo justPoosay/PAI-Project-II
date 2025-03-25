@@ -27,7 +27,10 @@
         class="w-full h-[2px] bg-white/15 mt-1 data-[expanded=false]:max-lg:hidden"
       />
       <div class="flex-1 space-y-1 overflow-y-auto pt-1">
-        <div v-for="[group, conversations] in Object.entries(groups).filter(v => v[1].length)">
+        <div
+          v-for="[group, conversations] in Object.entries(groups).filter(v => v[1].length)"
+          v-bind:key="group"
+        >
           <div class="text-white/50 text-sm px-2 py-1" :key="group">{{ group }}</div>
           <div v-for="c in conversations" :key="c.id">
             <VMenu v-if="editingId !== c.id" placement="right">
@@ -87,7 +90,7 @@ const editedName = ref('');
 const conversationStore = useConversationStore();
 const { conversations } = storeToRefs(conversationStore);
 
-const showSettingModal = defineModel<boolean>({ required: true });
+// const showSettingModal = defineModel<boolean>({ required: true });
 
 type Conversations = typeof conversations extends Ref<infer U> ? U : never;
 
@@ -115,7 +118,7 @@ const groups = computed(function () {
       lastWeek.setDate(lastWeek.getDate() - 7);
       return date >= lastWeek;
     },
-    Older(_) {
+    Older() {
       return true;
     }
   } as const satisfies Record<string, (date: Date) => boolean>;

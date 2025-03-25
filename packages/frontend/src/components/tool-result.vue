@@ -27,7 +27,11 @@
           }}</a>
           <p>{{ tool.result.zci.text }}</p>
         </div>
-        <div v-for="result in tool.result.results" class="inline-flex flex-col">
+        <div
+          v-for="result in tool.result.results"
+          class="inline-flex flex-col"
+          v-bind:key="result.url"
+        >
           <div class="inline-block">
             <a
               class="text-lg text-sky-400 hover:underline dark:text-blue-500 -mb-1"
@@ -57,7 +61,7 @@ import { CircleAlertIcon } from 'lucide-vue-next';
 defineProps<{
   tool: {
     name: string;
-    result: any;
+    result: any; // eslint-disable-line
   };
 }>();
 

@@ -22,11 +22,11 @@ export default {
       });
       try {
         return await app.scrapeUrl(url, { formats: ['markdown'] });
-      } catch (e: any) {
+      } catch (e: unknown) {
         logger.error('Encountered an error during execution of the tool', e);
         return {
           succes: false,
-          error: e.message
+          error: `${e}`
         };
       }
     }

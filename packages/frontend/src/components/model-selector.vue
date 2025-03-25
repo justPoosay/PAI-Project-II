@@ -16,6 +16,7 @@
           v-for="model in models"
           @click="selectOption(model)"
           class="select-none cursor-pointer flex justify-between px-1 items-center"
+          v-bind:key="model"
         >
           <div class="flex space-x-1 items-center">
             <p class="font-medium">{{ modelInfo[model].name }}</p>
@@ -33,6 +34,7 @@
               v-for="capability in modelInfo[model].capabilities"
               :is="capabilities[capability][0]"
               v-tooltip="capabilities[capability][1]"
+              v-bind:key="capability"
             />
           </div>
         </div>
@@ -60,7 +62,7 @@ import Reasoning from '@/components/model-capabilities/reasoning.vue';
 
 type CapabilityRecord = Record<
   ModelInfo['capabilities'][number],
-  [DefineComponent<any, any, any, any, any, any, any, any, any, any>, string]
+  [DefineComponent<any, any, any, any, any, any, any, any, any, any>, string] // eslint-disable-line
 >;
 
 const capabilities: CapabilityRecord = {

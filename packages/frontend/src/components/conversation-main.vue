@@ -24,42 +24,45 @@
               :data-self="message.role === 'user'"
               class="max-w-[80%] dark:max-w-[90%] max-md:max-w-full p-2 data-[self=false]:pb-3 relative backdrop-blur-md bg-clip-padding rounded-tl-2xl rounded-tr-2xl data-[self=true]:rounded-bl-2xl data-[self=false]:rounded-br-2xl shadow-lg dark:shadow-none bg-gradient-to-tr from-white/10 via-white/5 to-white/10 data-[self=true]:bg-gradient-to-tl data-[self=true]:from-white/5 data-[self=true]:via-white/[3%] data-[self=true]:to-white/5 dark:bg-none dark:data-[self=true]:bg-[#2A2A2A] dark:rounded-lg dark:data-[self=true]:rounded-bl-lg dark:data-[self=false]:rounded-br-lg"
             >
-              <template v-if="getParts(message).length" v-for="part of getParts(message)">
-                <div
-                  v-if="typeof part === 'string'"
-                  v-html="parseMarkdown(part, false)"
-                  class="markdown-content"
-                />
-                <div v-else class="m-1 ml-0">
-                  <button
-                    class="inline-flex items-center space-x-1 rounded-lg p-1 text-sm bg-white/15 dark:bg-vue-black-mute cursor-pointer"
-                    @click="
-                      unfoldedTools.includes(part.id)
-                        ? (unfoldedTools = unfoldedTools.filter(v => v !== part.id))
-                        : unfoldedTools.push(part.id)
-                    "
-                  >
-                    <component :is="toolIcons[part.name] ?? toolIcons.default" class="w-4 h-4" />
-                    <div class="inline-flex items-center space-x-3 select-none">
-                      <p>{{ capitalize(part.name) }}</p>
-                      <LoaderCircleIcon class="w-4 h-4 animate-spin" v-if="!('result' in part)" />
-                      <ChevronUpIcon
-                        v-else-if="part.result"
-                        :data-folded="!unfoldedTools.includes(part.id)"
-                        class="w-4 h-4 data-[folded=true]:rotate-180 transition-all duration-100 ease-in-out"
-                      />
-                      <CheckIcon v-else class="w-4 h-4 text-green-500" />
-                    </div>
-                  </button>
+              <template v-if="getParts(message).length">
+                <template v-for="(part, partIndex) of getParts(message)">
                   <div
-                    v-if="unfoldedTools.includes(part.id) && 'result' in part"
-                    class="mt-1 border-l-2 border-white/30 pl-2 break-words text-sm"
-                  >
-                    <p class="mb-1">{{ JSON.stringify(part.args) }}</p>
-                    <ToolResult v-if="part.result" :tool="part" />
-                    <div v-else class="text-white/75">Tool didn't return any data</div>
+                    v-if="typeof part === 'string'"
+                    v-html="parseMarkdown(part, false)"
+                    class="markdown-content"
+                    v-bind:key="`str@${partIndex}`"
+                  />
+                  <div v-else class="m-1 ml-0" v-bind:key="partIndex">
+                    <button
+                      class="inline-flex items-center space-x-1 rounded-lg p-1 text-sm bg-white/15 dark:bg-vue-black-mute cursor-pointer"
+                      @click="
+                        unfoldedTools.includes(part.id)
+                          ? (unfoldedTools = unfoldedTools.filter(v => v !== part.id))
+                          : unfoldedTools.push(part.id)
+                      "
+                    >
+                      <component :is="toolIcons[part.name] ?? toolIcons.default" class="w-4 h-4" />
+                      <div class="inline-flex items-center space-x-3 select-none">
+                        <p>{{ capitalize(part.name) }}</p>
+                        <LoaderCircleIcon class="w-4 h-4 animate-spin" v-if="!('result' in part)" />
+                        <ChevronUpIcon
+                          v-else-if="part.result"
+                          :data-folded="!unfoldedTools.includes(part.id)"
+                          class="w-4 h-4 data-[folded=true]:rotate-180 transition-all duration-100 ease-in-out"
+                        />
+                        <CheckIcon v-else class="w-4 h-4 text-green-500" />
+                      </div>
+                    </button>
+                    <div
+                      v-if="unfoldedTools.includes(part.id) && 'result' in part"
+                      class="mt-1 border-l-2 border-white/30 pl-2 break-words text-sm"
+                    >
+                      <p class="mb-1">{{ JSON.stringify(part.args) }}</p>
+                      <ToolResult v-if="part.result" :tool="part" />
+                      <div v-else class="text-white/75">Tool didn't return any data</div>
+                    </div>
                   </div>
-                </div>
+                </template>
               </template>
               <div v-else-if="!finished(message)" class="flex items-center justify-center p-2">
                 <Loader />
@@ -129,7 +132,7 @@
         class="flex flex-col items-start max-w-2xl mx-auto bg-gradient-to-br from-vue-black/30 via-vue-black-soft/20 to-vue-black/30 dark:bg-none dark:bg-vue-black backdrop-blur-md rounded-xl p-2 shadow-lg pointer-events-auto"
       >
         <div v-if="uploads.length" class="flex">
-          <div v-for="file in uploads" class="relative">
+          <div v-for="file in uploads" class="relative" v-bind:key="file.hash">
             <button
               class="absolute -top-1.5 right-0 rounded-full bg-vue-black/75 p-[1px]"
               @click="uploads = uploads.filter(f => f.hash !== file.hash)"
@@ -275,6 +278,7 @@ const abortController = ref<AbortController | null>(null);
 const unfoldedTools = ref<FullToolCall['id'][]>([]);
 const lastMessage = computed(() => messages.value.array?.at(-1) ?? null);
 
+// eslint-disable-next-line
 const toolIcons: Record<string, FunctionalComponent<LucideProps, {}, any, {}>> = {
   weather: SunIcon,
   scrape: GlobeIcon,
@@ -497,7 +501,7 @@ interface InitialToolCall {
   args: Record<string, unknown>;
 }
 
-type FullToolCall = InitialToolCall & { result: any };
+type FullToolCall = InitialToolCall & { result: unknown };
 
 function getParts(msg: Message) {
   const parts: (InitialToolCall | FullToolCall | string)[] = [];
@@ -637,6 +641,7 @@ async function requestCompletion({
             const json = JSON.parse(part);
             const { data: chunk } = MessageChunkSchema.safeParse(json);
             if (chunk !== undefined) msg.chunks.push(chunk);
+            //eslint-disable-next-line
           } catch (e) {
             console.warn('Failed to parse chunk:', part);
           }
@@ -650,6 +655,7 @@ async function requestCompletion({
       const json = JSON.parse(buffer);
       const { data: chunk } = MessageChunkSchema.safeParse(json);
       if (chunk !== undefined) msg.chunks.push(chunk);
+      //eslint-disable-next-line
     } catch (e) {
       console.warn('Failed to parse chunk:', buffer);
     }

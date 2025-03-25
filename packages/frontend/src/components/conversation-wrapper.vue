@@ -5,7 +5,7 @@
 </template>
 
 <script setup lang="ts">
-import Conversation from '@/components/conversation.vue';
+import Conversation from '@/components/conversation-main.vue';
 import Sidebar from '@/components/sidebar.vue';
 import SettingModal from '@/components/setting-modal.vue';
 import { useConversationStore } from '@/stores/conversations.ts';

@@ -34,7 +34,7 @@ export const server = serve({
       try {
         const appRequest = Object.assign(req, { route: match });
 
-        let module: any;
+        let module: any; // eslint-disable-line
 
         try {
           module = await import(match.filePath);

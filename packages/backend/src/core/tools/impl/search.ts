@@ -41,7 +41,9 @@ export default {
             api_key: env.SERP_API_KEY,
             page
           });
-          return ((result?.organic_results ?? []) as any[]).map(({ title, link, snippet }) => ({
+          return (
+            (result?.organic_results ?? []) as { title: string; link: string; snippet: string }[]
+          ).map(({ title, link, snippet }) => ({
             title,
             link,
             snippet

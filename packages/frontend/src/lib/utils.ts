@@ -9,6 +9,7 @@ export function isValidJSON(str: string): boolean {
   }
 }
 
+// eslint-disable-next-line
 export function safeParse<T = any, F = null>(str: Nullish<string>, fallback = null as F): T | F {
   if (!str) return fallback;
   try {
