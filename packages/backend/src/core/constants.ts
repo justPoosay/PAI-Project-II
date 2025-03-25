@@ -1,11 +1,10 @@
-import type { LanguageModelV1 } from 'ai';
-import { openai } from '@ai-sdk/openai';
 import { anthropic } from '@ai-sdk/anthropic';
-import type { Model as TModel } from '/shared/';
-import { type ModelInfo, modelInfo } from 'shared';
-import { xai } from '@ai-sdk/xai';
-import { env } from '~/lib/utils.ts';
 import { groq } from '@ai-sdk/groq';
+import { openai } from '@ai-sdk/openai';
+import { xai } from '@ai-sdk/xai';
+import type { LanguageModelV1 } from 'ai';
+import { type ModelInfo, modelInfo, type Model as TModel } from 'shared';
+import { env } from '~/lib/utils.ts';
 
 type Model = ModelInfo & {
   model: LanguageModelV1;

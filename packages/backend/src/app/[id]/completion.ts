@@ -1,5 +1,5 @@
 import type { AppRequest } from '~/lib/types';
-import { modelSchema } from 'shared';
+import { modelSchema, type Message } from 'shared';
 import { ConversationService } from '~/lib/database';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
@@ -11,7 +11,6 @@ import logger from '~/lib/logger';
 import { openai } from '@ai-sdk/openai';
 import { emitter } from '~';
 import { pick } from '~/lib/utils';
-import type { Message } from '/shared/';
 import { type } from 'arktype';
 
 dayjs.extend(utc);

@@ -1,7 +1,6 @@
 import type { AppRequest } from '~/lib/types';
-import { ModelSchema, routes } from 'shared';
+import { ModelSchema, routes, type Model } from 'shared';
 import { z } from 'zod';
-import type { Model } from '/shared/';
 import { isValidJSON } from '~/lib/utils';
 import logger from '~/lib/logger';
 import { ConversationService } from '~/lib/database';
