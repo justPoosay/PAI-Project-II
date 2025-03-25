@@ -1,11 +1,11 @@
-import { MongoClient, Db } from 'mongodb';
+import { randomUUIDv7 } from 'bun';
+import { Db, MongoClient } from 'mongodb';
+import { dbName } from '~/lib/database';
 import {
   ConversationDTO,
   type ConversationEntity,
   conversationEntitySchema
 } from '~/lib/database/schemas/ConversationSchemas';
-import { randomUUIDv7 } from 'bun';
-import { dbName } from '~/lib/database';
 
 export default class ConversationService {
   #db: Db;

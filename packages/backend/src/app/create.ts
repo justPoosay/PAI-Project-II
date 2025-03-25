@@ -1,13 +1,13 @@
-import type { AppRequest } from '~/lib/types';
 import { ModelSchema, routes, type Model } from 'shared';
 import { z } from 'zod';
-import { isValidJSON } from '~/lib/utils';
-import logger from '~/lib/logger';
+import { getAvailableModels } from '~/core/utils';
 import { ConversationService } from '~/lib/database';
-import { availableModels } from '~/core/constants';
+import logger from '~/lib/logger';
+import type { AppRequest } from '~/lib/types';
+import { isValidJSON } from '~/lib/utils';
 
 export async function POST(req: AppRequest): Promise<Response> {
-  let model: Model = availableModels[0];
+  let model: Model = getAvailableModels()[0];
   const data = await req.text();
   logger.trace('/create', { data });
   if (isValidJSON(data)) {

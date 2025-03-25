@@ -1,7 +1,7 @@
+import { isBackendAlive } from '@/lib/utils.ts';
 import { defineStore } from 'pinia';
 import { type Model, routes } from 'shared';
 import { ref } from 'vue';
-import { isBackendAlive } from '@/lib/utils.ts';
 
 export const useModelStore = defineStore('models', () => {
   const models = ref<Model[]>([]);

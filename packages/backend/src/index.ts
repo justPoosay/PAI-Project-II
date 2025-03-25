@@ -1,9 +1,9 @@
-import { serve, FileSystemRouter, type Server } from 'bun';
-import * as path from 'node:path';
-import logger from '~/lib/logger.ts';
+import { FileSystemRouter, serve, type Server } from 'bun';
 import EventEmitter from 'node:events';
-import { z } from 'zod';
+import * as path from 'node:path';
 import type { SSESchema } from 'shared';
+import { z } from 'zod';
+import logger from '~/lib/logger.ts';
 
 export const emitter = new EventEmitter<{
   sse: [data: z.infer<typeof SSESchema>];

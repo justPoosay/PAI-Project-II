@@ -1,5 +1,5 @@
-import { date, object, z } from 'zod';
 import { ConversationSchema, MessageSchema } from 'shared';
+import { date, object, z } from 'zod';
 import { omit } from '~/lib/utils';
 
 export const conversationEntitySchema = object({

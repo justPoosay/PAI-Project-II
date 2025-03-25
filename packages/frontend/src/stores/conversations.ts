@@ -1,8 +1,8 @@
-import { defineStore } from 'pinia';
-import { ref } from 'vue';
-import { ConversationSchema, routes, type Model } from 'shared';
 import type { Conversation } from '@/lib/types.ts';
 import { isBackendAlive } from '@/lib/utils.ts';
+import { defineStore } from 'pinia';
+import { ConversationSchema, routes, type Model } from 'shared';
+import { ref } from 'vue';
 
 export const useConversationStore = defineStore('conversations', () => {
   const conversations = ref<Conversation[]>([]);

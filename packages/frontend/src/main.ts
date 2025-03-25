@@ -1,9 +1,8 @@
 import './assets/main.css';
 
-import { createApp } from 'vue';
+import FloatingVue, { Menu, vTooltip } from 'floating-vue';
 import { createPinia } from 'pinia';
-import { Menu, vTooltip } from 'floating-vue';
-import FloatingVue from 'floating-vue';
+import { createApp } from 'vue';
 
 import App from './app.vue';
 import router from './router';

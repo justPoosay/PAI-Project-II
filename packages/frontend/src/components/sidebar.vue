@@ -76,10 +76,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, type Ref, ref } from 'vue';
-import { PlusIcon, ChevronLeftIcon, Trash2Icon, Pencil } from 'lucide-vue-next';
 import { useConversationStore } from '@/stores/conversations.ts';
+import { ChevronLeftIcon, Pencil, PlusIcon, Trash2Icon } from 'lucide-vue-next';
 import { storeToRefs } from 'pinia';
+import { computed, onMounted, onUnmounted, type Ref, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 const router = useRouter();

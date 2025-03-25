@@ -1,9 +1,9 @@
-import type { Tool } from '~/core/tools';
+import FirecrawlApp from '@mendable/firecrawl-js';
 import { tool } from 'ai';
 import { z } from 'zod';
-import FirecrawlApp from '@mendable/firecrawl-js';
-import { env } from '~/lib/utils';
+import type { Tool } from '~/core/tools';
 import logger from '~/lib/logger';
+import { env } from '~/lib/utils';
 
 export default {
   dependency() {

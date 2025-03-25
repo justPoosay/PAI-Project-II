@@ -1,8 +1,8 @@
 import { color, type ColorInput } from 'bun';
-import { z } from 'zod';
 import dayjs from 'dayjs';
-import { env } from '~/lib/utils';
+import { z } from 'zod';
 import { LogLevelSchema } from '~/lib/schemas';
+import { env } from '~/lib/utils';
 
 function colorize(input: ColorInput, text: string) {
   return color(input, 'ansi') + text + color('white', 'ansi');

@@ -16,9 +16,9 @@
               v-if="message.role === 'assistant'"
               class="w-6 h-6 dark:mt-2 max-md:hidden"
               :alt="message.author"
-              :src="modelInfo[message.author].logoSrc"
+              :src="models[message.author].logoSrc"
               width="24"
-              v-tooltip="{ content: modelInfo[message.author].name, placement: 'left' }"
+              v-tooltip="{ content: models[message.author].name, placement: 'left' }"
             />
             <div
               :data-self="message.role === 'user'"
@@ -143,7 +143,7 @@
               v-if="file.image"
               :key="file.hash"
               :src="file.href"
-              :data-disabled="!modelInfo[model].capabilities.includes('imageInput')"
+              :data-disabled="!models[model].capabilities.includes('imageInput')"
               class="w-12 h-12 rounded-lg mr-2 overflow-hidden data-[disabled=true]:grayscale"
               alt="File"
             />
@@ -164,17 +164,17 @@
             class="hidden"
             id="file"
             @change.prevent="upload(($event.target as HTMLInputElement)?.files ?? undefined)"
-            :disabled="!modelInfo[model].capabilities.includes('imageInput')"
+            :disabled="!models[model].capabilities.includes('imageInput')"
           />
           <div class="flex p-1">
             <ModelSelector v-model="model" />
           </div>
           <div class="flex items-center">
             <label
-              :aria-disabled="!modelInfo[model].capabilities.includes('imageInput')"
+              :aria-disabled="!models[model].capabilities.includes('imageInput')"
               class="p-2 rounded-full aria-[disabled=false]:hover:bg-white/5 transition mt-1 aria-[disabled=false]:cursor-pointer aria-[disabled=true]:text-white/25"
               :title="
-                modelInfo[model].capabilities.includes('imageInput')
+                models[model].capabilities.includes('imageInput')
                   ? 'Upload File'
                   : 'This model does not support file input'
               "
@@ -211,46 +211,46 @@
 import 'floating-vue/dist/style.css';
 import 'highlight.js/styles/github-dark.min.css';
 
-import { ref, onMounted, watch, type Ref, type FunctionalComponent, nextTick, computed } from 'vue';
+import ErrorPopup from '@/components/error-popup.vue';
+import Loader from '@/components/loader.vue';
+import ModelSelector from '@/components/model-selector.vue';
+import ToolResult from '@/components/tool-result.vue';
+import { parseMarkdown } from '@/lib/markdown.ts';
+import type { Conversation, Nullish } from '@/lib/types.ts';
+import { calculateHash, capitalize, isBackendAlive, safeParse } from '@/lib/utils.ts';
+import router from '@/router';
+import { useConversationStore } from '@/stores/conversations.ts';
+import { useModelStore } from '@/stores/models.ts';
 import {
-  SendIcon,
-  PaperclipIcon,
+  CheckIcon,
+  ChevronUpIcon,
   CircleStopIcon,
-  XIcon,
   CopyIcon,
-  type LucideProps,
-  SunIcon,
-  SearchIcon,
-  GlobeIcon,
-  FolderTreeIcon,
   FileDiffIcon,
+  FolderTreeIcon,
+  GlobeIcon,
   HammerIcon,
   LoaderCircleIcon,
-  ChevronUpIcon,
-  CheckIcon,
-  RefreshCwIcon
+  PaperclipIcon,
+  RefreshCwIcon,
+  SearchIcon,
+  SendIcon,
+  SunIcon,
+  XIcon,
+  type LucideProps
 } from 'lucide-vue-next';
-import { calculateHash, capitalize, isBackendAlive, safeParse } from '@/lib/utils.ts';
-import { onBeforeRouteUpdate, useRoute } from 'vue-router';
 import {
   MessageChunkSchema,
   MessageSchema,
+  models,
   routes,
   SSESchema,
-  modelInfo,
   type Message,
   type Model
 } from 'shared';
-import { useConversationStore } from '@/stores/conversations.ts';
-import ModelSelector from '@/components/model-selector.vue';
-import router from '@/router';
-import { useModelStore } from '@/stores/models.ts';
-import type { Conversation, Nullish } from '@/lib/types.ts';
-import Loader from '@/components/loader.vue';
+import { computed, nextTick, onMounted, ref, watch, type FunctionalComponent, type Ref } from 'vue';
+import { onBeforeRouteUpdate, useRoute } from 'vue-router';
 import { z } from 'zod';
-import ErrorPopup from '@/components/error-popup.vue';
-import { parseMarkdown } from '@/lib/markdown.ts';
-import ToolResult from '@/components/tool-result.vue';
 
 type FileData = Omit<z.infer<(typeof routes)['upload']>[0], 'id'> & { id?: string; href: string };
 type AssistantMessage = Extract<Message, { role: 'assistant' }>;
@@ -307,7 +307,7 @@ function copyToClipboard(text: string) {
 }
 
 async function upload(fileList: FileList | undefined) {
-  if (!fileList?.length || !modelInfo[model.value].capabilities.includes('imageInput')) {
+  if (!fileList?.length || !models[model.value].capabilities.includes('imageInput')) {
     return;
   }
 
@@ -558,7 +558,7 @@ async function sendMessage() {
       await router.push({ name: 'c', params: { id } });
     }
 
-    const attachments = modelInfo[model.value].capabilities.includes('imageInput')
+    const attachments = models[model.value].capabilities.includes('imageInput')
       ? (uploads.value.filter(f => !!f.id) as { id: string; image: boolean }[])
       : undefined;
 

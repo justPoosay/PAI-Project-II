@@ -18,8 +18,8 @@
 </template>
 
 <script setup lang="ts">
-import { z } from 'zod';
 import type { SSESchema } from 'shared';
+import { z } from 'zod';
 
 defineProps<{
   show: boolean;

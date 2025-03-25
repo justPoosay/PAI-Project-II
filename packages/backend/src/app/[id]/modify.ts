@@ -1,8 +1,8 @@
-import type { AppRequest } from '~/lib/types';
-import { z } from 'zod';
-import { isValidJSON } from '~/lib/utils';
 import { ConversationSchema, ModelSchema } from 'shared';
+import { z } from 'zod';
 import { ConversationService } from '~/lib/database';
+import type { AppRequest } from '~/lib/types';
+import { isValidJSON } from '~/lib/utils';
 
 export async function pre(req: AppRequest): Promise<Response | null> {
   const c = await ConversationService.findOne(req.route.params.id, { archived: false });

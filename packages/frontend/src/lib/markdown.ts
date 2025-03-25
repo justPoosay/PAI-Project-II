@@ -1,9 +1,9 @@
+import DOMPurify from 'dompurify';
 import hljs from 'highlight.js';
 import { Marked, Renderer } from 'marked';
 import { markedHighlight } from 'marked-highlight';
-import { capitalize } from './utils';
 import markedKatex from 'marked-katex-extension';
-import DOMPurify from 'dompurify';
+import { capitalize } from './utils';
 
 const stock = new Marked(); // for parsing blockquotes
 const marked = new Marked(

@@ -1,6 +1,6 @@
-import type { AppRequest } from '~/lib/types';
 import { routes } from 'shared';
 import { ConversationService } from '~/lib/database';
+import type { AppRequest } from '~/lib/types';
 
 export async function GET(req: AppRequest): Promise<Response> {
   const { id } = req.route.params;

@@ -6,12 +6,12 @@
 
 <script setup lang="ts">
 import Conversation from '@/components/conversation-main.vue';
-import Sidebar from '@/components/sidebar.vue';
 import SettingModal from '@/components/setting-modal.vue';
+import Sidebar from '@/components/sidebar.vue';
 import { useConversationStore } from '@/stores/conversations.ts';
 import { useModelStore } from '@/stores/models.ts';
-import { ref } from 'vue';
 import { usePreferenceStore } from '@/stores/preferences';
+import { ref } from 'vue';
 
 const showSettingModal = ref(false);
 

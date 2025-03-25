@@ -21,11 +21,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
 import ConversationWrapper from '@/components/conversation-wrapper.vue';
-import { useModelStore } from '@/stores/models.ts';
-import { useConversationStore } from '@/stores/conversations.ts';
 import Loader from '@/components/loader.vue';
+import { useConversationStore } from '@/stores/conversations.ts';
+import { useModelStore } from '@/stores/models.ts';
+import { ref } from 'vue';
 
 const error = ref<string | null>(null);
 
