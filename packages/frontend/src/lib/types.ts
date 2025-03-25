@@ -1,4 +1,4 @@
-import { routes } from 'shared';
+import { routes } from 'common';
 import { z } from 'zod';
 
 export type Nullish<T> = T | null | undefined;

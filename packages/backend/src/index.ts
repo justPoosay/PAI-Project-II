@@ -1,7 +1,7 @@
 import { FileSystemRouter, serve, type Server } from 'bun';
+import type { SSESchema } from 'common';
 import EventEmitter from 'node:events';
 import * as path from 'node:path';
-import type { SSESchema } from 'shared';
 import { z } from 'zod';
 import logger from '~/lib/logger.ts';
 

@@ -1,4 +1,4 @@
-import { routes } from 'shared';
+import { routes } from 'common';
 import { getAvailableModels } from '~/core/utils';
 
 export async function GET(): Promise<Response> {

@@ -1,7 +1,7 @@
 import type { Conversation } from '@/lib/types.ts';
 import { isBackendAlive } from '@/lib/utils.ts';
+import { ConversationSchema, routes, type Model } from 'common';
 import { defineStore } from 'pinia';
-import { ConversationSchema, routes, type Model } from 'shared';
 import { ref } from 'vue';
 
 export const useConversationStore = defineStore('conversations', () => {

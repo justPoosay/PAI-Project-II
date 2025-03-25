@@ -4,7 +4,7 @@ WORKDIR /usr/src/app
 COPY package.json bun.lock ./
 
 COPY packages/frontend packages/frontend
-COPY packages/shared packages/shared
+COPY packages/common packages/common
 
 COPY patches patches
 

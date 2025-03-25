@@ -1,4 +1,4 @@
-import { ModelSchema, routes, type Model } from 'shared';
+import { ModelSchema, routes, type Model } from 'common';
 import { z } from 'zod';
 import { getAvailableModels } from '~/core/utils';
 import { ConversationService } from '~/lib/database';

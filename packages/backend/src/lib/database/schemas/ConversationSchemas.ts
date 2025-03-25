@@ -1,4 +1,4 @@
-import { ConversationSchema, MessageSchema } from 'shared';
+import { ConversationSchema, MessageSchema } from 'common';
 import { date, object, z } from 'zod';
 import { omit } from '~/lib/utils';
 

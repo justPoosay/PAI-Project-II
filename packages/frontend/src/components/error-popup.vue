@@ -18,7 +18,7 @@
 </template>
 
 <script setup lang="ts">
-import type { SSESchema } from 'shared';
+import type { SSESchema } from 'common';
 import { z } from 'zod';
 
 defineProps<{

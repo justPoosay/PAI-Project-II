@@ -1,4 +1,4 @@
-import { models, type Model } from 'shared';
+import { models, type Model } from 'common';
 import { env } from '~/lib/utils';
 
 export function getAvailableModels() {

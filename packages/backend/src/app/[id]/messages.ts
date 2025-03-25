@@ -1,4 +1,4 @@
-import { routes } from 'shared';
+import { routes } from 'common';
 import { ConversationService } from '~/lib/database';
 import type { AppRequest } from '~/lib/types';
 

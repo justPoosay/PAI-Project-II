@@ -55,9 +55,9 @@ import ImageInput from '@/components/model-capabilities/image-input.vue';
 import Reasoning from '@/components/model-capabilities/reasoning.vue';
 import ToolUsage from '@/components/model-capabilities/tool-usage.vue';
 import { useModelStore } from '@/stores/models.ts';
+import { models, type Model, type ModelInfo } from 'common';
 import { ChevronUpIcon, InfoIcon } from 'lucide-vue-next';
 import { storeToRefs } from 'pinia';
-import { models, type Model, type ModelInfo } from 'shared';
 import { onBeforeUnmount, onMounted, ref, type DefineComponent } from 'vue';
 
 type CapabilityRecord = Record<

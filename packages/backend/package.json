@@ -27,6 +27,6 @@
     "owoifyx": "^1.0.4",
     "serpapi": "^2.1.0",
     "zod": "^3.24.2",
-    "shared": "workspace:*"
+    "common": "workspace:*"
   }
 }

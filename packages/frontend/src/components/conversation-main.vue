@@ -222,6 +222,15 @@ import router from '@/router';
 import { useConversationStore } from '@/stores/conversations.ts';
 import { useModelStore } from '@/stores/models.ts';
 import {
+  MessageChunkSchema,
+  MessageSchema,
+  models,
+  routes,
+  SSESchema,
+  type Message,
+  type Model
+} from 'common';
+import {
   CheckIcon,
   ChevronUpIcon,
   CircleStopIcon,
@@ -239,15 +248,6 @@ import {
   XIcon,
   type LucideProps
 } from 'lucide-vue-next';
-import {
-  MessageChunkSchema,
-  MessageSchema,
-  models,
-  routes,
-  SSESchema,
-  type Message,
-  type Model
-} from 'shared';
 import { computed, nextTick, onMounted, ref, watch, type FunctionalComponent, type Ref } from 'vue';
 import { onBeforeRouteUpdate, useRoute } from 'vue-router';
 import { z } from 'zod';

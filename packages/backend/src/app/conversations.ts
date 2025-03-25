@@ -1,4 +1,4 @@
-import { routes } from 'shared';
+import { routes } from 'common';
 import { ConversationService } from '~/lib/database';
 
 export async function GET(): Promise<Response> {

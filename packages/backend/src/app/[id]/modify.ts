@@ -1,4 +1,4 @@
-import { ConversationSchema, ModelSchema } from 'shared';
+import { ConversationSchema, ModelSchema } from 'common';
 import { z } from 'zod';
 import { ConversationService } from '~/lib/database';
 import type { AppRequest } from '~/lib/types';

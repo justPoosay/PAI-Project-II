@@ -1,10 +1,10 @@
 import { openai } from '@ai-sdk/openai';
 import { type CoreMessage, streamText } from 'ai';
 import { type } from 'arktype';
+import { type Message, models, modelSchema } from 'common';
 import dayjs from 'dayjs';
 import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
-import { type Message, models, modelSchema } from 'shared';
 import { emitter } from '~';
 import tools from '~/core/tools';
 import { ConversationService } from '~/lib/database';
