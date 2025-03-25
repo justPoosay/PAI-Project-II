@@ -4,9 +4,9 @@ services:
   frontend:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: packages/frontend/Dockerfile
     ports:
-      - '80:80'
+      - "80:80"
     depends_on:
       - backend
     restart: on-failure
@@ -14,7 +14,7 @@ services:
   backend:
     build:
       context: .
-      dockerfile: backend/Dockerfile
+      dockerfile: packages/backend/Dockerfile
     environment:
       - DATABASE_URL=mongodb://root:pass@db:27017
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
@@ -41,7 +41,7 @@ services:
       - mongo_data:/data/db
     healthcheck:
       test:
-        ['CMD-SHELL', 'echo ''db.runCommand("ping").ok'' | mongosh localhost:27017/test --quiet']
+        [ "CMD-SHELL", "echo 'db.runCommand(\"ping\").ok' | mongosh localhost:27017/test --quiet" ]
       interval: 5s
       timeout: 5s
       retries: 5

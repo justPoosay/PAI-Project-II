@@ -3,8 +3,8 @@ name: Continuous Integration
 on: [push, pull_request]
 
 jobs:
-  types-frontend:
-    name: Check Types on the Frontend
+  types:
+    name: Check Types
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -21,8 +21,8 @@ jobs:
       - name: Check types
         run: bun type-check
 
-  types-backend:
-    name: Check Types on the Backend
+  prettier:
+    name: Check Code Style
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -34,9 +34,7 @@ jobs:
           bun-version: canary
 
       - name: Install dependencies
-        working-directory: ./backend
         run: bun install
 
-      - name: Check types
-        working-directory: ./backend
-        run: bun type-check
+      - name: Check code style
+        run: bun prettier
