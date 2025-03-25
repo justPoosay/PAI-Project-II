@@ -15,17 +15,20 @@ This project is organized as a monorepo with the following packages:
 ## Development Setup
 
 1. Clone the repository:
+
    ```
    git clone <repository-url>
    cd <repo-name>
    ```
 
 2. Install dependencies:
+
    ```
    bun install
    ```
 
 3. Create a `.env` file in the project root with the following variables (at minimum one provider API key is required):
+
    ```
    DATABASE_URL=mongodb://root:pass@localhost:27017
    OPENAI_API_KEY=your_openai_key
@@ -42,6 +45,7 @@ This project is organized as a monorepo with the following packages:
    ```
 
 4. Start the development servers:
+
    ```
    bun run dev
    ```
@@ -53,11 +57,13 @@ This project is organized as a monorepo with the following packages:
 ## Running Individual Services
 
 - Frontend only:
+
   ```
   bun run --filter frontend dev
   ```
 
 - Backend only:
+
   ```
   bun run --filter backend dev
   ```
@@ -76,6 +82,7 @@ This project is organized as a monorepo with the following packages:
 2. Create a `.env` file with your API keys (as outlined above)
 
 3. Build and start the containers:
+
    ```
    docker-compose up -d
    ```
@@ -87,12 +94,13 @@ This project is organized as a monorepo with the following packages:
 For manual deployment:
 
 1. Build the frontend:
+
    ```
    cd packages/frontend
    bun run build
    ```
 
-2. Host the static files from `packages/frontend/dist` using a web server like Nginx 
+2. Host the static files from `packages/frontend/dist` using a web server like Nginx
 
 3. Configure your web server to proxy API requests to the backend
 
@@ -106,11 +114,13 @@ For manual deployment:
 ## Additional Commands
 
 - Format code:
+
   ```
   bunx prettier --write .
   ```
 
 - Lint code:
+
   ```
   bunx eslint .
   ```
