@@ -29,7 +29,7 @@
   },
   "dependencies": {
     "@tanstack/vue-form": "^0.41.4",
-    "arktype": "^2.1.12",
+    "arktype": "^2.1.13",
     "dompurify": "^3.2.4",
     "floating-vue": "^5.2.2",
     "highlight.js": "^11.11.1",

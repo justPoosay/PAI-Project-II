@@ -18,8 +18,8 @@
   "dependencies": {
     "@mendable/firecrawl-js": "^1.21.0",
     "@types/mongodb": "^4.0.7",
-    "ai": "^4.2.2",
-    "arktype": "^2.1.12",
+    "ai": "^4.2.5",
+    "arktype": "^2.1.13",
     "cheerio": "^1.0.0",
     "dayjs": "^1.11.13",
     "mongodb": "^6.15.0",
