@@ -1,4 +1,5 @@
 import { type } from 'arktype';
+import { color } from 'bun';
 import { LogLevel } from '~/lib/schemas';
 
 export function isValidJSON(str: string): boolean {
@@ -48,16 +49,13 @@ export const Env = type({
   'GITHUB_PAT?': 'string',
 
   LOG_LEVEL: LogLevel.default('info')
-}).narrow((env, ctx) => {
-  return !env.OPENAI_API_KEY && !env.ANTHROPIC_API_KEY && !env.XAI_API_KEY && !env.GROQ_API_KEY
-    ? ctx.error('at least one API provider must be set') && false
-    : true;
 });
 
 const out = Env(Bun.env);
 
 if (out instanceof type.errors) {
-  throw new Error(out.summary);
+  console.error(`${color('#e81747', 'ansi')}[ENV] ${out.summary}${color('white', 'ansi')}`);
+  process.exit(1);
 }
 
 export const env = out;
