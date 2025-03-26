@@ -16,7 +16,7 @@ A full-stack AI chat application featuring a Vue 3 frontend and a Bun backend. I
 
 - **Frontend:** Vue 3, Vite, Pinia, Tailwind CSS, TypeScript
 - **Backend:** Bun, Hono, Vercel AI SDK, MongoDB, TypeScript
-- **Common:** Zod, ArkType (for schema validation)
+- **Common:** ArkType (for schema validation)
 - **Deployment:** Docker, Nginx (for frontend serving/proxying)
 
 ## 🏁 Getting Started
