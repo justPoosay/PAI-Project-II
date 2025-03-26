@@ -4,3 +4,4 @@
 - update the design
 - support for reasoning
 - better error displaying
+- fix the docker image not building
