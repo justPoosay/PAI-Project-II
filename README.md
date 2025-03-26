@@ -4,11 +4,11 @@ This project is organized as a monorepo with the following packages:
 
 - `frontend`: Vue.js application with TailwindCSS
 - `backend`: Bun-powered API server
-- `shared`: Common types and schemas shared between packages
+- `common`: Common types and schemas shared between packages
 
 ## Prerequisites
 
-- [Bun](https://bun.sh/) 1.0.0 or higher
+- [Bun](https://bun.sh/) 1.2.6 or higher
 - MongoDB (for development, or use the Docker setup)
 - API keys for at least one of: OpenAI, Anthropic, Groq, or XAI
 
