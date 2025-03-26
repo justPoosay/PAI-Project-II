@@ -55,7 +55,7 @@ import ImageInput from '@/components/model-capabilities/image-input.vue';
 import Reasoning from '@/components/model-capabilities/reasoning.vue';
 import ToolUsage from '@/components/model-capabilities/tool-usage.vue';
 import { useModelStore } from '@/stores/models.ts';
-import { models, type Model, type ModelInfo } from 'common';
+import { Model, models, type ModelInfo } from 'common';
 import { ChevronUpIcon, InfoIcon } from 'lucide-vue-next';
 import { storeToRefs } from 'pinia';
 import { onBeforeUnmount, onMounted, ref, type DefineComponent } from 'vue';
@@ -75,13 +75,13 @@ const modelStore = useModelStore();
 const { models: availableModels } = storeToRefs(modelStore);
 
 const expanded = ref<boolean>(false);
-const selected = defineModel<Model>({ required: true });
+const selected = defineModel<typeof Model.infer>({ required: true });
 
 function toggleExpanded() {
   expanded.value = !expanded.value;
 }
 
-function selectOption(value: Model) {
+function selectOption(value: typeof Model.infer) {
   selected.value = value;
   expanded.value = false;
 }

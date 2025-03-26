@@ -1,8 +1,7 @@
 import { routes } from 'common';
-import { z } from 'zod';
 
 export type Nullish<T> = T | null | undefined;
 
-export type Conversation = Omit<z.infer<(typeof routes)['conversations']>[0], 'updated_at'> & {
+export type Conversation = Omit<(typeof routes.conversations.infer)[0], 'updated_at'> & {
   updated_at: Date;
 };

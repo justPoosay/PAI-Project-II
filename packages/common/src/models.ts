@@ -3,7 +3,7 @@ import { groq } from '@ai-sdk/groq';
 import { openai } from '@ai-sdk/openai';
 import { xai } from '@ai-sdk/xai';
 import type { LanguageModelV1 } from 'ai';
-import type { Model } from '.';
+import type { Model } from './schemas';
 
 export interface ModelInfo {
   capabilities: Array<'toolUsage' | 'imageInput' | 'reasoning' | (string & {})>;
@@ -14,7 +14,7 @@ export interface ModelInfo {
   env: string;
 }
 
-export const models: Record<Model, ModelInfo> = {
+export const models: Record<typeof Model.infer, ModelInfo> = {
   'claude-3-5-sonnet': {
     capabilities: ['toolUsage', 'imageInput'],
     name: 'Claude 3.5 Sonnet',

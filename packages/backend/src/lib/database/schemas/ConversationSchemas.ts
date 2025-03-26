@@ -1,23 +1,22 @@
-import { ConversationSchema, MessageSchema } from 'common';
-import { date, object, z } from 'zod';
-import { omit } from '~/lib/utils';
+import { type } from 'arktype';
+import { Message, Model } from 'common';
 
-export const conversationEntitySchema = object({
-  messages: MessageSchema.array(),
-  archived: z.boolean(),
-  created_at: date(),
-  updated_at: date(),
-  ...omit(ConversationSchema.shape, ['updated_at'])
+export const ConversationEntity = type({
+  id: 'string',
+  name: 'string | null',
+  model: Model,
+  messages: Message.array(),
+  archived: 'boolean',
+  created_at: 'Date',
+  updated_at: 'Date'
 });
 
-export const conversationDTOSchema = conversationEntitySchema;
-
-export type ConversationEntity = z.infer<typeof conversationEntitySchema>;
-export type ConversationDTO = z.infer<typeof conversationDTOSchema>;
+export type TConversationEntity = typeof ConversationEntity.infer;
+export type TConversationDTO = typeof ConversationEntity.infer;
 
 export const ConversationDTO = {
-  convertFromEntity(entity: ConversationEntity) {
-    const { data } = conversationDTOSchema.safeParse(entity);
-    return data ?? null;
+  convertFromEntity(entity: typeof ConversationEntity.infer) {
+    const out = ConversationEntity(entity); // here `ConversationDTO` schema should be used, but both are the same
+    return out instanceof type.errors ? null : out;
   }
 } as const;

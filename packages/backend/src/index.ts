@@ -1,12 +1,11 @@
 import { FileSystemRouter, serve, type Server } from 'bun';
-import type { SSESchema } from 'common';
+import { SSE } from 'common';
 import EventEmitter from 'node:events';
 import * as path from 'node:path';
-import { z } from 'zod';
 import logger from '~/lib/logger.ts';
 
 export const emitter = new EventEmitter<{
-  sse: [data: z.infer<typeof SSESchema>];
+  sse: [data: typeof SSE.infer];
 }>();
 
 setInterval(() => {

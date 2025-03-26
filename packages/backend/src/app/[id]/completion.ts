@@ -1,7 +1,7 @@
 import { openai } from '@ai-sdk/openai';
 import { type CoreMessage, streamText } from 'ai';
 import { type } from 'arktype';
-import { type Message, models, modelSchema } from 'common';
+import { Message, Model, models } from 'common';
 import dayjs from 'dayjs';
 import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
@@ -17,7 +17,7 @@ dayjs.extend(timezone);
 
 const options = type({
   message: 'string>0 | null',
-  'model?': modelSchema,
+  'model?': Model,
   'attachmentIds?': 'string[]',
   'plainText?': 'boolean'
 });
@@ -178,7 +178,7 @@ export async function POST(req: AppRequest): Promise<Response> {
     }
 
     if (c.messages.at(-1)?.role === 'assistant') {
-      (c.messages.at(-1) as Extract<Message, { role: 'assistant' }>).chunks = chunks;
+      (c.messages.at(-1) as Extract<typeof Message.infer, { role: 'assistant' }>).chunks = chunks;
     }
 
     if (!encounteredError && c.messages.length >= 2 && !c.name) {

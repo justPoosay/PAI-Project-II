@@ -1,3 +1,3 @@
-import { z } from 'zod';
+import { type } from 'arktype';
 
-export const LogLevelSchema = z.enum(['trace', 'debug', 'info', 'warn', 'error', 'fatal']);
+export const LogLevel = type("'trace' | 'debug' | 'info' | 'warn' | 'error' | 'fatal'");

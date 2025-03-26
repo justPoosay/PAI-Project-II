@@ -1,5 +1,5 @@
-import { ConversationSchema, ModelSchema } from 'common';
-import { z } from 'zod';
+import { type } from 'arktype';
+import { Conversation, Model } from 'common';
 import { ConversationService } from '~/lib/database';
 import type { AppRequest } from '~/lib/types';
 import { isValidJSON } from '~/lib/utils';
@@ -18,15 +18,13 @@ export async function DELETE(req: AppRequest): Promise<Response> {
 export async function PATCH(req: AppRequest): Promise<Response> {
   const userSuppliedData = await req.text();
   if (!isValidJSON(userSuppliedData)) return new Response(null, { status: 400 });
-  const result = z
-    .object({
-      name: z.string().nullable().optional(),
-      model: ModelSchema.optional()
-    })
-    .safeParse(JSON.parse(userSuppliedData));
-  if (!result.success) return new Response(null, { status: 400 });
-  const updated = await ConversationService.update(req.route.params.id, result.data);
+  const out = type({
+    'name?': 'string | null',
+    'model?': Model
+  })(JSON.parse(userSuppliedData));
+  if (out instanceof type.errors) return new Response(null, { status: 400 });
+  const updated = await ConversationService.update(req.route.params.id, out);
   return Response.json(
-    ConversationSchema.parse({ ...updated, updated_at: updated?.updated_at.toISOString() })
+    Conversation.assert({ ...updated, updated_at: updated?.updated_at.toISOString() })
   );
 }

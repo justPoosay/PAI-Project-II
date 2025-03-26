@@ -3,8 +3,8 @@ import { Db, MongoClient } from 'mongodb';
 import { dbName } from '~/lib/database';
 import {
   ConversationDTO,
-  type ConversationEntity,
-  conversationEntitySchema
+  ConversationEntity,
+  type TConversationDTO
 } from '~/lib/database/schemas/ConversationSchemas';
 
 export default class ConversationService {
@@ -15,34 +15,34 @@ export default class ConversationService {
   }
 
   get #collection() {
-    return this.#db.collection<ConversationEntity>('conversations');
+    return this.#db.collection<typeof ConversationEntity.infer>('conversations');
   }
 
-  async findOne(id: ConversationDTO['id'], where?: Omit<Partial<ConversationDTO>, 'id'>) {
+  async findOne(id: TConversationDTO['id'], where?: Omit<Partial<TConversationDTO>, 'id'>) {
     const entity = await this.#collection.findOne({ id, ...where });
     return entity ? ConversationDTO.convertFromEntity(entity) : null;
   }
 
-  async find(where?: Omit<Partial<ConversationDTO>, 'id'>) {
+  async find(where?: Omit<Partial<TConversationDTO>, 'id'>) {
     const entities = await this.#collection.find({ ...where }).toArray();
     return entities.map(ConversationDTO.convertFromEntity).filter(v => v !== null);
   }
 
-  async create(dto: Omit<ConversationDTO, 'id' | 'created_at' | 'updated_at'>) {
+  async create(dto: Omit<TConversationDTO, 'id' | 'created_at' | 'updated_at'>) {
     const now = new Date();
     const obj = { ...dto, created_at: now, updated_at: now, id: randomUUIDv7() };
-    const candidate = conversationEntitySchema.parse(obj);
+    const candidate = ConversationEntity.assert(obj);
     await this.#collection.insertOne(candidate);
     return ConversationDTO.convertFromEntity(obj)!;
   }
 
   async update(
-    id: ConversationDTO['id'],
-    dto: Omit<Partial<ConversationDTO>, 'id' | 'created_at' | 'updated_at'>
+    id: TConversationDTO['id'],
+    dto: Omit<Partial<TConversationDTO>, 'id' | 'created_at' | 'updated_at'>
   ) {
     const now = new Date();
     const obj = { ...dto, updated_at: now };
-    const candidate = conversationEntitySchema.partial().parse(obj);
+    const candidate = ConversationEntity.partial().assert(obj);
 
     const value = await this.#collection.findOneAndUpdate(
       { id },
@@ -52,7 +52,7 @@ export default class ConversationService {
     return value ? ConversationDTO.convertFromEntity(value) : null;
   }
 
-  async delete(id: ConversationDTO['id']) {
+  async delete(id: TConversationDTO['id']) {
     await this.#collection.deleteOne({ id });
   }
 }

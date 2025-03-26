@@ -18,11 +18,10 @@
 </template>
 
 <script setup lang="ts">
-import type { SSESchema } from 'common';
-import { z } from 'zod';
+import { SSE } from 'common';
 
 defineProps<{
   show: boolean;
-  error: Omit<Extract<z.infer<typeof SSESchema>, { kind: 'error' }>, 'kind' | 'for'> | null;
+  error: Omit<Extract<typeof SSE.infer, { kind: 'error' }>, 'kind' | 'for'> | null;
 }>();
 </script>

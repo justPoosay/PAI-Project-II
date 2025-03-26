@@ -1,5 +1,5 @@
-import { z } from 'zod';
-import { LogLevelSchema } from '~/lib/schemas';
+import { type } from 'arktype';
+import { LogLevel } from '~/lib/schemas';
 
 export function isValidJSON(str: string): boolean {
   try {
@@ -32,36 +32,32 @@ export function pick<T extends Record<string, unknown>, K extends keyof T>(
   return copy;
 }
 
-export const env = z
-  .object({
-    DATABASE_URL: z.string(),
+export const Env = type({
+  DATABASE_URL: 'string',
 
-    OPENAI_API_KEY: z.string().optional(),
-    ANTHROPIC_API_KEY: z.string().optional(),
-    XAI_API_KEY: z.string().optional(),
-    GROQ_API_KEY: z.string().optional(),
+  'OPENAI_API_KEY?': 'string',
+  'ANTHROPIC_API_KEY?': 'string',
+  'XAI_API_KEY?': 'string',
+  'GROQ_API_KEY?': 'string',
 
-    FIRECRAWL_API_KEY: z.string().optional(),
-    FIRECRAWL_API_URL: z.string().optional(),
-    WEATHER_API_KEY: z.string().optional(),
-    SERP_API_KEY: z.string().optional(),
+  'FIRECRAWL_API_KEY?': 'string',
+  'FIRECRAWL_API_URL?': 'string',
+  'WEATHER_API_KEY?': 'string',
+  'SERP_API_KEY?': 'string',
 
-    GITHUB_PAT: z.string().optional(),
+  'GITHUB_PAT?': 'string',
 
-    LOG_LEVEL: LogLevelSchema.default('info')
-  })
-  .superRefine((data, ctx) => {
-    if (
-      !data.OPENAI_API_KEY &&
-      !data.ANTHROPIC_API_KEY &&
-      !data.XAI_API_KEY &&
-      !data.GROQ_API_KEY
-    ) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message:
-          'At least one of OPENAI_API_KEY, ANTHROPIC_API_KEY, XAI_API_KEY or GROQ_API_KEY must be set'
-      });
-    }
-  })
-  .parse(process.env);
+  LOG_LEVEL: LogLevel.default('info')
+}).narrow((env, ctx) => {
+  return !env.OPENAI_API_KEY && !env.ANTHROPIC_API_KEY && !env.XAI_API_KEY && !env.GROQ_API_KEY
+    ? ctx.error('at least one API provider must be set') && false
+    : true;
+});
+
+const out = Env(Bun.env);
+
+if (out instanceof type.errors) {
+  throw new Error(out.summary);
+}
+
+export const env = out;

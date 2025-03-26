@@ -221,15 +221,8 @@ import { calculateHash, capitalize, isBackendAlive, safeParse } from '@/lib/util
 import router from '@/router';
 import { useConversationStore } from '@/stores/conversations.ts';
 import { useModelStore } from '@/stores/models.ts';
-import {
-  MessageChunkSchema,
-  MessageSchema,
-  models,
-  routes,
-  SSESchema,
-  type Message,
-  type Model
-} from 'common';
+import { type } from 'arktype';
+import { Message, MessageChunk, models, routes, SSE, type Model } from 'common';
 import {
   CheckIcon,
   ChevronUpIcon,
@@ -250,16 +243,15 @@ import {
 } from 'lucide-vue-next';
 import { computed, nextTick, onMounted, ref, watch, type FunctionalComponent, type Ref } from 'vue';
 import { onBeforeRouteUpdate, useRoute } from 'vue-router';
-import { z } from 'zod';
 
-type FileData = Omit<z.infer<(typeof routes)['upload']>[0], 'id'> & { id?: string; href: string };
-type AssistantMessage = Extract<Message, { role: 'assistant' }>;
+type FileData = Omit<(typeof routes.upload.infer)[0], 'id'> & { id?: string; href: string };
+type AssistantMessage = Extract<typeof Message.infer, { role: 'assistant' }>;
 
 const route = useRoute();
 const conversationStore = useConversationStore();
 const modelStore = useModelStore();
 
-const messages = ref<{ loading: boolean; error: string | null; array: Message[] }>({
+const messages = ref<{ loading: boolean; error: string | null; array: (typeof Message.infer)[] }>({
   loading: true,
   error: null,
   array: []
@@ -269,10 +261,7 @@ const conversation = ref<Conversation | null>(
 );
 const input = ref('');
 const uploads = ref<FileData[]>([]);
-const error = ref<Omit<
-  Extract<z.infer<typeof SSESchema>, { kind: 'error' }>,
-  'kind' | 'for'
-> | null>(null);
+const error = ref<Omit<Extract<typeof SSE.infer, { kind: 'error' }>, 'kind' | 'for'> | null>(null);
 const showError = ref(false);
 const abortController = ref<AbortController | null>(null);
 const unfoldedTools = ref<FullToolCall['id'][]>([]);
@@ -341,10 +330,10 @@ async function upload(fileList: FileList | undefined) {
     return;
   }
 
-  const result = routes['upload'].safeParse(await res.json());
-  if (result.success) {
+  const out = routes['upload'](await res.json());
+  if (!(out instanceof type.errors)) {
     uploads.value.forEach(file => {
-      const data = result.data.find(f => f.hash === file.hash);
+      const data = out.find(f => f.hash === file.hash);
       if (data) {
         file.id = data.id;
         URL.revokeObjectURL(file.href);
@@ -381,7 +370,7 @@ function init(id: string) {
 }
 
 function fetchMessages(id: string) {
-  function equals(a: Message, b: Message) {
+  function equals(a: typeof Message.infer, b: typeof Message.infer) {
     if (a.role !== b.role) return false;
 
     if (a.role === 'user') {
@@ -406,18 +395,18 @@ function fetchMessages(id: string) {
       }
 
       res.json().then(data => {
-        const result = routes['[id]']['messages'].safeParse(data);
-        if (result.success) {
-          if (messages.value.array.length > result.data.length) {
-            const lastIndex = result.data.length - 1;
+        const out = routes['[id]']['messages'](data);
+        if (!(out instanceof type.errors)) {
+          if (messages.value.array.length > out.length) {
+            const lastIndex = out.length - 1;
             const local = messages.value.array[lastIndex];
-            const remote = result.data[lastIndex];
+            const remote = out[lastIndex];
             // if both messages are the same and the last message is not finished, don't update
             if (equals(local, remote) && !finished(messages.value.array.at(-1))) return;
           }
 
-          messages.value.array = result.data;
-          localStorage.setItem(id, JSON.stringify(result.data));
+          messages.value.array = out;
+          localStorage.setItem(id, JSON.stringify(out));
         } else {
           messages.value.error = 'Backend provided bogus data';
         }
@@ -428,11 +417,9 @@ function fetchMessages(id: string) {
       messages.value.error = e.message;
     });
 
-  const { data: fromLocalStorage } = MessageSchema.array().safeParse(
-    safeParse(localStorage.getItem(id))
-  );
-  if (fromLocalStorage) {
-    messages.value.array = fromLocalStorage;
+  const out = Message.array()(safeParse(localStorage.getItem(id)));
+  if (!(out instanceof type.errors)) {
+    messages.value.array = out;
     return (messages.value.loading = false);
   }
 
@@ -462,7 +449,10 @@ onMounted(() => {
 
     sse.onmessage = e => {
       const data = JSON.parse(e.data);
-      const { data: msg } = SSESchema.safeParse(data);
+      const msg = SSE(data);
+      if (msg instanceof type.errors) {
+        return;
+      }
       if (msg?.kind === 'rename') {
         conversationStore.$modify({ id: msg.for, requestChange: false, name: msg.newName });
       }
@@ -483,12 +473,12 @@ onMounted(() => {
   setupSSE();
 });
 
-function getContent(msg: Message) {
+function getContent(msg: typeof Message.infer) {
   return 'content' in msg
     ? msg.content
     : msg.chunks
         .filter(
-          (v): v is Extract<z.infer<typeof MessageChunkSchema>, { type: 'text-delta' }> =>
+          (v): v is Extract<typeof MessageChunk.infer, { type: 'text-delta' }> =>
             v?.type === 'text-delta'
         )
         .map(v => v.textDelta)
@@ -503,7 +493,7 @@ interface InitialToolCall {
 
 type FullToolCall = InitialToolCall & { result: unknown };
 
-function getParts(msg: Message) {
+function getParts(msg: typeof Message.infer) {
   const parts: (InitialToolCall | FullToolCall | string)[] = [];
 
   if (msg.role === 'user') {
@@ -588,7 +578,7 @@ async function sendMessage() {
 }
 
 /** Checks if the message ends with a null chunk */
-function finished(msg: Nullish<Message>) {
+function finished(msg: Nullish<typeof Message.infer>) {
   const u = undefined;
   return (msg ? ('chunks' in msg ? msg.chunks : u) : u)?.at(-1) === null;
 }
@@ -596,7 +586,7 @@ function finished(msg: Nullish<Message>) {
 interface CompletionOptions {
   conversationId?: string;
   message: string | null;
-  model?: Model;
+  model?: typeof Model.infer;
   attachmentIds?: string[];
 }
 
@@ -639,11 +629,10 @@ async function requestCompletion({
         if (part.trim()) {
           try {
             const json = JSON.parse(part);
-            const { data: chunk } = MessageChunkSchema.safeParse(json);
-            if (chunk !== undefined) msg.chunks.push(chunk);
-            //eslint-disable-next-line
+            const out = MessageChunk(json);
+            if (!(out instanceof type.errors)) msg.chunks.push(out);
           } catch (e) {
-            console.warn('Failed to parse chunk:', part);
+            console.warn('Failed to parse chunk:', part, e);
           }
         }
       }
@@ -653,11 +642,10 @@ async function requestCompletion({
   if (buffer.trim()) {
     try {
       const json = JSON.parse(buffer);
-      const { data: chunk } = MessageChunkSchema.safeParse(json);
-      if (chunk !== undefined) msg.chunks.push(chunk);
-      //eslint-disable-next-line
+      const out = MessageChunk(json);
+      if (!(out instanceof type.errors)) msg.chunks.push(out);
     } catch (e) {
-      console.warn('Failed to parse chunk:', buffer);
+      console.warn('Failed to parse chunk:', buffer, e);
     }
   }
   abortController.value = null;

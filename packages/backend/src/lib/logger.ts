@@ -1,14 +1,11 @@
 import { color, type ColorInput } from 'bun';
 import dayjs from 'dayjs';
-import { z } from 'zod';
-import { LogLevelSchema } from '~/lib/schemas';
+import { LogLevel } from '~/lib/schemas';
 import { env } from '~/lib/utils';
 
 function colorize(input: ColorInput, text: string) {
   return color(input, 'ansi') + text + color('white', 'ansi');
 }
-
-type LogLevel = z.infer<typeof LogLevelSchema>;
 
 const logLevel = {
   trace: [-1, 'blue'],
@@ -17,18 +14,20 @@ const logLevel = {
   warn: [2, 'yellow'],
   error: [3, 'red'],
   fatal: [4, 'magenta']
-} as const satisfies Record<LogLevel, [number, ColorInput]>;
+} as const satisfies Record<typeof LogLevel.infer, [number, ColorInput]>;
 
 const logger = Object.fromEntries(
-  LogLevelSchema.options.map(level => [
-    level,
-    (...args: unknown[]) => {
-      const [index, color] = logLevel[level];
-      if (index < logLevel[env.LOG_LEVEL][0]) return;
-      const date = dayjs().format('MM-DD-YY HH:mm:ss.SSS');
-      console.log(colorize(color, `[${date}] [${level.toUpperCase()}]:`), ...args);
-    }
-  ])
-) as Record<LogLevel, (...args: unknown[]) => void>;
+  (['trace', 'debug', 'info', 'warn', 'error', 'fatal'] satisfies (typeof LogLevel.infer)[]).map(
+    level => [
+      level,
+      (...args: unknown[]) => {
+        const [index, color] = logLevel[level];
+        if (index < logLevel[env.LOG_LEVEL][0]) return;
+        const date = dayjs().format('MM-DD-YY HH:mm:ss.SSS');
+        console.log(colorize(color, `[${date}] [${level.toUpperCase()}]:`), ...args);
+      }
+    ]
+  )
+) as Record<typeof LogLevel.infer, (...args: unknown[]) => void>;
 
 export default logger;
