@@ -1,135 +1,95 @@
-## Project Structure
+# AI Chat Interface 💬
 
-This project is organized as a monorepo with the following packages:
+A full-stack AI chat application featuring a Vue 3 frontend and a Bun backend. It supports multiple LLMs, tool usage, and real-time updates.
 
-- `frontend`: Vue.js application with TailwindCSS
-- `backend`: Bun-powered API server
-- `common`: Common types and schemas shared between packages
+## ✨ Key Features
 
-## Prerequisites
+- **Multi-Model Support:** Connects to OpenAI, Anthropic, Groq, and XAI models.
+- **Tool Integration:** Empowers models with tools for web search, web scraping, weather lookups, and GitHub repository interaction.
+- **Real-time Updates:** Uses Server-Sent Events (SSE) for live updates (e.g., conversation renaming).
+- **Rich Frontend:** Vue 3 interface with Markdown rendering (including code highlighting & KaTeX), image uploads, and conversation management.
+- **Modern Backend:** Built with Bun, TypeScript, and the Vercel AI SDK.
+- **Persistent Storage:** Uses MongoDB to store conversation history.
+- **Containerized:** Includes Docker configuration for easy setup and deployment.
 
-- [Bun](https://bun.sh/) 1.2.6 or higher
-- MongoDB (for development, or use the Docker setup)
-- API keys for at least one of: OpenAI, Anthropic, Groq, or XAI
+## 🚀 Tech Stack
 
-## Development Setup
+- **Frontend:** Vue 3, Vite, Pinia, Tailwind CSS, TypeScript
+- **Backend:** Bun, Hono, Vercel AI SDK, MongoDB, TypeScript
+- **Common:** Zod, ArkType (for schema validation)
+- **Deployment:** Docker, Nginx (for frontend serving/proxying)
 
-1. Clone the repository:
+## 🏁 Getting Started
 
-   ```
-   git clone <repository-url>
-   cd <repo-name>
-   ```
+### Prerequisites
 
-2. Install dependencies:
+- [Bun](https://bun.sh/) (v1.2.x or higher recommended)
+- [Docker](https://www.docker.com/) & [Docker Compose](https://docs.docker.com/compose/) (Recommended for easy setup)
+- API Keys for at least one supported AI provider (OpenAI, Anthropic, Groq, XAI).
 
-   ```
-   bun install
-   ```
+### 1. Clone the Repository
 
-3. Create a `.env` file in the project root with the following variables (at minimum one provider API key is required):
+```bash
+git clone <repository-url>
+cd <repository-name>
+```
 
-   ```
-   DATABASE_URL=mongodb://root:pass@localhost:27017
-   OPENAI_API_KEY=your_openai_key
-   ANTHROPIC_API_KEY=your_anthropic_key
-   XAI_API_KEY=your_xai_key
-   GROQ_API_KEY=your_groq_key
-   # Optional API keys for tools
-   FIRECRAWL_API_KEY=your_firecrawl_key
-   FIRECRAWL_API_URL=your_firecrawl_url
-   WEATHER_API_KEY=your_weather_key
-   SERP_API_KEY=your_serp_key
-   GITHUB_PAT=your_github_personal_access_token
-   LOG_LEVEL=debug # Optional, defaults to info
-   ```
+### 2. Install Dependencies
 
-4. Start the development servers:
+```bash
+bun install
+```
 
-   ```
-   bun run dev
-   ```
+### 3. Configure Environment Variables
 
-5. Access the application:
-   - Frontend: http://localhost:5173
-   - Backend: http://localhost:3000
+Copy the `.env.example` file to `.env` and fill in the required values:
 
-## Running Individual Services
+```bash
+cp .env.example .env
+# Edit .env with your details
+```
 
-- Frontend only:
+**Required:**
 
-  ```
-  bun run --filter frontend dev
-  ```
+- `DATABASE_URL`: Connection string for your MongoDB instance (defaults to `mongodb://root:pass@localhost:27017` for Docker).
+- At least one provider API key (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `XAI_API_KEY`, `GROQ_API_KEY`).
 
-- Backend only:
+**Optional (for Tools):**
 
-  ```
-  bun run --filter backend dev
-  ```
+- `FIRECRAWL_API_KEY` / `FIRECRAWL_API_URL`
+- `WEATHER_API_KEY`
+- `SERP_API_KEY`
+- `GITHUB_PAT`
 
-- Type checking:
-  ```
-  bun run type-check
-  ```
+### 4. Run the Application
 
-## Production Deployment
+**Option A: Using Docker Compose (Recommended)**
 
-### Using Docker Compose (Recommended)
+This starts the frontend, backend, and a MongoDB database.
 
-1. Ensure Docker and Docker Compose are installed on your system
+```bash
+docker-compose up -d
+```
 
-2. Create a `.env` file with your API keys (as outlined above)
+Access the application at `http://localhost`.
 
-3. Build and start the containers:
+**Option B: Running Services Manually**
 
-   ```
-   docker-compose up -d
-   ```
+Ensure you have a MongoDB instance running and accessible via the `DATABASE_URL` in your `.env` file.
 
-4. Access the application at http://localhost
+```bash
+# Start backend (port 3000) and frontend (port 5173) with hot-reloading
+bun run dev
+```
 
-### Manual Deployment
+Access the frontend at `http://localhost:5173`.
 
-For manual deployment:
+## 🛠️ Development
 
-1. Build the frontend:
+- **Type Check:** `bun run type-check`
+- **Format Code:** `bunx prettier --write .`
+- **Lint Code:** `bunx eslint .`
 
-   ```
-   cd packages/frontend
-   bun run build
-   ```
+## 📄 License
 
-2. Host the static files from `packages/frontend/dist` using a web server like Nginx
-
-3. Configure your web server to proxy API requests to the backend
-
-4. Deploy the backend:
-   ```
-   cd packages/backend
-   # Set environment variables
-   bun run src/index.ts
-   ```
-
-## Additional Commands
-
-- Format code:
-
-  ```
-  bunx prettier --write .
-  ```
-
-- Lint code:
-
-  ```
-  bunx eslint .
-  ```
-
-- Fix linting issues:
-  ```
-  bunx eslint . --fix
-  ```
-
-## License
-
-See the LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
