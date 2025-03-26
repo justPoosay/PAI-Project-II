@@ -1,0 +1,6 @@
+- indexed db and sync layer
+- fix sse
+- editing messages
+- update the design
+- support for reasoning
+- better error displaying

@@ -17,7 +17,7 @@
 - Follow Prettier config: 100 char line length, 2 space indent, single quotes
 - Import order: external libs → shared → local modules
 - Use named exports/imports over default exports
-- Use zod/arktype for schema validation and type inference
+- Use arktype for schema validation and type inference
 - Prefer functional approach: arrow functions, immutability (use omit/pick)
 - Error handling: validate inputs with schemas, use try/catch for async operations
 - Use JSDoc comments for important functions/interfaces
