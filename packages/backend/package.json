@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "bun run --watch src/index.ts",
+    "dev": "bun run --env-file=../../.env --watch src/index.ts",
     "db:addTerminatingNullChunk": "bun run src/scripts/addTerminatingNullChunk.ts",
     "type-check": "tsc --noEmit"
   },
