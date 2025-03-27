@@ -16,7 +16,7 @@ jobs:
           bun-version: canary
 
       - name: Install dependencies
-        run: bun install --frozen-lockfile
+        run: bun install
 
       - name: Check types
         run: bun type-check
@@ -34,7 +34,7 @@ jobs:
           bun-version: canary
 
       - name: Install dependencies
-        run: bun install --frozen-lockfile
+        run: bun install
 
       - name: Check code style
         run: bun prettier
@@ -52,7 +52,7 @@ jobs:
           bun-version: canary
 
       - name: Install dependencies
-        run: bun install --frozen-lockfile
+        run: bun install
 
       - name: Check ESLint
         run: bun lint
