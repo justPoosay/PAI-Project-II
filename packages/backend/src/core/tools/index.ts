@@ -1,9 +1,9 @@
 import { type Tool as CoreTool } from 'ai';
-import { repo_file, repo_tree } from '~/core/tools/impl/github';
-import scrape from '~/core/tools/impl/scrape';
-import search from '~/core/tools/impl/search';
-import weather from '~/core/tools/impl/weather';
-import logger from '~/lib/logger';
+import { repo_file, repo_tree } from '../../core/tools/impl/github';
+import scrape from '../../core/tools/impl/scrape';
+import search from '../../core/tools/impl/search';
+import weather from '../../core/tools/impl/weather';
+import logger from '../../lib/logger';
 
 export interface Tool {
   core: CoreTool;

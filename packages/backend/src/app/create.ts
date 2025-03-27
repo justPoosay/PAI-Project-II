@@ -1,13 +1,13 @@
 import { type } from 'arktype';
 import { Model, routes } from 'common';
-import { getAvailableModels } from '~/core/utils';
-import { ConversationService } from '~/lib/database';
-import logger from '~/lib/logger';
-import type { AppRequest } from '~/lib/types';
-import { isValidJSON } from '~/lib/utils';
+import { getAvailableModels } from '../core/utils';
+import { ConversationService } from '../lib/database';
+import logger from '../lib/logger';
+import type { AppRequest } from '../lib/types';
+import { isValidJSON } from '../lib/utils';
 
 export async function POST(req: AppRequest): Promise<Response> {
-  let model = getAvailableModels()[0];
+  let model = getAvailableModels()[0] ?? 'o3-mini';
   const data = await req.text();
   logger.trace('/create', { data });
   if (isValidJSON(data)) {

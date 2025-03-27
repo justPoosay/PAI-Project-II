@@ -1,10 +1,10 @@
 import { tool } from 'ai';
 import { getAccount, getJson } from 'serpapi';
 import { z } from 'zod';
-import type { Tool } from '~/core/tools';
-import { search } from '~/core/tools/utils/search';
-import logger from '~/lib/logger';
-import { env } from '~/lib/utils';
+import type { Tool } from '../../../core/tools';
+import { search } from '../../../core/tools/utils/search';
+import logger from '../../../lib/logger';
+import { env } from '../../../lib/utils';
 
 let thirdPartySearchAPIAvailable = false;
 

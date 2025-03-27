@@ -1,5 +1,5 @@
 import { routes } from 'common';
-import { ConversationService } from '~/lib/database';
+import { ConversationService } from '../lib/database';
 
 export async function GET(): Promise<Response> {
   const cs = await ConversationService.find({ archived: false });

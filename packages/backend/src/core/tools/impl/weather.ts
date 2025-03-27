@@ -1,8 +1,8 @@
 import { tool } from 'ai';
 import { z } from 'zod';
-import type { Tool } from '~/core/tools';
-import logger from '~/lib/logger';
-import { env } from '~/lib/utils';
+import type { Tool } from '../../../core/tools';
+import logger from '../../../lib/logger';
+import { env } from '../../../lib/utils';
 
 const baseUrl = 'https://api.weatherapi.com/v1';
 

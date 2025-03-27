@@ -1,5 +1,5 @@
-import { closeDB, ConversationService } from '~/lib/database';
-import { pick } from '~/lib/utils';
+import { closeDB, ConversationService } from '../lib/database';
+import { pick } from '../lib/utils';
 
 export default async function addTerminatingNullChunk() {
   const conversations = await ConversationService.find();

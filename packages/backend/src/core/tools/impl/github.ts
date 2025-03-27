@@ -1,10 +1,10 @@
 import { tool } from 'ai';
 import { Octokit } from 'octokit';
 import { z } from 'zod';
-import type { Tool } from '~/core/tools';
-import { getFileContent, getRepositoryTree } from '~/core/tools/utils/github';
-import logger from '~/lib/logger';
-import { env } from '~/lib/utils';
+import type { Tool } from '../../../core/tools';
+import { getFileContent, getRepositoryTree } from '../../../core/tools/utils/github';
+import logger from '../../../lib/logger';
+import { env } from '../../../lib/utils';
 
 export const repo_tree = {
   dependency() {

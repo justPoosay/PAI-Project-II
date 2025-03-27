@@ -1,5 +1,5 @@
 import { Model, models } from 'common';
-import { env } from '~/lib/utils';
+import { env } from '../lib/utils';
 
 export function getAvailableModels() {
   return Object.entries(models)

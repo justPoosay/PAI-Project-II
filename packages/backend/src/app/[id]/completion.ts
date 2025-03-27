@@ -5,12 +5,11 @@ import { Message, Model, models } from 'common';
 import dayjs from 'dayjs';
 import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
-import { emitter } from '~';
-import tools from '~/core/tools';
-import { ConversationService } from '~/lib/database';
-import logger from '~/lib/logger';
-import type { AppRequest } from '~/lib/types';
-import { pick } from '~/lib/utils';
+import tools from '../../core/tools';
+import { ConversationService } from '../../lib/database';
+import logger from '../../lib/logger';
+import type { AppRequest } from '../../lib/types';
+import { pick } from '../../lib/utils';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -28,7 +27,7 @@ interface IError {
 }
 
 export async function POST(req: AppRequest): Promise<Response> {
-  const c = await ConversationService.findOne(req.route.params.id, { archived: false });
+  const c = await ConversationService.findOne(req.route.params.id!, { archived: false });
   let opts: typeof options.infer;
 
   if (!c) {
@@ -193,7 +192,7 @@ export async function POST(req: AppRequest): Promise<Response> {
         for await (const delta of comp.textStream) {
           newName += delta;
           if (newName !== 'null') {
-            emitter.emit('sse', { kind: 'rename', for: c.id, newName });
+            // emitter.emit('sse', { kind: 'rename', for: c.id, newName });
           }
         }
         if (newName !== 'null') {
@@ -202,12 +201,12 @@ export async function POST(req: AppRequest): Promise<Response> {
       } catch (e) {
         if (e instanceof Error) {
           logger.error('Error renaming chat', e.message);
-          emitter.emit('sse', {
-            kind: 'error',
-            for: c.id,
-            title: 'Error renaming chat',
-            message: e.name + ': ' + e.message
-          });
+          // emitter.emit('sse', {
+          //   kind: 'error',
+          //   for: c.id,
+          //   title: 'Error renaming chat',
+          //   message: e.name + ': ' + e.message
+          // });
         }
       }
     }

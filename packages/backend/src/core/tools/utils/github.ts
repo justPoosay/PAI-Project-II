@@ -40,19 +40,19 @@ export async function getRepositoryTree(
         const currentPath = parentPath ? `${parentPath}/${currentPart}` : currentPart;
         const isLastPart = i === parts.length - 1;
 
-        if (!pathMap.get(parentPath)?.children.includes(currentPath)) {
-          pathMap.get(parentPath)?.children.push(currentPath);
+        if (!pathMap.get(parentPath)?.children.includes(currentPath!)) {
+          pathMap.get(parentPath)?.children.push(currentPath!);
         }
 
-        if (!pathMap.has(currentPath)) {
-          pathMap.set(currentPath, {
-            name: currentPart,
+        if (!pathMap.has(currentPath!)) {
+          pathMap.set(currentPath!, {
+            name: currentPart!,
             type: isLastPart ? (item.type === 'tree' ? 'directory' : 'file') : 'directory',
             children: []
           });
         }
 
-        parentPath = currentPath;
+        parentPath = currentPath!;
       }
     }
 

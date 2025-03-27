@@ -1,6 +1,6 @@
 import { type } from 'arktype';
 import { color } from 'bun';
-import { LogLevel } from '~/lib/schemas';
+import { LogLevel } from './schemas';
 
 export function isValidJSON(str: string): boolean {
   try {
@@ -48,7 +48,7 @@ export const Env = type({
 
   'GITHUB_PAT?': 'string',
 
-  LOG_LEVEL: LogLevel.default('info')
+  LOG_LEVEL: LogLevel
 });
 
 const out = Env(Bun.env);
