@@ -1,6 +1,5 @@
-import { isBackendAlive } from '@/lib/utils.ts';
-import { type } from 'arktype';
-import { Model, routes } from 'common';
+import { trpc } from '@/lib/trpc';
+import { Model } from 'common';
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 
@@ -10,20 +9,10 @@ export const useModelStore = defineStore('models', () => {
 
   async function $fetch() {
     try {
-      const res = await fetch('/api/models');
-      if (!res.ok) {
-        const alive = await isBackendAlive();
-        if (!alive) throw new Error('Backend seems to be dead');
-        throw new Error(res.statusText);
-      }
-      const out = routes['models'](await res.json());
-      if (out instanceof type.errors) throw new Error('Backend provided bogus data');
-      models.value = out;
+      models.value = await trpc.models.query();
       error.value = null;
     } catch (e) {
-      if (e instanceof Error) {
-        error.value = e.message;
-      }
+      error.value = `${e}`;
     }
   }
 

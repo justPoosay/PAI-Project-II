@@ -76,6 +76,7 @@
 </template>
 
 <script setup lang="ts">
+import { trpc } from '@/lib/trpc';
 import { useConversationStore } from '@/stores/conversations.ts';
 import { ChevronLeftIcon, Pencil, PlusIcon, Trash2Icon } from 'lucide-vue-next';
 import { storeToRefs } from 'pinia';
@@ -159,8 +160,7 @@ function cancelEdit() {
 
 async function deleteConversation(id: string) {
   try {
-    const res = await fetch(`/api/${id}/modify`, { method: 'DELETE' });
-    if (!res.ok) throw new Error('Failed to delete conversation');
+    await trpc.conversation.delete.mutate({ id });
     conversationStore.conversations = conversationStore.conversations.filter(c => c.id !== id);
     if (router.currentRoute.value.params.id === id) {
       await router.push({ name: 'c', params: { id: 'new' } });

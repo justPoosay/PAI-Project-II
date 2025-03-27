@@ -216,13 +216,14 @@ import Loader from '@/components/loader.vue';
 import ModelSelector from '@/components/model-selector.vue';
 import ToolResult from '@/components/tool-result.vue';
 import { parseMarkdown } from '@/lib/markdown.ts';
-import type { Conversation, Nullish } from '@/lib/types.ts';
-import { calculateHash, capitalize, isBackendAlive, safeParse } from '@/lib/utils.ts';
+import { trpc } from '@/lib/trpc';
+import type { Nullish } from '@/lib/types.ts';
+import { capitalize, safeParse } from '@/lib/utils.ts';
 import router from '@/router';
 import { useConversationStore } from '@/stores/conversations.ts';
 import { useModelStore } from '@/stores/models.ts';
 import { type } from 'arktype';
-import { Message, MessageChunk, models, routes, SSE, type Model } from 'common';
+import { Conversation, Message, MessageChunk, models, SSE, type Model } from 'common';
 import {
   CheckIcon,
   ChevronUpIcon,
@@ -241,10 +242,11 @@ import {
   XIcon,
   type LucideProps
 } from 'lucide-vue-next';
-import { computed, nextTick, onMounted, ref, watch, type FunctionalComponent, type Ref } from 'vue';
+import SuperJSON from 'superjson';
+import { computed, nextTick, onMounted, ref, watch, type FunctionalComponent } from 'vue';
 import { onBeforeRouteUpdate, useRoute } from 'vue-router';
 
-type FileData = Omit<(typeof routes.upload.infer)[0], 'id'> & { id?: string; href: string };
+type FileData = Record<string, undefined>; //Omit<(typeof routes.upload.infer)[0], 'id'> & { id?: string; href: string };
 type AssistantMessage = Extract<typeof Message.infer, { role: 'assistant' }>;
 
 const route = useRoute();
@@ -256,7 +258,7 @@ const messages = ref<{ loading: boolean; error: string | null; array: (typeof Me
   error: null,
   array: []
 });
-const conversation = ref<Conversation | null>(
+const conversation = ref<typeof Conversation.infer | null>(
   conversationStore.conversations.find(c => c.id === route.params.id) ?? null
 );
 const input = ref('');
@@ -277,72 +279,73 @@ const toolIcons: Record<string, FunctionalComponent<LucideProps, {}, any, {}>> =
   default: HammerIcon
 };
 
-function showErrorPopup(err: NonNullable<typeof error extends Ref<infer U> ? U : never>) {
-  error.value = err;
-  showError.value = true;
+// function showErrorPopup(err: NonNullable<typeof error extends Ref<infer U> ? U : never>) {
+//   error.value = err;
+//   showError.value = true;
 
-  const msPerWord = 500;
+//   const msPerWord = 500;
 
-  setTimeout(
-    () => {
-      showError.value = false;
-    },
-    err.message.split(' ').length * msPerWord
-  );
-}
+//   setTimeout(
+//     () => {
+//       showError.value = false;
+//     },
+//     err.message.split(' ').length * msPerWord
+//   );
+// }
 
 function copyToClipboard(text: string) {
   navigator.clipboard.writeText(text);
 }
 
 async function upload(fileList: FileList | undefined) {
-  if (!fileList?.length || !models[model.value].capabilities.includes('imageInput')) {
-    return;
-  }
+  return fileList;
+  // if (!fileList?.length || !models[model.value].capabilities.includes('imageInput')) {
+  //   return;
+  // }
 
-  const files = Array.from<File>(fileList);
-  const fileData = (
-    await Promise.all(
-      files.map<Promise<FileData>>(async file => ({
-        hash: (await calculateHash(await file.arrayBuffer())).hex,
-        href: URL.createObjectURL(file),
-        image: file.type.startsWith('image/')
-      }))
-    )
-  ).filter(f => !uploads.value.find(u => u.hash === f.hash));
+  // const files = Array.from<File>(fileList);
+  // const fileData = (
+  //   await Promise.all(
+  //     files.map<Promise<FileData>>(async file => ({
+  //       hash: (await calculateHash(await file.arrayBuffer())).hex,
+  //       href: URL.createObjectURL(file),
+  //       image: file.type.startsWith('image/')
+  //     }))
+  //   )
+  // ).filter(f => !uploads.value.find(u => u.hash === f.hash));
 
-  if (!fileData.length) {
-    return;
-  }
+  // if (!fileData.length) {
+  //   return;
+  // }
 
-  uploads.value.push(...fileData);
-  const formData = new FormData();
-  files.forEach(file => formData.append('file', file));
+  // uploads.value.push(...fileData);
+  // const formData = new FormData();
+  // files.forEach(file => formData.append('file', file));
 
-  const res = await fetch('/api/upload', {
-    method: 'POST',
-    body: formData
-  });
+  // const res = await fetch('/api/upload', {
+  //   method: 'POST',
+  //   body: formData
+  // });
 
-  if (!res.ok) {
-    console.log('Failed to upload files');
-    uploads.value = uploads.value.filter(file => !fileData.find(f => f.hash === file.hash));
-    return;
-  }
+  // if (!res.ok) {
+  //   console.log('Failed to upload files');
+  //   uploads.value = uploads.value.filter(file => !fileData.find(f => f.hash === file.hash));
+  //   return;
+  // }
 
-  const out = routes['upload'](await res.json());
-  if (!(out instanceof type.errors)) {
-    uploads.value.forEach(file => {
-      const data = out.find(f => f.hash === file.hash);
-      if (data) {
-        file.id = data.id;
-        URL.revokeObjectURL(file.href);
-        file.href = '/api/upload/' + data.id;
-      }
-    });
-  } else {
-    uploads.value = uploads.value.filter(file => !fileData.find(f => f.hash === file.hash));
-  }
+  // const out = routes['upload'](await res.json());
+  // if (!(out instanceof type.errors)) {
+  //   uploads.value.forEach(file => {
+  //     const data = out.find(f => f.hash === file.hash);
+  //     if (data) {
+  //       file.id = data.id;
+  //       URL.revokeObjectURL(file.href);
+  //       file.href = '/api/upload/' + data.id;
+  //     }
+  //   });
+  // } else {
+  //   uploads.value = uploads.value.filter(file => !fileData.find(f => f.hash === file.hash));
+  // }
 }
 
 const model = ref(modelStore.models[0]);
@@ -383,34 +386,21 @@ function fetchMessages(id: string) {
     );
   }
 
-  fetch(`/api/${id}/messages`)
-    .then(res => {
+  trpc.conversation.getMessages
+    .query({ id })
+    .then(msgs => {
       messages.value.loading = false;
 
-      if (!res.ok) {
-        return isBackendAlive().then(alive => {
-          if (!alive) return (messages.value.error = 'Backend seems to be dead');
-          messages.value.error = res.statusText;
-        });
+      if (messages.value.array.length > msgs.length) {
+        const lastIndex = msgs.length - 1;
+        const local = messages.value.array[lastIndex];
+        const remote = msgs[lastIndex];
+        // if both messages are the same and the last message is not finished, don't update
+        if (equals(local, remote) && !finished(messages.value.array.at(-1))) return;
       }
 
-      res.json().then(data => {
-        const out = routes['[id]']['messages'](data);
-        if (!(out instanceof type.errors)) {
-          if (messages.value.array.length > out.length) {
-            const lastIndex = out.length - 1;
-            const local = messages.value.array[lastIndex];
-            const remote = out[lastIndex];
-            // if both messages are the same and the last message is not finished, don't update
-            if (equals(local, remote) && !finished(messages.value.array.at(-1))) return;
-          }
-
-          messages.value.array = out;
-          localStorage.setItem(id, JSON.stringify(out));
-        } else {
-          messages.value.error = 'Backend provided bogus data';
-        }
-      });
+      messages.value.array = msgs;
+      localStorage.setItem(id, SuperJSON.stringify(msgs));
     })
     .catch(e => {
       messages.value.loading = false;
@@ -444,33 +434,33 @@ onBeforeRouteUpdate((to, from, next) => {
 onMounted(() => {
   init(route.params.id as string);
 
-  function setupSSE() {
-    const sse = new EventSource('/api/sse');
+  // function setupSSE() {
+  //   const sse = new EventSource('/api/sse');
 
-    sse.onmessage = e => {
-      const data = JSON.parse(e.data);
-      const msg = SSE(data);
-      if (msg instanceof type.errors) {
-        return;
-      }
-      if (msg?.kind === 'rename') {
-        conversationStore.$modify({ id: msg.for, requestChange: false, name: msg.newName });
-      }
+  //   sse.onmessage = e => {
+  //     const data = JSON.parse(e.data);
+  //     const msg = SSE(data);
+  //     if (msg instanceof type.errors) {
+  //       return;
+  //     }
+  //     if (msg?.kind === 'rename') {
+  //       conversationStore.$modify({ id: msg.for, requestChange: false, name: msg.newName });
+  //     }
 
-      if (msg?.kind === 'error' && msg?.for === route.params.id) {
-        console.error(msg.title + ': ', msg.message);
-        showErrorPopup(msg);
-      }
-    };
+  //     if (msg?.kind === 'error' && msg?.for === route.params.id) {
+  //       console.error(msg.title + ': ', msg.message);
+  //       showErrorPopup(msg);
+  //     }
+  //   };
 
-    sse.onerror = e => {
-      console.error('SSE connection error:', e);
-      sse.close();
-      setTimeout(setupSSE, 1000);
-    };
-  }
+  //   sse.onerror = e => {
+  //     console.error('SSE connection error:', e);
+  //     sse.close();
+  //     setTimeout(setupSSE, 1000);
+  //   };
+  // }
 
-  setupSSE();
+  // setupSSE();
 });
 
 function getContent(msg: typeof Message.infer) {
@@ -549,7 +539,8 @@ async function sendMessage() {
     }
 
     const attachments = models[model.value].capabilities.includes('imageInput')
-      ? (uploads.value.filter(f => !!f.id) as { id: string; image: boolean }[])
+      ? // ? (uploads.value.filter(f => !!f.id) as { id: string; image: boolean }[])
+        []
       : undefined;
 
     messages.value.array.push(

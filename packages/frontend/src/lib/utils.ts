@@ -1,3 +1,4 @@
+import SuperJSON from 'superjson';
 import type { Nullish } from './types';
 
 export function isValidJSON(str: string): boolean {
@@ -13,7 +14,7 @@ export function isValidJSON(str: string): boolean {
 export function safeParse<T = any, F = null>(str: Nullish<string>, fallback = null as F): T | F {
   if (!str) return fallback;
   try {
-    return JSON.parse(str);
+    return SuperJSON.parse(str);
   } catch (e) {
     return fallback;
   }
@@ -21,11 +22,6 @@ export function safeParse<T = any, F = null>(str: Nullish<string>, fallback = nu
 
 export function capitalize(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1);
-}
-
-export async function isBackendAlive(): Promise<boolean> {
-  const res = await fetch('/api/alive');
-  return res.ok;
 }
 
 export async function calculateHash(buffer: ArrayBuffer) {

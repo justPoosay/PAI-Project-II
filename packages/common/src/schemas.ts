@@ -55,7 +55,7 @@ export const Conversation = type({
   id: 'string',
   name: 'string | null',
   model: Model,
-  updated_at: 'string.date'
+  updated_at: 'Date'
 });
 
 export const SSE = type.or(
@@ -74,17 +74,3 @@ export const SSE = type.or(
     kind: "'keep-alive'"
   }
 );
-
-export const routes = Object.freeze({
-  '[id]': {
-    messages: Message.array()
-  },
-  conversations: Conversation.array(),
-  create: Conversation,
-  models: Model.array(),
-  upload: type({
-    id: 'string',
-    hash: 'string',
-    image: 'boolean'
-  }).array()
-});
