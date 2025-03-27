@@ -29,7 +29,9 @@
   },
   "dependencies": {
     "@tanstack/vue-form": "^0.41.4",
+    "@trpc/client": "^11.0.0",
     "arktype": "^2.1.13",
+    "common": "workspace:*",
     "dompurify": "^3.2.4",
     "floating-vue": "^5.2.2",
     "highlight.js": "^11.11.1",
@@ -38,9 +40,9 @@
     "marked-highlight": "^2.2.1",
     "marked-katex-extension": "^5.1.4",
     "pinia": "^2.3.1",
+    "superjson": "^2.2.2",
     "vue": "^3.5.13",
-    "vue-router": "^4.5.0",
-    "common": "workspace:*"
+    "vue-router": "^4.5.0"
   },
   "patchedDependencies": {
     "marked-highlight@2.2.1": "patches/marked-highlight@2.2.1.patch"

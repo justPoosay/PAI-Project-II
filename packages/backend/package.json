@@ -17,16 +17,18 @@
   },
   "dependencies": {
     "@mendable/firecrawl-js": "^1.21.0",
+    "@trpc/server": "^11.0.0",
     "@types/mongodb": "^4.0.7",
     "ai": "^4.2.5",
     "arktype": "^2.1.13",
     "cheerio": "^1.0.0",
+    "common": "workspace:*",
     "dayjs": "^1.11.13",
     "mongodb": "^6.15.0",
     "octokit": "^4.1.2",
     "owoifyx": "^1.0.4",
     "serpapi": "^2.1.0",
-    "zod": "^3.24.2",
-    "common": "workspace:*"
+    "superjson": "^2.2.2",
+    "zod": "^3.24.2"
   }
 }
