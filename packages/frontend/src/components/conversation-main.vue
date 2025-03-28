@@ -193,7 +193,9 @@
               v-else
               @click="
                 abortController.abort();
-                (messages.array[messages.array.length - 1] as typeof AssistantMessage.infer).chunks.push(null);
+                (
+                  messages.array[messages.array.length - 1] as typeof AssistantMessage.infer
+                ).chunks.push(null);
                 abortController = null;
               "
               class="p-2 rounded-full hover:bg-white/5 transition mt-1"
@@ -223,7 +225,15 @@ import router from '@/router';
 import { useConversationStore } from '@/stores/conversations.ts';
 import { useModelStore } from '@/stores/models.ts';
 import { type } from 'arktype';
-import { AssistantMessage, Conversation, Message, MessageChunk, models, SSE, type Model } from 'common';
+import {
+  AssistantMessage,
+  Conversation,
+  Message,
+  MessageChunk,
+  models,
+  SSE,
+  type Model
+} from 'common';
 import {
   CheckIcon,
   ChevronUpIcon,
