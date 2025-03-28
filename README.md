@@ -1,22 +1,23 @@
 # AI Chat Interface 💬
 
-A full-stack AI chat application featuring a Vue 3 frontend and a Bun backend. It supports multiple LLMs, tool usage, and real-time updates.
+A full-stack AI chat application featuring a Vue 3 frontend and a Bun backend, built with end-to-end type safety using tRPC. It supports multiple LLMs, tool usage, and streaming responses.
 
 ## ✨ Key Features
 
-- **Multi-Model Support:** Connects to OpenAI, Anthropic, Groq, and XAI models.
+- **End-to-End Type Safety:** Uses tRPC for robust type safety between the frontend and backend.
+- **Multi-Model Support:** Connects to OpenAI, Anthropic, Groq, and XAI models via the Vercel AI SDK.
 - **Tool Integration:** Empowers models with tools for web search, web scraping, weather lookups, and GitHub repository interaction.
-- **Real-time Updates:** Uses Server-Sent Events (SSE) for live updates (e.g., conversation renaming).
-- **Rich Frontend:** Vue 3 interface with Markdown rendering (including code highlighting & KaTeX), image uploads, and conversation management.
-- **Modern Backend:** Built with Bun, TypeScript, and the Vercel AI SDK.
+- **Streaming Responses:** Leverages tRPC's streaming capabilities for real-time message generation.
+- **Rich Frontend:** Vue 3 interface with Markdown rendering (including code highlighting & KaTeX), image uploads (capability present, upload implementation pending), and conversation management.
+- **Modern Backend:** Built with Bun, TypeScript, and tRPC.
 - **Persistent Storage:** Uses MongoDB to store conversation history.
 - **Containerized:** Includes Docker configuration for easy setup and deployment.
 
 ## 🚀 Tech Stack
 
-- **Frontend:** Vue 3, Vite, Pinia, Tailwind CSS, TypeScript
-- **Backend:** Bun, Hono, Vercel AI SDK, MongoDB, TypeScript
-- **Common:** ArkType (for schema validation)
+- **Frontend:** Vue 3, Vite, Pinia, Tailwind CSS, TypeScript, `@trpc/client`
+- **Backend:** Bun, TypeScript, `@trpc/server`, Vercel AI SDK, MongoDB
+- **Common:** ArkType (for schema validation), SuperJSON (for data serialization)
 - **Deployment:** Docker, Nginx (for frontend serving/proxying)
 
 ## 🏁 Getting Started
@@ -82,7 +83,7 @@ Ensure you have a MongoDB instance running and accessible via the `DATABASE_URL`
 bun run dev
 ```
 
-Access the frontend at `http://localhost:5173`.
+Access the frontend at `http://localhost:5173`. The Vite dev server proxies `/api/trpc` requests to the backend.
 
 ## 🛠️ Development
 
