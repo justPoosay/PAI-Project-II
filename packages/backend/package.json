@@ -10,7 +10,8 @@
   },
   "devDependencies": {
     "@types/bun": "latest",
-    "@types/node": "latest"
+    "@types/node": "latest",
+    "@types/mongodb": "^4.0.7"
   },
   "peerDependencies": {
     "typescript": "latest"
@@ -18,7 +19,6 @@
   "dependencies": {
     "@mendable/firecrawl-js": "^1.21.0",
     "@trpc/server": "^11.0.0",
-    "@types/mongodb": "^4.0.7",
     "ai": "^4.2.5",
     "arktype": "^2.1.13",
     "cheerio": "^1.0.0",
