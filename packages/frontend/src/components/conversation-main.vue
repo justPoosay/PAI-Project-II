@@ -193,7 +193,7 @@
               v-else
               @click="
                 abortController.abort();
-                (messages.array[messages.array.length - 1] as AssistantMessage).chunks.push(null);
+                (messages.array[messages.array.length - 1] as typeof AssistantMessage.infer).chunks.push(null);
                 abortController = null;
               "
               class="p-2 rounded-full hover:bg-white/5 transition mt-1"
@@ -223,7 +223,7 @@ import router from '@/router';
 import { useConversationStore } from '@/stores/conversations.ts';
 import { useModelStore } from '@/stores/models.ts';
 import { type } from 'arktype';
-import { Conversation, Message, MessageChunk, models, SSE, type Model } from 'common';
+import { AssistantMessage, Conversation, Message, MessageChunk, models, SSE, type Model } from 'common';
 import {
   CheckIcon,
   ChevronUpIcon,
@@ -247,7 +247,6 @@ import { computed, nextTick, onMounted, ref, watch, type FunctionalComponent } f
 import { onBeforeRouteUpdate, useRoute } from 'vue-router';
 
 type FileData = Record<string, undefined>; //Omit<(typeof routes.upload.infer)[0], 'id'> & { id?: string; href: string };
-type AssistantMessage = Extract<typeof Message.infer, { role: 'assistant' }>;
 
 const route = useRoute();
 const conversationStore = useConversationStore();
@@ -583,17 +582,9 @@ interface CompletionOptions {
 
 async function requestCompletion({
   conversationId = route.params.id as string,
-  ...opts
+  message
 }: CompletionOptions) {
   abortController.value = new AbortController();
-  const res = await fetch(`/api/${conversationId}/completion`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(opts),
-    signal: abortController.value.signal
-  });
 
   let msg = messages.value.array.at(-1)!;
   if (msg.role === 'user' || finished(msg)) {
@@ -603,42 +594,15 @@ async function requestCompletion({
         chunks: [],
         author: model.value
       }) - 1;
-    msg = messages.value.array[index] as AssistantMessage;
+    msg = messages.value.array[index] as typeof AssistantMessage.infer;
   }
 
-  const decoder = new TextDecoder();
-  let buffer = '';
-  for await (const chunk of res.body! as ReadableStream<Uint8Array> & AsyncIterable<Uint8Array>) {
-    buffer += decoder.decode(chunk);
-    const lastNewlineIndex = buffer.lastIndexOf('\n');
-    if (lastNewlineIndex !== -1) {
-      const completeChunks = buffer.slice(0, lastNewlineIndex);
-      buffer = buffer.slice(lastNewlineIndex + 1);
+  const stream = await trpc.completion.query({ message: message!, for: conversationId });
 
-      const parts = completeChunks.split('\n');
-      for (const part of parts) {
-        if (part.trim()) {
-          try {
-            const json = JSON.parse(part);
-            const out = MessageChunk(json);
-            if (!(out instanceof type.errors)) msg.chunks.push(out);
-          } catch (e) {
-            console.warn('Failed to parse chunk:', part, e);
-          }
-        }
-      }
-    }
+  for await (const chunk of stream) {
+    msg.chunks.push(chunk);
   }
-  // Handle any remaining data in buffer
-  if (buffer.trim()) {
-    try {
-      const json = JSON.parse(buffer);
-      const out = MessageChunk(json);
-      if (!(out instanceof type.errors)) msg.chunks.push(out);
-    } catch (e) {
-      console.warn('Failed to parse chunk:', buffer, e);
-    }
-  }
+
   abortController.value = null;
   localStorage.setItem(conversationId, JSON.stringify(messages.value.array));
 }

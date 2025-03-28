@@ -38,18 +38,19 @@ export const MessageChunk = type.or(
   'null'
 );
 
-export const Message = type.or(
-  {
-    role: "'user'",
-    content: 'string',
-    'attachmentIds?': 'string[]'
-  },
-  {
-    role: "'assistant'",
-    chunks: MessageChunk.array(),
-    author: Model
-  }
-);
+export const UserMessage = type({
+  role: "'user'",
+  content: 'string',
+  'attachmentIds?': 'string[]'
+});
+
+export const AssistantMessage = type({
+  role: "'assistant'",
+  chunks: MessageChunk.array(),
+  author: Model
+});
+
+export const Message = type.or(UserMessage, AssistantMessage);
 
 export const Conversation = type({
   id: 'string',
