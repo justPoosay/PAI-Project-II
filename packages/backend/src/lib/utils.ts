@@ -36,6 +36,9 @@ export function pick<T extends Record<string, unknown>, K extends keyof T>(
 export const Env = type({
   DATABASE_URL: 'string',
 
+  BETTER_AUTH_SECRET: 'string',
+  BETTER_AUTH_URL: 'string.url',
+
   'OPENAI_API_KEY?': 'string',
   'ANTHROPIC_API_KEY?': 'string',
   'XAI_API_KEY?': 'string',

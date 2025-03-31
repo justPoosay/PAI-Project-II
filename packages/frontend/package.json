@@ -31,6 +31,7 @@
     "@tanstack/vue-form": "^0.41.4",
     "@trpc/client": "^11.0.0",
     "arktype": "^2.1.13",
+    "better-auth": "^1.2.5",
     "common": "workspace:*",
     "dompurify": "^3.2.4",
     "floating-vue": "^5.2.2",

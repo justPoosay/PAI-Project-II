@@ -21,6 +21,7 @@
     "@trpc/server": "^11.0.0",
     "ai": "^4.2.5",
     "arktype": "^2.1.13",
+    "better-auth": "^1.2.5",
     "cheerio": "^1.0.0",
     "common": "workspace:*",
     "dayjs": "^1.11.13",

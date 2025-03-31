@@ -1,4 +1,5 @@
-import { closeDB, ConversationService } from '../lib/database';
+import { closeDB } from '../lib/database';
+import { ConversationService } from '../lib/database/services/ConversationService';
 import { pick } from '../lib/utils';
 
 export default async function addTerminatingNullChunk() {
