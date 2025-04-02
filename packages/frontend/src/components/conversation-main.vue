@@ -4,7 +4,7 @@
     <!-- Chat Messages -->
     <div
       v-if="!messages.loading && !messages.error && messages.array.length"
-      class="flex-1 overflow-y-auto p-4 pb-36 overflow-x-hidden"
+      class="flex-1 overflow-y-auto p-4 pb-28 overflow-x-hidden"
     >
       <div class="max-w-5xl mx-auto">
         <div v-for="(message, i) in messages.array" :key="i" class="mb-2 relative">
@@ -125,11 +125,11 @@
     <ErrorPopup :show="showError" :error="error" />
     <!-- Input Area -->
     <div
-      class="absolute bottom-4 left-4 right-4 z-10 pointer-events-none"
+      class="absolute bottom-0 left-4 right-4 z-10 pointer-events-none"
       @drop.prevent="upload($event.dataTransfer?.files)"
     >
       <div
-        class="flex flex-col items-start max-w-2xl mx-auto bg-gradient-to-br from-vue-black/30 via-vue-black-soft/20 to-vue-black/30 dark:bg-none dark:bg-vue-black backdrop-blur-md rounded-xl p-2 shadow-lg pointer-events-auto"
+        class="flex flex-col items-start max-w-2xl mx-auto bg-gradient-to-br from-vue-black/30 via-vue-black-soft/20 to-vue-black/30 dark:bg-none dark:bg-vue-black backdrop-blur-md rounded-xl rounded-b-none p-2 shadow-lg pointer-events-auto"
       >
         <div v-if="uploads.length" class="flex">
           <div v-for="file in uploads" class="relative" v-bind:key="file.hash">

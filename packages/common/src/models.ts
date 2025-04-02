@@ -3,6 +3,7 @@ import { groq } from '@ai-sdk/groq';
 import { openai } from '@ai-sdk/openai';
 import { xai } from '@ai-sdk/xai';
 import type { LanguageModelV1 } from 'ai';
+import type { Env } from '../../backend/src/lib/utils';
 import type { Model } from './schemas';
 
 export interface ModelInfo {
@@ -11,7 +12,7 @@ export interface ModelInfo {
   logoSrc: string;
   description: string | null;
   model: LanguageModelV1;
-  env: string;
+  env: keyof typeof Env.infer;
 }
 
 export const models: Record<typeof Model.infer, ModelInfo> = {

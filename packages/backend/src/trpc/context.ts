@@ -1,13 +1,30 @@
 import { type FetchCreateContextFnOptions } from '@trpc/server/adapters/fetch';
+import { auth } from '../lib/auth';
 import { ConversationService } from '../lib/database/services/ConversationService';
+import logger from '../lib/logger';
 
-export function createContext({ req, resHeaders }: FetchCreateContextFnOptions) {
+export async function createContext({ req, resHeaders, info }: FetchCreateContextFnOptions) {
+  const session = await auth.api.getSession(req);
+
+  logger.trace(
+    '[tRPC]',
+    info.calls.map(c => c.path).join(','),
+    'by',
+    session?.user?.email ?? 'anonymous'
+  );
+
   return {
     req,
     resHeaders,
     db: {
       conversations: ConversationService
-    }
+    },
+    auth: session
+      ? {
+          user: session.user,
+          session: session.session
+        }
+      : null
   };
 }
 

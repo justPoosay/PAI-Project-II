@@ -1,4 +1,4 @@
-import * as cheerio from 'cheerio';
+import { load } from 'cheerio';
 
 interface SearchResults {
   success: true;
@@ -15,13 +15,13 @@ interface SearchResults {
 }
 
 // TODO: Captcha handling
-export const search = {
+export const search = Object.freeze({
   async duckduckgo(query: string, page: number) {
     const res = await fetch(
       `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}&t=h_&ia=web&p=${page}`
     );
     const html = await res.text();
-    const $ = cheerio.load(html);
+    const $ = load(html);
 
     const zci = $('.zci');
     const zero_click_abstract = zci.find('#zero_click_abstract');
@@ -56,5 +56,7 @@ export const search = {
       zci: result_zci,
       results
     } satisfies SearchResults;
-  }
-} as const;
+  },
+  google: null,
+  bing: null
+});

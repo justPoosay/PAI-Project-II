@@ -41,17 +41,15 @@ export default {
             api_key: env.SERP_API_KEY,
             page
           });
-          return (
-            (result?.organic_results ?? []) as { title: string; link: string; snippet: string }[]
-          ).map(({ title, link, snippet }) => ({
-            title,
-            link,
-            snippet
-          }));
+          return ((result?.organic_results ?? []) as { [key: string]: unknown }[]).map(
+            ({ title, link, snippet }) => ({
+              title,
+              link,
+              snippet
+            })
+          );
         } else {
-          let searchFunction = search[engine as keyof typeof search];
-          if (!searchFunction) searchFunction = search.duckduckgo;
-          return await searchFunction(query, page);
+          return await (search[engine] ?? search.duckduckgo)(query, page);
         }
       } catch (e) {
         if (e instanceof Error) {

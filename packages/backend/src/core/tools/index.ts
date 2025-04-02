@@ -12,13 +12,13 @@ export interface Tool {
   dependency(): (string | null) | Promise<string | null>;
 }
 
-export const tools = {
+export const tools = Object.freeze({
   weather,
   scrape,
   search,
   repo_tree,
   repo_file
-} as const satisfies Record<string, Tool>;
+} satisfies Record<string, Tool>);
 
 const toolEntries = await Promise.all(
   Object.entries(tools).map(

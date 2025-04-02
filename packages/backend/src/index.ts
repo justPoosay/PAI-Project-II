@@ -1,12 +1,16 @@
 import { fetchRequestHandler } from '@trpc/server/adapters/fetch';
 import type { Serve } from 'bun';
 import { auth } from './lib/auth';
+import logger from './lib/logger';
 import { appRouter as router } from './trpc';
 import { createContext } from './trpc/context';
 
 export default {
   async fetch(req) {
     const url = new URL(req.url);
+
+    logger.trace(`${req.method} ${url.pathname}`);
+
     if (url.pathname.startsWith('/auth')) {
       return auth.handler(req);
     }
