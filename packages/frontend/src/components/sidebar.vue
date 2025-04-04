@@ -1,75 +1,26 @@
 <template>
   <div
     :data-expanded="isExpanded"
-    class="flex flex-col bg-gradient-to-b from-gray-300/5 via-gray-300/[2%] to-gray-300/5 dark:bg-none dark:bg-vue-black-darker backdrop-blur-md transition-all duration-300 ease-out w-16 max-lg:w-0 shadow-sm data-[expanded=true]:w-64 light:data-[expanded=true]:rounded-r-xl text-white/75 dark:text-white h-screen z-50 max-lg:fixed"
+    class="top-0 left-0 flex flex-col bg-gradient-to-b from-gray-300/5 via-gray-300/[2%] to-gray-300/5 dark:bg-none dark:bg-vue-black-darker backdrop-blur-md transition-all duration-100 ease-out w-0 shadow-sm data-[expanded=true]:w-64 light:data-[expanded=true]:rounded-r-xl text-white/75 dark:text-white h-screen z-[99999999999] max-lg:fixed"
   >
-    <div class="p-1 pb-0 flex flex-col h-full relative">
-      <div
-        :data-expanded="isExpanded"
-        class="flex data-[expanded=false]:max-lg:flex-col-reverse justify-center data-[expanded=true]:justify-between lg:justify-between data-[expanded=true]:items-center data-[expanded=false]:max-lg:absolute data-[expanded=false]:max-lg:p-1 data-[expanded=false]:max-lg:bg-white/10 data-[expanded=false]:max-lg:backdrop-blur-sm data-[expanded=false]:max-lg:rounded-full"
-      >
-        <RouterLink
-          to="/c/new"
-          class="p-2 rounded-full hover:bg-white/5 transition"
-          :title="isExpanded ? 'New Chat' : ''"
-        >
-          <PlusIcon class="w-5 h-5" />
-        </RouterLink>
-        <button @click="toggleSidebar" class="p-2 rounded-full hover:bg-white/5 transition">
-          <ChevronLeftIcon
-            :data-expanded="isExpanded"
-            class="w-5 h-5 data-[expanded=true]: data-[expanded=false]:rotate-180 transition-all duration-300 ease-out"
-          />
+    <div class="flex flex-col h-full w-64">
+      <div class="flex flex-row items-start relative p-1">
+        <button @click="toggleSidebar" class="p-2 hover:bg-gray-300/10 rounded-md">
+          <SidebarIcon class="w-4 h-4" />
         </button>
       </div>
+
       <div
         :data-expanded="isExpanded"
-        class="w-full h-[2px] bg-white/15 mt-1 data-[expanded=false]:max-lg:hidden"
-      />
-      <div class="flex-1 space-y-1 overflow-y-auto pt-1">
-        <div
-          v-for="[group, conversations] in Object.entries(groups).filter(v => v[1].length)"
-          v-bind:key="group"
+        class="flex flex-col p-1 space-y-3 flex-grow transition-transform duration-100 ease-out data-[expanded=false]:-translate-x-full"
+      >
+        <RouterLink
+          class="bg-gradient-to-br from-green-500 to-emerald-500 py-1 rounded-md text-sm font-semibold text-center block"
+          to="/c/new"
+          :tabindex="isExpanded ? 0 : -1"
         >
-          <div class="text-white/50 text-sm px-2 py-1" :key="group">{{ group }}</div>
-          <div v-for="c in conversations" :key="c.id">
-            <VMenu v-if="editingId !== c.id" placement="right">
-              <RouterLink
-                :data-current="router.currentRoute.value.params.id === c.id"
-                :to="`/c/${c.id}`"
-                class="flex-grow block py-2 px-2 rounded transition-all duration-300 ease-out from-white/5 via-white/[2%] to-white/5 data-[current=true]:shadow-md dark:data-[current=true]:shadow-none dark:data-[current=true]:bg-vue-black-mute hover:bg-gradient-to-r dark:hover:bg-emerald-500 dark:hover:bg-none overflow-hidden hover:pl-4"
-              >
-                <span class="block truncate" :title="c.name ?? undefined">{{
-                  c.name ?? 'Untitled'
-                }}</span>
-              </RouterLink>
-
-              <template #popper>
-                <div class="flex p-2 text-white/75 dark:text-white space-x-2">
-                  <button title="delete" @click="deleteConversation(c.id)">
-                    <Trash2Icon class="w-5 h-5" />
-                  </button>
-                  <button title="rename" @click="startEdit(c)">
-                    <Pencil class="w-5 h-5" />
-                  </button>
-                </div>
-              </template>
-            </VMenu>
-            <input
-              v-else
-              v-model="editedName"
-              @keydown.enter="saveEdit(c.id)"
-              @keydown.esc="cancelEdit"
-              @blur="cancelEdit"
-              class="flex-grow block py-2 px-2 rounded bg-white/10 dark:bg-vue-black text-white focus:outline-none focus:ring-0 w-full"
-              :ref="
-                el => {
-                  if (el) (el as HTMLInputElement).focus();
-                }
-              "
-            />
-          </div>
-        </div>
+          New Chat
+        </RouterLink>
       </div>
     </div>
   </div>
@@ -78,10 +29,10 @@
 <script setup lang="ts">
 import { trpc } from '@/lib/trpc';
 import { useConversationStore } from '@/stores/conversations.ts';
-import { ChevronLeftIcon, Pencil, PlusIcon, Trash2Icon } from 'lucide-vue-next';
+import { SidebarIcon } from 'lucide-vue-next';
 import { storeToRefs } from 'pinia';
 import { computed, onMounted, onUnmounted, type Ref, ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { RouterLink, useRouter } from 'vue-router';
 
 const router = useRouter();
 const isExpanded = ref(true);
@@ -90,8 +41,6 @@ const editedName = ref('');
 
 const conversationStore = useConversationStore();
 const { conversations } = storeToRefs(conversationStore);
-
-// const showSettingModal = defineModel<boolean>({ required: true });
 
 type Conversations = typeof conversations extends Ref<infer U> ? U : never;
 
