@@ -1,11 +1,11 @@
 import { SSE } from 'common';
 import express from 'express';
 import EventEmitter from 'node:events';
-import { messages } from './app/[id]/messages';
 import { conversations } from './app/conversations';
-import { modify } from './app/[id]/modify';
 import { create } from './app/create';
 import { getAvailableModels } from './core/utils';
+import { routerID } from './app/[id]/messages';
+import { routerIDmodify } from './app/[id]/modify';
 
 
 export const emitter = new EventEmitter<{
@@ -18,9 +18,9 @@ setInterval(() => {
 
 const app = express();
 
-app.use('/messages', messages);
+app.use('/:id', routerID);
 app.use('/conversations', conversations);
-app.use('/modify', modify);
+app.use('/:id', routerIDmodify);
 app.use('/create', create);
 
 app.get('/models', (_ , res) => {

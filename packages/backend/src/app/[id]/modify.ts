@@ -4,14 +4,20 @@ import express from 'express';
 import { ConversationService } from '~/lib/database';
 import { isValidJSON } from '~/lib/utils';
 
-export const modify = express.Router();
+export const routerIDmodify = express.Router();
 
-modify.delete('/:id', async (req, res) => {
+
+routerIDmodify.use((req, res, next) => {
+  res.locals.id = req.params.id;
+  next();
+});
+
+routerIDmodify.delete('/modify', async (req, res) => {
   await ConversationService.update(req.route.params.id, { archived: true });
   res.status(204).send(null);
 });
 
-modify.patch('/:id', async (req, res) => {
+routerIDmodify.patch('/modify', async (req, res) => {
   const userSuppliedData = await req.body();
   if (!isValidJSON(userSuppliedData)) {
     res.status(400).send(null);
