@@ -1,9 +1,12 @@
+import express, {type Request, type Response} from 'express'
 import { emitter } from '~';
 
 const encoder = new TextEncoder();
 
-export async function GET() {
-  let listener: Parameters<typeof emitter.on<'sse'>>[1];
+export const sse = express.Router();
+
+sse.get('/', async (req: Request, res: Response) => {
+let listener: Parameters<typeof emitter.on<'sse'>>[1];
 
   const stream = new ReadableStream({
     start(controller) {
@@ -27,11 +30,15 @@ export async function GET() {
     }
   });
 
-  return new Response(stream, {
+  res.send(stream + " " + {
     headers: {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
       Connection: 'keep-alive'
     }
   });
-}
+})
+
+// export async function GET() {
+
+// }

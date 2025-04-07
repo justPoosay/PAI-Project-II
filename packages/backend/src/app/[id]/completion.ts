@@ -1,4 +1,3 @@
-import express, {type Request, type Response} from 'express'
 import { openai } from '@ai-sdk/openai';
 import { type CoreMessage, streamText } from 'ai';
 import { type } from 'arktype';
@@ -13,7 +12,6 @@ import logger from '~/lib/logger';
 import type { AppRequest } from '~/lib/types';
 import { pick } from '~/lib/utils';
 
-export const completion = express.Router();
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -30,7 +28,7 @@ interface IError {
   message: string;
 }
 
-completion.post('/', async (req: Request, res: Response) => {
+export async function POST(req: AppRequest): Promise<Response> {
   const c = await ConversationService.findOne(req.route.params.id, { archived: false });
   let opts: typeof options.infer;
 
@@ -142,7 +140,7 @@ completion.post('/', async (req: Request, res: Response) => {
     abortSignal: abortController.signal
   });
 
-  const ress = new Response(stream.readable, {
+  const res = new Response(stream.readable, {
     headers: {
       'Content-Type': 'application/json',
       'Transfer-Encoding': 'chunked'
@@ -222,9 +220,5 @@ completion.post('/', async (req: Request, res: Response) => {
 
   Promise.allSettled([comp, promise]).catch(writer.abort);
 
-  return ress;
-})
-
-// export async function POST(req: AppRequest): Promise<Response> {
-
-// }
+  return res;
+}
