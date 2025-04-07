@@ -1,6 +1,11 @@
+import express from 'express';
 import { routes } from 'common';
 import { getAvailableModels } from '~/core/utils';
 
-export async function GET(): Promise<Response> {
-  return Response.json(routes['models'].assert(getAvailableModels()));
-}
+export const modelsApp = express.Router();
+
+modelsApp.get('/', (req, res) => {
+  res.json(routes['models'].assert(getAvailableModels()));
+})
+
+

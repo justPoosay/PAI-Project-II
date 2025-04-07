@@ -1,13 +1,16 @@
 import { routes } from 'common';
+import express from 'express';
 import { ConversationService } from '~/lib/database';
 
-export async function GET(): Promise<Response> {
+export const conversations = express.Router();
+
+conversations.get('/', async (req, res) => {
   const cs = await ConversationService.find({ archived: false });
-  return Response.json(
+  res.json(
     routes['conversations'].assert(
       cs
-        .sort((a, b) => b.updated_at.getTime() - a.updated_at.getTime())
-        .map(({ updated_at, ...c }) => ({ ...c, updated_at: updated_at.toISOString() }))
+        .sort((a, b) => b!.updated_at.getTime() - a!.updated_at.getTime())
+        .map(c => ({ ...c, updated_at: c!.updated_at.toISOString() }))
     )
   );
-}
+});

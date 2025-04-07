@@ -1,3 +1,4 @@
+import express, {type Request, type Response} from 'express'
 import { openai } from '@ai-sdk/openai';
 import { type CoreMessage, streamText } from 'ai';
 import { type } from 'arktype';
@@ -11,6 +12,8 @@ import { ConversationService } from '~/lib/database';
 import logger from '~/lib/logger';
 import type { AppRequest } from '~/lib/types';
 import { pick } from '~/lib/utils';
+
+export const completion = express.Router();
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -27,7 +30,7 @@ interface IError {
   message: string;
 }
 
-export async function POST(req: AppRequest): Promise<Response> {
+completion.post('/', async (req: Request, res: Response) => {
   const c = await ConversationService.findOne(req.route.params.id, { archived: false });
   let opts: typeof options.infer;
 
@@ -36,7 +39,7 @@ export async function POST(req: AppRequest): Promise<Response> {
   }
 
   try {
-    const json = await req.json();
+    const json = await req.json
     const out = options(json);
     if (out instanceof type.errors) {
       throw new Error(out.summary);
@@ -85,7 +88,7 @@ export async function POST(req: AppRequest): Promise<Response> {
                 ? rest.content
                 : rest.chunks
                     .filter(v => v?.type === 'text-delta')
-                    .map(v => v.textDelta)
+                    .map(v => v?.textDelta)
                     .join('')
           }) satisfies CoreMessage
       )
@@ -139,7 +142,7 @@ export async function POST(req: AppRequest): Promise<Response> {
     abortSignal: abortController.signal
   });
 
-  const res = new Response(stream.readable, {
+  const ress = new Response(stream.readable, {
     headers: {
       'Content-Type': 'application/json',
       'Transfer-Encoding': 'chunked'
@@ -219,5 +222,9 @@ export async function POST(req: AppRequest): Promise<Response> {
 
   Promise.allSettled([comp, promise]).catch(writer.abort);
 
-  return res;
-}
+  return ress;
+})
+
+// export async function POST(req: AppRequest): Promise<Response> {
+
+// }

@@ -1,30 +1,40 @@
 import { type } from 'arktype';
 import { Conversation, Model } from 'common';
+import express from 'express';
 import { ConversationService } from '~/lib/database';
-import type { AppRequest } from '~/lib/types';
 import { isValidJSON } from '~/lib/utils';
 
-export async function pre(req: AppRequest): Promise<Response | null> {
-  const c = await ConversationService.findOne(req.route.params.id, { archived: false });
-  if (!c) return new Response(null, { status: 404 });
-  return null;
-}
+export const modify = express.Router();
 
-export async function DELETE(req: AppRequest): Promise<Response> {
+modify.delete('/:id', async (req, res) => {
   await ConversationService.update(req.route.params.id, { archived: true });
-  return new Response(null, { status: 204 });
-}
+  res.status(204).send(null);
+});
 
-export async function PATCH(req: AppRequest): Promise<Response> {
-  const userSuppliedData = await req.text();
-  if (!isValidJSON(userSuppliedData)) return new Response(null, { status: 400 });
+modify.patch('/:id', async (req, res) => {
+  const userSuppliedData = await req.body();
+  if (!isValidJSON(userSuppliedData)) {
+    res.status(400).send(null);
+    return;
+  }
   const out = type({
     'name?': 'string | null',
     'model?': Model
   })(JSON.parse(userSuppliedData));
-  if (out instanceof type.errors) return new Response(null, { status: 400 });
+  if (out instanceof type.errors) {
+    res.status(400).send(null);
+    return;
+  }
+
   const updated = await ConversationService.update(req.route.params.id, out);
-  return Response.json(
-    Conversation.assert({ ...updated, updated_at: updated?.updated_at.toISOString() })
-  );
+  res.json(Conversation.assert({ ...updated, updated_at: updated?.updated_at.toISOString() }));
+});
+
+export const pre = () => {
+  return async (req: any, res: any)=> {
+    const c = await ConversationService.findOne(req.params.id, { archived: false });
+    if (!c) { res.status(404).send(null); return;}
+    return null;
+  }
 }
+
