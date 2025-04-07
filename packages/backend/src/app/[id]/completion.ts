@@ -8,7 +8,7 @@ import utc from 'dayjs/plugin/utc';
 import { emitter } from '~';
 import tools from '~/core/tools';
 import { ConversationService } from '~/lib/database';
-import logger from '~/lib/logger';
+import logger from '~/lib/logger';s
 import type { AppRequest } from '~/lib/types';
 import { pick } from '~/lib/utils';
 
