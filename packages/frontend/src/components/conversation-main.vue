@@ -4,7 +4,7 @@
     <!-- Chat Messages -->
     <div
       v-if="!messages.loading && !messages.error && messages.array.length"
-      class="flex-1 overflow-y-auto p-4 pb-28 overflow-x-hidden"
+      class="flex-1 overflow-y-auto p-4 pb-32 dark:pb-28 overflow-x-hidden"
     >
       <div class="max-w-5xl mx-auto">
         <div v-for="(message, i) in messages.array" :key="i" class="mb-2 relative">
@@ -129,7 +129,7 @@
       @drop.prevent="upload($event.dataTransfer?.files)"
     >
       <div
-        class="flex flex-col items-start max-w-2xl mx-auto bg-gradient-to-br from-vue-black/30 via-vue-black-soft/20 to-vue-black/30 dark:bg-none dark:bg-vue-black backdrop-blur-md rounded-xl rounded-b-none p-2 shadow-lg pointer-events-auto"
+        class="flex flex-col items-start max-w-2xl mx-auto bg-[#9F94FF]/5 border border-b-0 border-[#9F94FF]/5 backdrop-blur-lg rounded-xl rounded-b-none p-2 shadow-lg pointer-events-auto"
       >
         <div v-if="uploads.length" class="flex">
           <div v-for="file in uploads" class="relative" v-bind:key="file.hash">
@@ -768,17 +768,17 @@ watch(input, () => {
       @apply bg-white/5
 
 .hljs
-  @apply bg-white/5 dark:bg-[#101010] border-[2px] border-t-0 border-white/10 dark:border-[#303030] rounded-b-xl
+  @apply bg-white/5 dark:bg-[#101010]
 
 .hljs-container
-  @apply flex flex-col light:shadow-md rounded-b-xl
+  @apply flex flex-col light:shadow-md
   &:not(:last-child)
     @apply mb-1
   &:not(:first-child)
     @apply mt-1
 
 .hljs-header
-  @apply bg-white/10 dark:bg-[#181818] flex items-center justify-between py-2 px-3 text-sm mt-1 border-[2px] border-b-0 border-white/10 dark:border-[#303030] rounded-t-xl
+  @apply bg-white/10 dark:bg-[#181818] flex items-center justify-between py-2 px-3 text-sm mt-1
 
 .v-popper--theme-tooltip
   .v-popper__inner

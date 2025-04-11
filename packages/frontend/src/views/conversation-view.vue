@@ -1,6 +1,6 @@
 <template>
   <div
-    class="flex h-full light:selection:bg-white/10 text-white dark:bg-vue-black-soft dark:bg-none bg-[url('/img/bg/Elarun.webp')] bg-cover bg-center bg-origin-border overflow-hidden"
+    class="flex h-full light:selection:bg-white/10 text-white dark:bg-[#151528] dark:bg-none bg-[url('/img/bg/Elarun.webp')] bg-cover bg-center bg-origin-border overflow-hidden"
   >
     <Suspense>
       <ConversationWrapper />
