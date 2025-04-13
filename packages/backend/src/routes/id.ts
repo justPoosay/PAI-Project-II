@@ -1,20 +1,68 @@
-import { openai } from '@ai-sdk/openai';
-import { type CoreMessage, streamText } from 'ai';
+import { streamText, type CoreMessage } from 'ai';
 import { type } from 'arktype';
-import { Message, Model, models } from 'common';
+import { Conversation, Message, Model, models, routes } from 'common';
 import dayjs from 'dayjs';
 import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
+import { Router } from 'express';
 import { emitter } from '~';
 import tools from '~/core/tools';
 import { ConversationService } from '~/lib/database';
 import logger from '~/lib/logger';
-import type { AppRequest } from '~/lib/types';
-import { pick } from '~/lib/utils';
-
+import { isValidJSON, pick } from '~/lib/utils';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
+
+export const IDRouter = Router({ mergeParams: true });
+
+IDRouter.get('/messages', async (req, res) => {
+  const { id } = type({ id: 'string' }).assert(req.params);
+  const c = await ConversationService.findOne(id, { archived: false });
+  res.json(routes['[id]']['messages'].assert(c?.messages ?? []));
+});
+
+IDRouter.use('/modify', async (req, res, next) => {
+  const c = await ConversationService.findOne(type({ id: 'string' }).assert(req.params).id, {
+    archived: false
+  });
+  if (!c) {
+    res.status(404).send(null);
+    return;
+  }
+
+  next();
+});
+
+IDRouter.delete('/modify', async (req, res) => {
+  await ConversationService.update(type({ id: 'string' }).assert(req.params).id, {
+    archived: true
+  });
+  res.status(204).send(null);
+});
+
+IDRouter.patch('/modify', async (req, res) => {
+  logger.debug(req.body);
+
+  if (!isValidJSON(req.body)) {
+    res.status(400).send('invalid json');
+    return;
+  }
+  const out = type({
+    'name?': 'string | null',
+    'model?': Model
+  })(JSON.parse(req.body));
+  if (out instanceof type.errors) {
+    res.status(400).send(out.summary);
+    return;
+  }
+
+  const updated = await ConversationService.update(
+    type({ id: 'string' }).assert(req.params).id,
+    out
+  );
+  res.json(Conversation.assert({ ...updated, updated_at: updated?.updated_at.toISOString() }));
+});
 
 const options = type({
   message: 'string>0 | null',
@@ -28,17 +76,24 @@ interface IError {
   message: string;
 }
 
-export async function POST(req: AppRequest): Promise<Response> {
-  const c = await ConversationService.findOne(req.route.params.id, { archived: false });
+IDRouter.post('/completion', async (req, res) => {
+  const c = await ConversationService.findOne(type({ id: 'string' }).assert(req.params).id, {
+    archived: false
+  });
   let opts: typeof options.infer;
 
   if (!c) {
-    return new Response(null, { status: 404 });
+    res.sendStatus(404);
+    return;
+  }
+
+  if (!isValidJSON(req.body)) {
+    res.status(400).send(null);
+    return;
   }
 
   try {
-    const json = await req.json
-    const out = options(json);
+    const out = options(JSON.parse(req.body));
     if (out instanceof type.errors) {
       throw new Error(out.summary);
     }
@@ -50,11 +105,13 @@ export async function POST(req: AppRequest): Promise<Response> {
       message = e.message;
     }
 
-    return new Response(message, { status: 400 });
+    res.status(400).send(message);
+    return;
   }
 
   if (!opts.message && !opts.attachmentIds?.length && !c.messages.length) {
-    return new Response('nothing to regenerate', { status: 400 });
+    res.status(400).send('nothing to regenerate');
+    return;
   }
 
   if (opts.message /*|| opts.attachmentIds?.length*/) {
@@ -67,11 +124,11 @@ export async function POST(req: AppRequest): Promise<Response> {
   c.messages.push({ role: 'assistant', chunks: [], author: c.model });
   await ConversationService.update(c.id, pick(c, ['messages', 'model']));
 
-  const stream = new TransformStream();
-  const writer = stream.writable.getWriter();
+  res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Transfer-Encoding', 'chunked');
 
   const abortController = new AbortController();
-  req.signal.addEventListener('abort', () => {
+  req.on('close', () => {
     abortController.abort();
   });
 
@@ -133,18 +190,11 @@ export async function POST(req: AppRequest): Promise<Response> {
           >
         );
         if (!opts.plainText) {
-          await writer.write(JSON.stringify(chunk) + '\n');
+          res.write(JSON.stringify(chunk) + '\n');
         }
       }
     },
     abortSignal: abortController.signal
-  });
-
-  const res = new Response(stream.readable, {
-    headers: {
-      'Content-Type': 'application/json',
-      'Transfer-Encoding': 'chunked'
-    }
   });
 
   const promise = new Promise<void>(async function (resolve) {
@@ -152,7 +202,7 @@ export async function POST(req: AppRequest): Promise<Response> {
     try {
       for await (const delta of comp.textStream) {
         if (opts.plainText) {
-          await writer.write(delta);
+          res.write(delta);
         }
       }
     } catch (e) {
@@ -164,7 +214,7 @@ export async function POST(req: AppRequest): Promise<Response> {
           message: e.name + ': ' + e.message
         };
         logger.error(encounteredError);
-        await writer.abort(encounteredError);
+        res.end(JSON.stringify(encounteredError));
       }
     }
 
@@ -172,9 +222,9 @@ export async function POST(req: AppRequest): Promise<Response> {
     if (!encounteredError) {
       try {
         if (!opts.plainText) {
-          await writer.write('null\n');
+          res.write('null\n');
         }
-        await writer.close();
+        res.end();
       } catch (e) {}
     }
 
@@ -185,7 +235,7 @@ export async function POST(req: AppRequest): Promise<Response> {
     if (!encounteredError && c.messages.length >= 2 && !c.name) {
       try {
         const comp = streamText({
-          model: openai('gpt-4o-mini'),
+          model: models['gpt-4o-mini'].model,
           system:
             "Based on the messages provided, create a name up to 20 characters long describing the chat. Don't wrap your response in quotes. If these messages are not enough to create a descriptive name, or its just a greeting of some sort, reply with 'null' (without quotes).",
           prompt: JSON.stringify(getMessages())
@@ -218,7 +268,5 @@ export async function POST(req: AppRequest): Promise<Response> {
     resolve();
   });
 
-  Promise.allSettled([comp, promise]).catch(writer.abort);
-
-  return res;
-}
+  Promise.allSettled([comp, promise]).catch(() => res.end());
+});

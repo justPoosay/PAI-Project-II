@@ -3,6 +3,10 @@ import { color } from 'bun';
 import { LogLevel } from '~/lib/schemas';
 
 export function isValidJSON(str: string): boolean {
+  if (!str) {
+    return false;
+  }
+
   try {
     JSON.parse(str);
     return true;
