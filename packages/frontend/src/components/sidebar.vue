@@ -1,7 +1,7 @@
 <template>
   <div
     :data-expanded="isExpanded"
-    class="flex flex-col bg-gradient-to-b from-gray-300/5 via-gray-300/[2%] to-gray-300/5 dark:bg-none dark:bg-[#0A0A14] backdrop-blur-md transition-all duration-100 ease-out w-0 shadow-sm data-[expanded=true]:w-64 light:data-[expanded=true]:rounded-r-xl text-white/75 dark:text-white h-screen z-[99999999999] max-lg:fixed dark:border-r border-[#4E42A9]/50"
+    class="flex flex-col transition-all duration-100 ease-out w-0 data-[expanded=true]:w-64 max-lg:data-[expanded=true]:rounded-r-xl max-lg:data-[expanded=true]:shadow-md h-screen z-[99999999999] max-lg:fixed max-lg:data-[expanded=true]:border-r max-lg:data-[expanded=true]:border-[#FFD700] max-lg:data-[expanded=true]:dark:border-[#FF69B4] max-lg:data-[expanded=true]:bg-[#F5F0E0] max-lg:data-[expanded=true]:dark:bg-[#2A222A]"
   >
     <div class="flex flex-col h-full w-64 p-1">
       <div class="flex flex-row relative p-1 w-fit flex-shrink-0">
@@ -26,7 +26,7 @@
         class="flex flex-col p-1 space-y-3 flex-grow transition-transform duration-100 ease-out data-[expanded=false]:-translate-x-full overflow-hidden"
       >
         <RouterLink
-          class="bg-gradient-to-b from-[#4E42A9] to-[#322B85] hover:from-[#5B4DC7] hover:to-[#3D349E] py-1.5 rounded-md text-sm font-semibold text-center block border border-[#6D62DC]/50 flex-shrink-0"
+          class="bg-gradient-to-r border from-[#FFD700] to-[#E6C200] hover:from-[#DAB100] hover:to-[#B79400] border-[#E6C200] dark:from-[#FF69B4] dark:to-[#E03E8C] dark:hover:from-[#D63B7D] dark:hover:to-[#B7326A] dark:border-[#D63B7D] py-1.5 rounded-md text-sm font-semibold text-center block flex-shrink-0"
           to="/c/new"
           :tabindex="isExpanded ? 0 : -1"
         >
@@ -34,7 +34,7 @@
         </RouterLink>
         <div class="overflow-y-auto flex-grow min-h-0">
           <div v-for="group in keys(groups)" v-bind:key="group">
-            <p class="text-xs text-[#B8B8D0] font-semibold mb-1" v-if="groups[group].length">
+            <p class="text-xs font-semibold text-[#CEAF00] dark:text-[#FF69B4]" v-if="groups[group].length">
               {{ group }}
             </p>
             <RouterLink
@@ -71,7 +71,8 @@ import { storeToRefs } from 'pinia';
 import { computed, onMounted, onUnmounted, type Ref, ref } from 'vue';
 import { RouterLink } from 'vue-router';
 
-const isExpanded = ref(true);
+const isExpanded = defineModel<boolean>({ required: true });
+const circumstances = ref<Partial<{ force: boolean; narrow: boolean }>>({});
 
 const conversationStore = useConversationStore();
 const { conversations } = storeToRefs(conversationStore);
@@ -79,7 +80,7 @@ const { conversations } = storeToRefs(conversationStore);
 type Conversations = typeof conversations extends Ref<infer U> ? U : never;
 
 const groups = computed(function () {
-  const groups = {
+  const groups = Object.freeze({
     Today(date) {
       const today = new Date();
       return (
@@ -105,7 +106,7 @@ const groups = computed(function () {
     Older() {
       return true;
     }
-  } as const satisfies Record<string, (date: Date) => boolean>;
+  } satisfies Record<string, (date: Date) => boolean>);
 
   return conversations.value.reduce(
     (acc, v) => {
@@ -123,11 +124,19 @@ const groups = computed(function () {
 
 function toggleSidebar() {
   isExpanded.value = !isExpanded.value;
+  circumstances.value = { force: false, narrow: window.innerWidth < 1024 };
 }
 
 function resizeHandler() {
-  if (window.innerWidth < 1024 && isExpanded.value) {
+  if (window.innerWidth < 1024 && isExpanded.value && !circumstances.value.narrow) {
     isExpanded.value = false;
+    circumstances.value.force = true;
+  } else if (window.innerWidth >= 1024) {
+    if (circumstances.value.force) {
+      isExpanded.value = true;
+      circumstances.value.force = false;
+    }
+    circumstances.value.narrow = false;
   }
 }
 

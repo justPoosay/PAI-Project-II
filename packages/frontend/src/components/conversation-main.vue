@@ -59,7 +59,7 @@
                     >
                       <p class="mb-1">{{ JSON.stringify(part.args) }}</p>
                       <ToolResult v-if="part.result" :tool="part" />
-                      <div v-else class="text-white/75">Tool didn't return any data</div>
+                      <div v-else>Tool didn't return any data</div>
                     </div>
                   </div>
                 </template>
@@ -129,79 +129,81 @@
       @drop.prevent="upload($event.dataTransfer?.files)"
     >
       <div
-        class="flex flex-col items-start max-w-2xl mx-auto bg-[#9F94FF]/5 border border-b-0 border-[#9F94FF]/5 backdrop-blur-lg rounded-xl rounded-b-none p-2 shadow-lg pointer-events-auto"
+        class="max-w-2xl mx-auto border border-b-0 bg-[#FFD700]/25 border-[#E6C200]/20 dark:bg-[#FF69B4]/10 dark:border-[#D63B7D]/10 backdrop-blur-sm dark:backdrop-blur-md rounded-xl rounded-b-none p-2 pb-0 shadow-lg pointer-events-auto"
       >
-        <div v-if="uploads.length" class="flex">
-          <div v-for="file in uploads" class="relative" v-bind:key="file.hash">
-            <button
-              class="absolute -top-1.5 right-0 rounded-full bg-vue-black/75 p-[1px]"
-              @click="uploads = uploads.filter(f => f.hash !== file.hash)"
-            >
-              <XIcon class="w-4 h-4" />
-            </button>
-            <img
-              v-if="file.image"
-              :key="file.hash"
-              :src="file.href"
-              :data-disabled="!models[model].capabilities.includes('imageInput')"
-              class="w-12 h-12 rounded-lg mr-2 overflow-hidden data-[disabled=true]:grayscale"
-              alt="File"
-            />
+        <div class="flex flex-col items-start p-2 border border-b-0 bg-[#FFD700]/25 border-[#E6C200]/20 dark:bg-[#FF69B4]/10 dark:border-[#D63B7D]/10 rounded-lg rounded-b-none">
+          <div v-if="uploads.length" class="flex">
+            <div v-for="file in uploads" class="relative" v-bind:key="file.hash">
+              <button
+                class="absolute -top-1.5 right-0 rounded-full p-[1px]"
+                @click="uploads = uploads.filter(f => f.hash !== file.hash)"
+              >
+                <XIcon class="w-4 h-4" />
+              </button>
+              <img
+                v-if="file.image"
+                :key="file.hash"
+                :src="file.href"
+                :data-disabled="!models[model].capabilities.includes('imageInput')"
+                class="w-12 h-12 rounded-lg mr-2 overflow-hidden data-[disabled=true]:grayscale"
+                alt="File"
+              />
+            </div>
           </div>
-        </div>
-        <textarea
-          v-model="input"
-          @keydown="handleKeyDown"
-          placeholder="Type a message..."
-          class="bg-transparent p-1 focus:outline-none w-full resize-none min-h-[4rem] max-h-[10rem] overflow-y-auto"
-          rows="2"
-        />
-        <div class="flex justify-between w-full text-white/75 items-end">
-          <input
-            type="file"
-            multiple
-            accept="image/*"
-            class="hidden"
-            id="file"
-            @change.prevent="upload(($event.target as HTMLInputElement)?.files ?? undefined)"
-            :disabled="!models[model].capabilities.includes('imageInput')"
+          <textarea
+            v-model="input"
+            @keydown="handleKeyDown"
+            placeholder="Type a message..."
+            class="bg-transparent p-1 focus:outline-none w-full resize-none min-h-[4rem] max-h-[10rem] overflow-y-auto"
+            rows="2"
           />
-          <div class="flex p-1">
-            <ModelSelector v-model="model" />
-          </div>
-          <div class="flex items-center">
-            <label
-              :aria-disabled="!models[model].capabilities.includes('imageInput')"
-              class="p-2 rounded-full aria-[disabled=false]:hover:bg-white/5 transition mt-1 aria-[disabled=false]:cursor-pointer aria-[disabled=true]:text-white/25"
-              :title="
-                models[model].capabilities.includes('imageInput')
-                  ? 'Upload File'
-                  : 'This model does not support file input'
-              "
-              for="file"
-            >
-              <PaperclipIcon class="w-5 h-5" />
-            </label>
-            <button
-              v-if="!abortController"
-              @click="sendMessage"
-              class="p-2 rounded-full hover:bg-white/5 transition mt-1"
-            >
-              <SendIcon class="w-5 h-5" />
-            </button>
-            <button
-              v-else
-              @click="
-                abortController.abort();
-                (
-                  messages.array[messages.array.length - 1] as typeof AssistantMessage.infer
-                ).chunks.push(null);
-                abortController = null;
-              "
-              class="p-2 rounded-full hover:bg-white/5 transition mt-1"
-            >
-              <CircleStopIcon class="w-5 h-5" />
-            </button>
+          <div class="flex justify-between w-full items-end">
+            <input
+              type="file"
+              multiple
+              accept="image/*"
+              class="hidden"
+              id="file"
+              @change.prevent="upload(($event.target as HTMLInputElement)?.files ?? undefined)"
+              :disabled="!models[model].capabilities.includes('imageInput')"
+            />
+            <div class="flex p-1">
+              <ModelSelector v-model="model" />
+            </div>
+            <div class="flex items-center">
+              <label
+                :aria-disabled="!models[model].capabilities.includes('imageInput')"
+                class="p-2 rounded-full transition mt-1 aria-[disabled=false]:cursor-pointer aria-[disabled=true]:text-white/25"
+                :title="
+                  models[model].capabilities.includes('imageInput')
+                    ? 'Upload File'
+                    : 'This model does not support file input'
+                "
+                for="file"
+              >
+                <PaperclipIcon class="w-5 h-5" />
+              </label>
+              <button
+                v-if="!abortController"
+                @click="sendMessage"
+                class="p-2 rounded-full hover:bg-white/5 transition mt-1"
+              >
+                <SendIcon class="w-5 h-5" />
+              </button>
+              <button
+                v-else
+                @click="
+                  abortController.abort();
+                  (
+                    messages.array[messages.array.length - 1] as typeof AssistantMessage.infer
+                  ).chunks.push(null);
+                  abortController = null;
+                "
+                class="p-2 rounded-full hover:bg-white/5 transition mt-1"
+              >
+                <CircleStopIcon class="w-5 h-5" />
+              </button>
+            </div>
           </div>
         </div>
       </div>

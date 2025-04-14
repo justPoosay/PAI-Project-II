@@ -1,6 +1,6 @@
 <template>
   <div
-    class="flex h-full light:selection:bg-white/10 text-white dark:bg-[#151528] dark:bg-none bg-[url('/img/bg/Elarun.webp')] bg-cover bg-center bg-origin-border overflow-hidden"
+    class="flex h-full text-[#333333] bg-[#F5F0E0] dark:text-white dark:bg-[#2A222A] overflow-hidden"
   >
     <Suspense>
       <ConversationWrapper />
@@ -10,7 +10,7 @@
           <Loader />
         </div>
         <div v-else class="w-full h-full flex items-center justify-center">
-          <div class="text-center text-white/75">
+          <div class="text-center">
             <h1 class="text-2xl font-bold">Encountered error while fetching vital data</h1>
             <p class="text-lg">{{ error }}</p>
           </div>
