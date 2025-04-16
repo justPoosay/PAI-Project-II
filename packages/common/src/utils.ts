@@ -16,7 +16,7 @@ export function isValidJSON(str: string): boolean {
 }
 
 export function omit<T extends object, K extends keyof T>(obj: T, keys: K[]): Omit<T, K> {
-  const copy = { ...obj };
+  const /*var*/ copy = { ...obj };
   for (const key of keys) {
     delete copy[key];
   }
@@ -24,7 +24,7 @@ export function omit<T extends object, K extends keyof T>(obj: T, keys: K[]): Om
 }
 
 export function pick<T extends object, K extends keyof T>(obj: T, keys: K[]): Pick<T, K> {
-  const copy = {} as Pick<T, K>;
+  const /*var*/ copy = {} as Pick<T, K>;
   for (const key of keys) {
     copy[key] = obj[key];
   }

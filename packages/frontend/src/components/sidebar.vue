@@ -1,7 +1,7 @@
 <template>
   <div
     :data-expanded="isExpanded"
-    class="flex flex-col transition-all duration-100 ease-out w-0 data-[expanded=true]:w-64 max-lg:data-[expanded=true]:rounded-r-xl max-lg:data-[expanded=true]:shadow-md h-screen z-[99999999999] max-lg:fixed max-lg:data-[expanded=true]:border-r max-lg:data-[expanded=true]:border-[#FFD700] max-lg:data-[expanded=true]:dark:border-[#FF69B4] max-lg:data-[expanded=true]:bg-[#F5F0E0] max-lg:data-[expanded=true]:dark:bg-[#2A222A]"
+    class="flex flex-col transition-all duration-100 ease-out w-0 data-[expanded=true]:w-64 sm:max-lg:data-[expanded=true]:rounded-r-xl max-lg:data-[expanded=true]:shadow-md h-screen z-[99999999999] max-lg:fixed max-lg:data-[expanded=true]:border-r max-lg:data-[expanded=true]:border-[#FFD700] max-lg:data-[expanded=true]:dark:border-[#FF69B4] max-lg:data-[expanded=true]:bg-[#F5F0E0] max-lg:data-[expanded=true]:dark:bg-[#2A222A]"
   >
     <div class="flex flex-col h-full w-64 p-1">
       <div class="flex flex-row relative p-1 w-fit flex-shrink-0">

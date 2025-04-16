@@ -125,13 +125,13 @@
     <ErrorPopup :show="showError" :error="error" />
     <!-- Input Area -->
     <div
-      class="absolute bottom-0 left-4 right-4 z-10 pointer-events-none"
+      class="absolute bottom-0 left-0 right-0 sm:left-4 sm:right-4 z-10 pointer-events-none"
       @drop.prevent="upload($event.dataTransfer?.files)"
     >
       <div
-        class="max-w-2xl mx-auto border border-b-0 bg-[#FFD700]/25 border-[#E6C200]/20 dark:bg-[#FF69B4]/10 dark:border-[#D63B7D]/10 backdrop-blur-sm dark:backdrop-blur-md rounded-xl rounded-b-none p-2 pb-0 shadow-lg pointer-events-auto"
+        class="max-w-3xl mx-auto border border-b-0 bg-[#FFD700]/25 border-[#E6C200]/20 dark:bg-[#FF69B4]/5 dark:border-[#D63B7D]/5 backdrop-blur-sm dark:backdrop-blur-md rounded-xl rounded-b-none p-2 pb-0 shadow-lg pointer-events-auto"
       >
-        <div class="flex flex-col items-start p-2 border border-b-0 bg-[#FFD700]/25 border-[#E6C200]/20 dark:bg-[#FF69B4]/10 dark:border-[#D63B7D]/10 rounded-lg rounded-b-none">
+        <div class="flex flex-col items-start p-2 border border-b-0 bg-[#FFD700]/15 border-[#E6C200]/10 dark:bg-[#FF69B4] dark:bg-opacity-[4%] dark:border-[#D63B7D]/5 rounded-lg rounded-b-none">
           <div v-if="uploads.length" class="flex">
             <div v-for="file in uploads" class="relative" v-bind:key="file.hash">
               <button
@@ -154,7 +154,7 @@
             v-model="input"
             @keydown="handleKeyDown"
             placeholder="Type a message..."
-            class="bg-transparent p-1 focus:outline-none w-full resize-none min-h-[4rem] max-h-[10rem] overflow-y-auto"
+            class="bg-transparent focus:outline-none w-full resize-none min-h-[4rem] max-h-[10rem] overflow-y-auto"
             rows="2"
           />
           <div class="flex justify-between w-full items-end">
@@ -167,13 +167,13 @@
               @change.prevent="upload(($event.target as HTMLInputElement)?.files ?? undefined)"
               :disabled="!models[model].capabilities.includes('imageInput')"
             />
-            <div class="flex p-1">
+            <div class="flex">
               <ModelSelector v-model="model" />
             </div>
             <div class="flex items-center">
               <label
                 :aria-disabled="!models[model].capabilities.includes('imageInput')"
-                class="p-2 rounded-full transition mt-1 aria-[disabled=false]:cursor-pointer aria-[disabled=true]:text-white/25"
+                class="p-1 rounded-full transition mt-1 aria-[disabled=false]:cursor-pointer aria-[disabled=true]:text-white/25"
                 :title="
                   models[model].capabilities.includes('imageInput')
                     ? 'Upload File'
@@ -181,14 +181,14 @@
                 "
                 for="file"
               >
-                <PaperclipIcon class="w-5 h-5" />
+                <PaperclipIcon class="w-4 h-4" />
               </label>
               <button
                 v-if="!abortController"
                 @click="sendMessage"
-                class="p-2 rounded-full hover:bg-white/5 transition mt-1"
+                class="p-1 rounded-full hover:bg-white/5 transition mt-1"
               >
-                <SendIcon class="w-5 h-5" />
+                <SendIcon class="w-4 h-4" />
               </button>
               <button
                 v-else
@@ -199,9 +199,9 @@
                   ).chunks.push(null);
                   abortController = null;
                 "
-                class="p-2 rounded-full hover:bg-white/5 transition mt-1"
+                class="p-1 rounded-full hover:bg-white/5 transition mt-1"
               >
-                <CircleStopIcon class="w-5 h-5" />
+                <CircleStopIcon class="w-4 h-4" />
               </button>
             </div>
           </div>
