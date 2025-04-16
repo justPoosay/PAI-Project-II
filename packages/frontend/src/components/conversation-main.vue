@@ -131,7 +131,9 @@
       <div
         class="max-w-3xl mx-auto border border-b-0 bg-[#55CDFC]/25 border-[#55CDFC]/20 dark:bg-[#f7a8b8]/5 dark:border-[#f7a8b8]/5 backdrop-blur-sm dark:backdrop-blur-md rounded-xl rounded-b-none p-2 pb-0 shadow-lg pointer-events-auto"
       >
-        <div class="flex flex-col items-start p-2 border border-b-0 bg-[#55CDFC]/15 border-[#55CDFC]/10 dark:bg-[#f7a8b8] dark:bg-opacity-[4%] dark:border-[#f7a8b8]/5 rounded-lg rounded-b-none">
+        <div
+          class="flex flex-col items-start p-2 border border-b-0 bg-[#55CDFC]/15 border-[#55CDFC]/10 dark:bg-[#f7a8b8] dark:bg-opacity-[4%] dark:border-[#f7a8b8]/5 rounded-lg rounded-b-none"
+        >
           <div v-if="uploads.length" class="flex">
             <div v-for="file in uploads" class="relative" v-bind:key="file.hash">
               <button

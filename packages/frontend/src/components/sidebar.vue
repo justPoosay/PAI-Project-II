@@ -34,7 +34,10 @@
         </RouterLink>
         <div class="overflow-y-auto flex-grow min-h-0">
           <div v-for="group in keys(groups)" v-bind:key="group">
-            <p class="text-xs font-semibold text-[#55CDFC] dark:text-[#F7A8B8]" v-if="groups[group].length">
+            <p
+              class="text-xs font-semibold text-[#55CDFC] dark:text-[#F7A8B8]"
+              v-if="groups[group].length"
+            >
               {{ group }}
             </p>
             <RouterLink
