@@ -1,6 +1,6 @@
 <template>
   <div
-    class="flex h-full text-[#333333] bg-[#F5F0E0] dark:text-white dark:bg-[#2A222A] overflow-hidden"
+    class="flex h-full text-[#333333] bg-[#DDE6F0] dark:text-white dark:bg-[#2A1F2A] overflow-hidden"
   >
     <Suspense>
       <ConversationWrapper />

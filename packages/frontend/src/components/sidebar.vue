@@ -26,7 +26,7 @@
         class="flex flex-col p-1 space-y-3 flex-grow transition-transform duration-100 ease-out data-[expanded=false]:-translate-x-full overflow-hidden"
       >
         <RouterLink
-          class="bg-gradient-to-r border from-[#FFD700] to-[#E6C200] hover:from-[#DAB100] hover:to-[#B79400] border-[#E6C200] dark:from-[#FF69B4] dark:to-[#E03E8C] dark:hover:from-[#D63B7D] dark:hover:to-[#B7326A] dark:border-[#D63B7D] py-1.5 rounded-md text-sm font-semibold text-center block flex-shrink-0"
+          class="bg-gradient-to-r border from-[#55CDFC] to-[#3EB0E2] hover:from-[#2A9FD8] hover:to-[#1E8BC4] border-[#3EB0E2] dark:from-[#F7A8B8] dark:to-[#D08A9E] dark:hover:from-[#C3778C] dark:hover:to-[#A86479] dark:border-[#C3778C] py-1.5 rounded-md text-sm font-semibold text-center block flex-shrink-0"
           to="/c/new"
           :tabindex="isExpanded ? 0 : -1"
         >
@@ -34,7 +34,7 @@
         </RouterLink>
         <div class="overflow-y-auto flex-grow min-h-0">
           <div v-for="group in keys(groups)" v-bind:key="group">
-            <p class="text-xs font-semibold text-[#CEAF00] dark:text-[#FF69B4]" v-if="groups[group].length">
+            <p class="text-xs font-semibold text-[#55CDFC] dark:text-[#F7A8B8]" v-if="groups[group].length">
               {{ group }}
             </p>
             <RouterLink

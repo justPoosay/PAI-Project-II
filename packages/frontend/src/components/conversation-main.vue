@@ -22,7 +22,7 @@
             />
             <div
               :data-self="message.role === 'user'"
-              class="max-w-[80%] dark:max-w-[90%] max-md:max-w-full p-2 data-[self=false]:pb-3 relative backdrop-blur-md bg-clip-padding rounded-tl-2xl rounded-tr-2xl data-[self=true]:rounded-bl-2xl data-[self=false]:rounded-br-2xl shadow-lg dark:shadow-none bg-gradient-to-tr from-white/10 via-white/5 to-white/10 data-[self=true]:bg-gradient-to-tl data-[self=true]:from-white/5 data-[self=true]:via-white/[3%] data-[self=true]:to-white/5 dark:bg-none dark:data-[self=true]:bg-[#2A2A2A] dark:rounded-lg dark:data-[self=true]:rounded-bl-lg dark:data-[self=false]:rounded-br-lg"
+              class="max-w-[80%] dark:max-w-[90%] max-md:max-w-full p-2 data-[self=false]:pb-3 relative rounded-tl-2xl rounded-tr-2xl data-[self=true]:rounded-bl-2xl data-[self=false]:rounded-br-2xl shadow-lg dark:shadow-none light:bg-[#D8E6F0] data-[self=true]:bg-[#B3D6E6] dark:data-[self=true]:bg-[#3E2A3E] dark:rounded-lg dark:data-[self=true]:rounded-bl-lg dark:data-[self=false]:rounded-br-lg"
             >
               <template v-if="getParts(message).length">
                 <template v-for="(part, partIndex) of getParts(message)">
@@ -129,9 +129,9 @@
       @drop.prevent="upload($event.dataTransfer?.files)"
     >
       <div
-        class="max-w-3xl mx-auto border border-b-0 bg-[#FFD700]/25 border-[#E6C200]/20 dark:bg-[#FF69B4]/5 dark:border-[#D63B7D]/5 backdrop-blur-sm dark:backdrop-blur-md rounded-xl rounded-b-none p-2 pb-0 shadow-lg pointer-events-auto"
+        class="max-w-3xl mx-auto border border-b-0 bg-[#55CDFC]/25 border-[#55CDFC]/20 dark:bg-[#f7a8b8]/5 dark:border-[#f7a8b8]/5 backdrop-blur-sm dark:backdrop-blur-md rounded-xl rounded-b-none p-2 pb-0 shadow-lg pointer-events-auto"
       >
-        <div class="flex flex-col items-start p-2 border border-b-0 bg-[#FFD700]/15 border-[#E6C200]/10 dark:bg-[#FF69B4] dark:bg-opacity-[4%] dark:border-[#D63B7D]/5 rounded-lg rounded-b-none">
+        <div class="flex flex-col items-start p-2 border border-b-0 bg-[#55CDFC]/15 border-[#55CDFC]/10 dark:bg-[#f7a8b8] dark:bg-opacity-[4%] dark:border-[#f7a8b8]/5 rounded-lg rounded-b-none">
           <div v-if="uploads.length" class="flex">
             <div v-for="file in uploads" class="relative" v-bind:key="file.hash">
               <button
@@ -154,7 +154,7 @@
             v-model="input"
             @keydown="handleKeyDown"
             placeholder="Type a message..."
-            class="bg-transparent focus:outline-none w-full resize-none min-h-[4rem] max-h-[10rem] overflow-y-auto"
+            class="bg-transparent focus:outline-none w-full resize-none min-h-[4rem] max-h-[10rem] overflow-y-auto light:placeholder:text-black/70"
             rows="2"
           />
           <div class="flex justify-between w-full items-end">
