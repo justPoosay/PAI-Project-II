@@ -11,7 +11,7 @@ export default {
 
     logger.trace(`${req.method} ${url.pathname}`);
 
-    if (url.pathname.startsWith('/auth')) {
+    if (url.pathname.startsWith('/api/auth')) {
       return auth.handler(req);
     }
 

@@ -23,7 +23,7 @@
 
       <div
         :data-expanded="isExpanded"
-        class="flex flex-col p-1 space-y-3 flex-grow transition-transform duration-100 ease-out data-[expanded=false]:-translate-x-full overflow-hidden"
+        class="flex flex-col p-1 space-y-1 flex-grow transition-transform duration-100 ease-out data-[expanded=false]:-translate-x-full overflow-hidden"
       >
         <RouterLink
           class="bg-gradient-to-r border from-[#55CDFC] to-[#3EB0E2] hover:from-[#2A9FD8] hover:to-[#1E8BC4] border-[#3EB0E2] dark:from-[#F7A8B8] dark:to-[#D08A9E] dark:hover:from-[#C3778C] dark:hover:to-[#A86479] dark:border-[#C3778C] py-1.5 rounded-md text-sm font-semibold text-center block flex-shrink-0"
@@ -52,14 +52,34 @@
             </RouterLink>
           </div>
         </div>
-        <div class="flex-shrink-0 flex">
+        <div class="flex-shrink-0 flex pt-1">
           <RouterLink
+            v-if="!session.data"
             to="/login"
             class="w-full flex items-center space-x-2 p-2 rounded-xl hover:bg-gray-300/10"
           >
             <LogInIcon class="w-4 h-4" />
             <p>Login</p>
           </RouterLink>
+          <button
+            v-else
+            class="w-full flex items-center space-x-2 p-2 rounded-xl hover:bg-gray-300/10"
+          >
+            <img
+              v-if="session.data?.user?.image"
+              :src="session.data.user.image"
+              alt="User Avatar"
+              class="w-9 h-9 rounded-full"
+            />
+            <div class="flex flex-col items-start">
+              <p class="text-sm font-semibold m-0">
+                {{ session.data.user.name ?? 'User' }}
+              </p>
+              <p class="text-xs text-gray-500 dark:text-gray-400 m-0">
+                {{ 'Pro' /* TODO */ }}
+              </p>
+            </div>
+          </button>
         </div>
       </div>
     </div>
@@ -67,12 +87,15 @@
 </template>
 
 <script setup lang="ts">
+import { useSession } from '@/lib/auth-client';
 import { useConversationStore } from '@/stores/conversations.ts';
 import { keys } from 'common/utils';
 import { LogInIcon, PlusIcon, SearchIcon, SidebarIcon } from 'lucide-vue-next';
 import { storeToRefs } from 'pinia';
 import { computed, onMounted, onUnmounted, type Ref, ref } from 'vue';
 import { RouterLink } from 'vue-router';
+
+const session = useSession();
 
 const isExpanded = defineModel<boolean>({ required: true });
 const circumstances = ref<Partial<{ force: boolean; narrow: boolean }>>({});

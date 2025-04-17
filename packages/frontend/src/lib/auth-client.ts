@@ -1,3 +1,5 @@
 import { createAuthClient } from 'better-auth/vue';
 
-export const { signIn, signOut, useSession } = createAuthClient({});
+export const { signIn, signOut, useSession } = createAuthClient({
+  basePath: '/api/auth'
+});
