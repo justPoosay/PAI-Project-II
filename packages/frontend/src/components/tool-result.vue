@@ -6,7 +6,7 @@
         v-if="!(tool.result.success ?? false)"
         class="inline-flex items-center space-x-2 text-red-500"
       >
-        <CircleAlertIcon class="w-4 h-4" />
+        <CircleAlertIcon class="h-4 w-4" />
         <p>{{ tool.result.error }}</p>
       </div>
       <div v-else v-html="parseMarkdown(tool.result.markdown)" class="markdown-content" />
@@ -17,7 +17,7 @@
         v-if="!(tool.result.success ?? true)"
         class="inline-flex items-center space-x-2 text-red-500"
       >
-        <CircleAlertIcon class="w-4 h-4" />
+        <CircleAlertIcon class="h-4 w-4" />
         <p>{{ tool.result.error }}</p>
       </div>
       <div v-else class="flex flex-col space-y-2">
@@ -34,13 +34,13 @@
         >
           <div class="inline-block">
             <a
-              class="text-lg text-sky-400 hover:underline dark:text-blue-500 -mb-1"
+              class="-mb-1 text-lg text-sky-400 hover:underline dark:text-blue-500"
               :href="result.url"
               >{{ result.title }}</a
             >
           </div>
           <div class="inline-block">
-            <a class="hover:underline text-emerald-400" :href="result.url">{{ result.url }}</a>
+            <a class="text-emerald-400 hover:underline" :href="result.url">{{ result.url }}</a>
           </div>
           <p>{{ result.snippet }}</p>
         </div>
@@ -61,7 +61,7 @@ import { CircleAlertIcon } from 'lucide-vue-next';
 defineProps<{
   tool: {
     name: string;
-    result: any; // eslint-disable-line
+    result: any; // eslint-disable-line @typescript-eslint/no-explicit-any
   };
 }>();
 

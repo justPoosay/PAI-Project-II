@@ -5,20 +5,13 @@ import { ref } from 'vue';
 
 export const useModelStore = defineStore('models', () => {
   const models = ref<(typeof Model.infer)[]>([]);
-  const error = ref<string | null>();
 
   async function $fetch() {
-    try {
-      models.value = await trpc.models.query();
-      error.value = null;
-    } catch (e) {
-      error.value = `${e}`;
-    }
+    models.value = await trpc.models.query();
   }
 
   return {
     models,
-    $fetch,
-    error
+    $fetch
   };
 });

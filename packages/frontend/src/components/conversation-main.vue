@@ -1,20 +1,20 @@
 <template>
   <!-- Chat Area -->
-  <div class="flex-1 flex flex-col relative">
+  <div class="relative flex flex-1 flex-col">
     <!-- Chat Messages -->
     <div
       v-if="!messages.loading && !messages.error && messages.array.length"
-      class="flex-1 overflow-y-auto p-4 pb-32 dark:pb-28 overflow-x-hidden"
+      class="flex-1 overflow-y-auto overflow-x-hidden p-4 pb-32 dark:pb-28"
     >
-      <div class="max-w-5xl mx-auto">
-        <div v-for="(message, i) in messages.array" :key="i" class="mb-2 relative">
+      <div class="mx-auto max-w-5xl">
+        <div v-for="(message, i) in messages.array" :key="i" class="relative mb-2">
           <div
             :data-self="message.role === 'user'"
-            class="flex justify-start data-[self=true]:justify-end items-end dark:items-start space-x-2"
+            class="flex items-end justify-start space-x-2 data-[self=true]:justify-end dark:items-start"
           >
             <img
               v-if="message.role === 'assistant'"
-              class="w-6 h-6 dark:mt-2 max-md:hidden"
+              class="h-6 w-6 max-md:hidden dark:mt-2"
               :alt="message.author"
               :src="models[message.author].logoSrc"
               width="24"
@@ -22,7 +22,7 @@
             />
             <div
               :data-self="message.role === 'user'"
-              class="max-w-[80%] dark:max-w-[90%] max-md:max-w-full p-2 data-[self=false]:pb-3 relative rounded-tl-2xl rounded-tr-2xl data-[self=true]:rounded-bl-2xl data-[self=false]:rounded-br-2xl shadow-lg dark:shadow-none light:bg-[#D8E6F0] data-[self=true]:bg-[#B3D6E6] dark:data-[self=true]:bg-[#3E2A3E] dark:rounded-lg dark:data-[self=true]:rounded-bl-lg dark:data-[self=false]:rounded-br-lg"
+              class="light:bg-[#D8E6F0] relative max-w-[80%] rounded-tl-2xl rounded-tr-2xl p-2 shadow-lg data-[self=false]:rounded-br-2xl data-[self=true]:rounded-bl-2xl data-[self=true]:bg-[#B3D6E6] data-[self=false]:pb-3 max-md:max-w-full dark:max-w-[90%] dark:rounded-lg dark:shadow-none dark:data-[self=false]:rounded-br-lg dark:data-[self=true]:rounded-bl-lg dark:data-[self=true]:bg-[#3E2A3E]"
             >
               <template v-if="getParts(message).length">
                 <template v-for="(part, partIndex) of getParts(message)">
@@ -34,28 +34,28 @@
                   />
                   <div v-else class="m-1 ml-0" v-bind:key="partIndex">
                     <button
-                      class="inline-flex items-center space-x-1 rounded-lg p-1 text-sm bg-white/15 dark:bg-vue-black-mute cursor-pointer"
+                      class="dark:bg-vue-black-mute inline-flex cursor-pointer items-center space-x-1 rounded-lg bg-white/15 p-1 text-sm"
                       @click="
                         unfoldedTools.includes(part.id)
                           ? (unfoldedTools = unfoldedTools.filter(v => v !== part.id))
                           : unfoldedTools.push(part.id)
                       "
                     >
-                      <component :is="toolIcons[part.name] ?? toolIcons.default" class="w-4 h-4" />
-                      <div class="inline-flex items-center space-x-3 select-none">
+                      <component :is="toolIcons[part.name] ?? toolIcons.default" class="h-4 w-4" />
+                      <div class="inline-flex select-none items-center space-x-3">
                         <p>{{ capitalize(part.name) }}</p>
-                        <LoaderCircleIcon class="w-4 h-4 animate-spin" v-if="!('result' in part)" />
+                        <LoaderCircleIcon class="h-4 w-4 animate-spin" v-if="!('result' in part)" />
                         <ChevronUpIcon
                           v-else-if="part.result"
                           :data-folded="!unfoldedTools.includes(part.id)"
-                          class="w-4 h-4 data-[folded=true]:rotate-180 transition-all duration-100 ease-in-out"
+                          class="h-4 w-4 transition-all duration-100 ease-in-out data-[folded=true]:rotate-180"
                         />
-                        <CheckIcon v-else class="w-4 h-4 text-green-500" />
+                        <CheckIcon v-else class="h-4 w-4 text-green-500" />
                       </div>
                     </button>
                     <div
                       v-if="unfoldedTools.includes(part.id) && 'result' in part"
-                      class="mt-1 border-l-2 border-white/30 pl-2 break-words text-sm"
+                      class="mt-1 break-words border-l-2 border-white/30 pl-2 text-sm"
                     >
                       <p class="mb-1">{{ JSON.stringify(part.args) }}</p>
                       <ToolResult v-if="part.result" :tool="part" />
@@ -78,24 +78,24 @@
                     message.role === 'assistant' &&
                     (finished(message) || (!finished(message) && !abortController))
                   "
-                  class="flex p-0.5 dark:pl-0 rounded-md light:bg-white/15 backdrop-blur-sm light:absolute light:-bottom-3 light:left-1 light:shadow-md dark:space-x-1.5"
+                  class="light:bg-white/15 light:absolute light:-bottom-3 light:left-1 light:shadow-md flex rounded-md p-0.5 backdrop-blur-sm dark:space-x-1.5 dark:pl-0"
                 >
                   <button
                     v-if="finished(message)"
                     v-tooltip="'Copy'"
                     @click="copyToClipboard(getContent(message))"
-                    class="hover:bg-white/5 transition p-1 rounded-md"
+                    class="rounded-md p-1 transition hover:bg-white/5"
                   >
-                    <CopyIcon class="w-3 h-3 dark:w-5 dark:h-5" />
+                    <CopyIcon class="h-3 w-3 dark:h-5 dark:w-5" />
                   </button>
                   <button
                     v-if="lastMessage === message"
                     v-tooltip="'Regenerate'"
                     @click="regenerateLastMessage"
-                    class="hover:bg-white/5 transition p-1 rounded-md group"
+                    class="group rounded-md p-1 transition hover:bg-white/5"
                   >
                     <RefreshCwIcon
-                      class="w-3 h-3 dark:w-5 dark:h-5 transition-all duration-500 group-hover:rotate-[360deg]"
+                      class="h-3 w-3 transition-all duration-500 group-hover:rotate-[360deg] dark:h-5 dark:w-5"
                     />
                   </button>
                 </div>
@@ -105,7 +105,7 @@
         </div>
       </div>
     </div>
-    <div v-else class="flex-1 flex items-center justify-center">
+    <div v-else class="flex flex-1 items-center justify-center">
       <div
         class="text-center"
         v-if="!messages.loading && !messages.error && !messages.array.length"
@@ -124,15 +124,12 @@
 
     <ErrorPopup :show="showError" :error="error" />
     <!-- Input Area -->
-    <div
-      class="absolute bottom-0 left-0 right-0 sm:left-4 sm:right-4 z-10 pointer-events-none"
-      @drop.prevent="upload($event.dataTransfer?.files)"
-    >
+    <div class="pointer-events-none absolute bottom-0 left-0 right-0 z-10 sm:left-4 sm:right-4">
       <div
-        class="max-w-3xl mx-auto border border-b-0 bg-[#55CDFC]/25 border-[#55CDFC]/20 dark:bg-[#f7a8b8]/5 dark:border-[#f7a8b8]/5 backdrop-blur-sm dark:backdrop-blur-md rounded-xl rounded-b-none p-2 pb-0 shadow-lg pointer-events-auto"
+        class="pointer-events-auto mx-auto max-w-3xl rounded-3xl rounded-b-none border border-b-0 border-[#55CDFC]/20 bg-[#55CDFC]/25 p-2 pb-0 shadow-lg backdrop-blur-sm dark:border-[#f7a8b8]/5 dark:bg-[#f7a8b8]/5 dark:backdrop-blur-md"
       >
         <div
-          class="flex flex-col items-start p-2 border border-b-0 bg-[#55CDFC]/15 border-[#55CDFC]/10 dark:bg-[#f7a8b8] dark:bg-opacity-[4%] dark:border-[#f7a8b8]/5 rounded-lg rounded-b-none"
+          class="flex flex-col items-start rounded-2xl rounded-b-none border border-b-0 border-[#55CDFC]/10 bg-[#55CDFC]/15 p-1 dark:border-[#f7a8b8]/5 dark:bg-[#f7a8b8] dark:bg-opacity-[4%]"
         >
           <div v-if="uploads.length" class="flex">
             <div v-for="file in uploads" class="relative" v-bind:key="file.hash">
@@ -140,14 +137,14 @@
                 class="absolute -top-1.5 right-0 rounded-full p-[1px]"
                 @click="uploads = uploads.filter(f => f.hash !== file.hash)"
               >
-                <XIcon class="w-4 h-4" />
+                <XIcon class="h-4 w-4" />
               </button>
               <img
                 v-if="file.image"
                 :key="file.hash"
                 :src="file.href"
                 :data-disabled="!models[model].capabilities.includes('imageInput')"
-                class="w-12 h-12 rounded-lg mr-2 overflow-hidden data-[disabled=true]:grayscale"
+                class="mr-2 h-12 w-12 overflow-hidden rounded-lg data-[disabled=true]:grayscale"
                 alt="File"
               />
             </div>
@@ -156,11 +153,11 @@
             v-model="input"
             @keydown="handleKeyDown"
             placeholder="Type a message..."
-            class="bg-transparent focus:outline-none w-full resize-none min-h-[4rem] max-h-[10rem] overflow-y-auto light:placeholder:text-black/70"
+            class="light:placeholder:text-black/70 max-h-[10rem] min-h-[4rem] w-full resize-none overflow-y-auto bg-transparent p-1 focus:outline-none"
             rows="2"
           />
-          <div class="flex justify-between w-full items-end">
-            <input
+          <div class="flex w-full items-end justify-between">
+            <!-- <input
               type="file"
               multiple
               accept="image/*"
@@ -168,14 +165,14 @@
               id="file"
               @change.prevent="upload(($event.target as HTMLInputElement)?.files ?? undefined)"
               :disabled="!models[model].capabilities.includes('imageInput')"
-            />
+            /> -->
             <div class="flex">
               <ModelSelector v-model="model" />
             </div>
             <div class="flex items-center">
               <label
                 :aria-disabled="!models[model].capabilities.includes('imageInput')"
-                class="p-1 rounded-full transition mt-1 aria-[disabled=false]:cursor-pointer aria-[disabled=true]:text-white/25"
+                class="mt-1 rounded-full p-1 transition aria-[disabled=false]:cursor-pointer aria-[disabled=true]:text-white/25"
                 :title="
                   models[model].capabilities.includes('imageInput')
                     ? 'Upload File'
@@ -183,14 +180,14 @@
                 "
                 for="file"
               >
-                <PaperclipIcon class="w-4 h-4" />
+                <PaperclipIcon class="h-4 w-4" />
               </label>
               <button
                 v-if="!abortController"
                 @click="sendMessage"
-                class="p-1 rounded-full hover:bg-white/5 transition mt-1"
+                class="mt-1 rounded-full p-1 transition hover:bg-white/5"
               >
-                <SendIcon class="w-4 h-4" />
+                <SendIcon class="h-4 w-4" />
               </button>
               <button
                 v-else
@@ -201,9 +198,9 @@
                   ).chunks.push(null);
                   abortController = null;
                 "
-                class="p-1 rounded-full hover:bg-white/5 transition mt-1"
+                class="mt-1 rounded-full p-1 transition hover:bg-white/5"
               >
-                <CircleStopIcon class="w-4 h-4" />
+                <CircleStopIcon class="h-4 w-4" />
               </button>
             </div>
           </div>
@@ -282,8 +279,8 @@ const abortController = ref<AbortController | null>(null);
 const unfoldedTools = ref<FullToolCall['id'][]>([]);
 const lastMessage = computed(() => messages.value.array?.at(-1) ?? null);
 
-// eslint-disable-next-line
-const toolIcons: Record<string, FunctionalComponent<LucideProps, {}, any, {}>> = {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const toolIcons: Record<string, FunctionalComponent<LucideProps, any, any, any>> = {
   weather: SunIcon,
   scrape: GlobeIcon,
   search: SearchIcon,
@@ -292,76 +289,11 @@ const toolIcons: Record<string, FunctionalComponent<LucideProps, {}, any, {}>> =
   default: HammerIcon
 };
 
-// function showErrorPopup(err: NonNullable<typeof error extends Ref<infer U> ? U : never>) {
-//   error.value = err;
-//   showError.value = true;
-
-//   const msPerWord = 500;
-
-//   setTimeout(
-//     () => {
-//       showError.value = false;
-//     },
-//     err.message.split(' ').length * msPerWord
-//   );
-// }
-
 function copyToClipboard(text: string) {
   navigator.clipboard.writeText(text);
 }
 
-async function upload(fileList: FileList | undefined) {
-  return fileList;
-  // if (!fileList?.length || !models[model.value].capabilities.includes('imageInput')) {
-  //   return;
-  // }
-
-  // const files = Array.from<File>(fileList);
-  // const fileData = (
-  //   await Promise.all(
-  //     files.map<Promise<FileData>>(async file => ({
-  //       hash: (await calculateHash(await file.arrayBuffer())).hex,
-  //       href: URL.createObjectURL(file),
-  //       image: file.type.startsWith('image/')
-  //     }))
-  //   )
-  // ).filter(f => !uploads.value.find(u => u.hash === f.hash));
-
-  // if (!fileData.length) {
-  //   return;
-  // }
-
-  // uploads.value.push(...fileData);
-  // const formData = new FormData();
-  // files.forEach(file => formData.append('file', file));
-
-  // const res = await fetch('/api/upload', {
-  //   method: 'POST',
-  //   body: formData
-  // });
-
-  // if (!res.ok) {
-  //   console.log('Failed to upload files');
-  //   uploads.value = uploads.value.filter(file => !fileData.find(f => f.hash === file.hash));
-  //   return;
-  // }
-
-  // const out = routes['upload'](await res.json());
-  // if (!(out instanceof type.errors)) {
-  //   uploads.value.forEach(file => {
-  //     const data = out.find(f => f.hash === file.hash);
-  //     if (data) {
-  //       file.id = data.id;
-  //       URL.revokeObjectURL(file.href);
-  //       file.href = '/api/upload/' + data.id;
-  //     }
-  //   });
-  // } else {
-  //   uploads.value = uploads.value.filter(file => !fileData.find(f => f.hash === file.hash));
-  // }
-}
-
-const model = ref(modelStore.models[0]);
+const model = ref<typeof Model.infer>(modelStore.models[0] ?? 'o3-mini');
 watch(model, function (newValue, oldValue) {
   if (newValue !== oldValue && conversation.value && conversation.value.model !== newValue) {
     conversationStore.$modify({ id: conversation.value.id, model: newValue });
@@ -374,7 +306,7 @@ function init(id: string) {
   messages.value = { loading: false, error: null, array: [] };
   const c = conversationStore.conversations.find(c => c.id === id) ?? null;
   conversation.value = c;
-  model.value = c?.model ?? modelStore.models[0];
+  model.value = c?.model ?? modelStore.models[0] ?? 'o3-mini';
   error.value = null;
   showError.value = false;
 
@@ -406,8 +338,8 @@ function fetchMessages(id: string) {
 
       if (messages.value.array.length > msgs.length) {
         const lastIndex = msgs.length - 1;
-        const local = messages.value.array[lastIndex];
-        const remote = msgs[lastIndex];
+        const local = messages.value.array[lastIndex]!;
+        const remote = msgs[lastIndex]!;
         // if both messages are the same and the last message is not finished, don't update
         if (equals(local, remote) && !finished(messages.value.array.at(-1))) return;
       }
@@ -446,34 +378,6 @@ onBeforeRouteUpdate((to, from, next) => {
 
 onMounted(() => {
   init(route.params.id as string);
-
-  // function setupSSE() {
-  //   const sse = new EventSource('/api/sse');
-
-  //   sse.onmessage = e => {
-  //     const data = JSON.parse(e.data);
-  //     const msg = SSE(data);
-  //     if (msg instanceof type.errors) {
-  //       return;
-  //     }
-  //     if (msg?.kind === 'rename') {
-  //       conversationStore.$modify({ id: msg.for, requestChange: false, name: msg.newName });
-  //     }
-
-  //     if (msg?.kind === 'error' && msg?.for === route.params.id) {
-  //       console.error(msg.title + ': ', msg.message);
-  //       showErrorPopup(msg);
-  //     }
-  //   };
-
-  //   sse.onerror = e => {
-  //     console.error('SSE connection error:', e);
-  //     sse.close();
-  //     setTimeout(setupSSE, 1000);
-  //   };
-  // }
-
-  // setupSSE();
 });
 
 function getContent(msg: typeof Message.infer) {
@@ -551,10 +455,7 @@ async function sendMessage() {
       await router.push({ name: 'c', params: { id } });
     }
 
-    const attachments = models[model.value].capabilities.includes('imageInput')
-      ? // ? (uploads.value.filter(f => !!f.id) as { id: string; image: boolean }[])
-        []
-      : undefined;
+    const attachments = models[model.value].capabilities.includes('imageInput') ? [] : undefined;
 
     messages.value.array.push(
       {

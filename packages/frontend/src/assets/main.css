@@ -176,7 +176,7 @@
 html,
 body,
 #app {
-  @apply h-full font-sf_pro_rounded;
+  @apply font-sf_pro_rounded h-full;
 }
 
 ::-webkit-scrollbar {

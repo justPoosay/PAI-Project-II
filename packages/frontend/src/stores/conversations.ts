@@ -5,15 +5,9 @@ import { ref } from 'vue';
 
 export const useConversationStore = defineStore('conversations', () => {
   const conversations = ref<(typeof Conversation.infer)[]>([]);
-  const error = ref<string | null>();
 
   async function $fetch() {
-    try {
-      conversations.value = await trpc.conversations.get.query();
-      error.value = null;
-    } catch (e) {
-      error.value = `${e}`;
-    }
+    conversations.value = await trpc.conversations.get.query();
   }
 
   async function $create(
@@ -42,13 +36,16 @@ export const useConversationStore = defineStore('conversations', () => {
       return;
     }
 
-    conversations.value[index] = { ...conversations.value[index], ...data, updated_at: new Date() };
+    conversations.value[index] = {
+      ...conversations.value[index]!,
+      ...data,
+      updated_at: new Date()
+    };
   }
 
   return {
     conversations,
     $fetch,
-    error,
     $create,
     $modify
   };

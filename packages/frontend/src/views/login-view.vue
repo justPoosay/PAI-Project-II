@@ -1,19 +1,19 @@
 <template>
   <div
-    class="flex h-full text-[#333333] bg-[#DDE6F0] dark:text-white dark:bg-[#2A1F2A] overflow-hidden"
+    class="flex h-full overflow-hidden bg-[#DDE6F0] text-[#333333] dark:bg-[#2A1F2A] dark:text-white"
   >
-    <div class="w-full flex items-center justify-center p-4">
+    <div class="flex w-full items-center justify-center p-4">
       <div
-        class="w-full max-w-md [--bg:#E7F0F8] dark:[--bg:#352A35] rounded-xl p-8 shadow-md border-2 dark:border border-transparent bg-clip-padding [background:linear-gradient(var(--bg),var(--bg))_padding-box,linear-gradient(var(--angle,225deg),#FF000E,#FF7300,#FAD220,#138F3E,#3558A0,#880082)_border-box] animate-[rotate-gradient_5s_linear_infinite]"
+        class="w-full max-w-md animate-[rotate-gradient_5s_linear_infinite] rounded-xl border-2 border-transparent bg-clip-padding p-8 shadow-md [--bg:#E7F0F8] [background:linear-gradient(var(--bg),var(--bg))_padding-box,linear-gradient(var(--angle,225deg),#FF000E,#FF7300,#FAD220,#138F3E,#3558A0,#880082)_border-box] dark:border dark:[--bg:#352A35]"
       >
-        <h1 class="text-3xl font-bold text-center mb-8">Welcome Back</h1>
+        <h1 class="mb-8 text-center text-3xl font-bold">Welcome Back</h1>
 
         <div class="space-y-6">
           <button
             @click="signIn.social({ provider: 'github' })"
-            class="w-full py-3 px-4 text-black dark:text-white font-medium rounded-lg bg-white dark:bg-[#352A35] border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-[#2A1F2A] focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-purple-500 transition-colors flex items-center justify-center space-x-2"
+            class="flex w-full items-center justify-center space-x-2 rounded-lg border border-gray-300 bg-white px-4 py-3 font-medium text-black transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-[#352A35] dark:text-white dark:hover:bg-[#2A1F2A] dark:focus:ring-purple-500"
           >
-            <img :src="GitHub" alt="GitHub" class="w-6 h-6" />
+            <img :src="GitHub" alt="GitHub" class="h-6 w-6" />
             <span>Sign in with GitHub</span>
           </button>
         </div>

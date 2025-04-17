@@ -1,81 +1,95 @@
 <template>
   <div
     :data-expanded="isExpanded"
-    class="flex flex-col transition-all duration-100 ease-out w-0 data-[expanded=true]:w-64 sm:max-lg:data-[expanded=true]:rounded-r-xl max-lg:data-[expanded=true]:shadow-md h-screen z-[99999999999] max-lg:fixed max-lg:data-[expanded=true]:border-r max-lg:data-[expanded=true]:border-[#FFD700] max-lg:data-[expanded=true]:dark:border-[#FF69B4] max-lg:data-[expanded=true]:bg-[#F5F0E0] max-lg:data-[expanded=true]:dark:bg-[#2A222A]"
+    class="z-[99999999999] flex h-screen w-0 flex-col transition-all duration-100 ease-out data-[expanded=true]:w-64 max-lg:fixed max-lg:data-[expanded=true]:border-r max-lg:data-[expanded=true]:border-[#FFD700] max-lg:data-[expanded=true]:bg-[#F5F0E0] max-lg:data-[expanded=true]:shadow-md sm:max-lg:data-[expanded=true]:rounded-r-xl max-lg:data-[expanded=true]:dark:border-[#FF69B4] max-lg:data-[expanded=true]:dark:bg-[#2A222A]"
   >
-    <div class="flex flex-col h-full w-64 p-1">
-      <div class="flex flex-row relative p-1 w-fit flex-shrink-0">
-        <button @click="toggleSidebar" class="p-2 hover:bg-gray-300/10 rounded-md z-20">
-          <SidebarIcon class="w-4 h-4" />
+    <div class="flex h-full w-64 flex-col p-1">
+      <div class="relative flex w-fit flex-shrink-0 flex-row p-1">
+        <button @click="toggleSidebar" class="z-20 rounded-md p-2 hover:bg-gray-300/10">
+          <SidebarIcon class="h-4 w-4" />
         </button>
         <div
           :data-expanded="isExpanded"
-          class="flex flex-row transition-all data-[expanded=true]:-translate-x-full data-[expanded=true]:pointer-events-none data-[expanded=true]:opacity-0 data-[expanded=false]:delay-100"
+          class="flex flex-row transition-all data-[expanded=true]:pointer-events-none data-[expanded=true]:-translate-x-full data-[expanded=true]:opacity-0 data-[expanded=false]:delay-100"
         >
-          <button @click="'TODO'" class="p-2 hover:bg-gray-300/10 rounded-md z-20">
-            <SearchIcon class="w-4 h-4" />
+          <button @click="'TODO'" class="z-20 rounded-md p-2 hover:bg-gray-300/10">
+            <SearchIcon class="h-4 w-4" />
           </button>
-          <RouterLink class="p-2 hover:bg-gray-300/10 rounded-md" to="/c/new">
-            <PlusIcon class="w-4 h-4" />
+          <RouterLink class="rounded-md p-2 hover:bg-gray-300/10" to="/c/new">
+            <PlusIcon class="h-4 w-4" />
           </RouterLink>
         </div>
       </div>
 
       <div
         :data-expanded="isExpanded"
-        class="flex flex-col p-1 space-y-1 flex-grow transition-transform duration-100 ease-out data-[expanded=false]:-translate-x-full overflow-hidden"
+        class="flex flex-grow flex-col space-y-1 overflow-hidden p-1 transition-transform duration-100 ease-out data-[expanded=false]:-translate-x-full"
       >
         <RouterLink
-          class="bg-gradient-to-r border from-[#55CDFC] to-[#3EB0E2] hover:from-[#2A9FD8] hover:to-[#1E8BC4] border-[#3EB0E2] dark:from-[#F7A8B8] dark:to-[#D08A9E] dark:hover:from-[#C3778C] dark:hover:to-[#A86479] dark:border-[#C3778C] py-1.5 rounded-md text-sm font-semibold text-center block flex-shrink-0"
+          class="block flex-shrink-0 rounded-md border border-[#3EB0E2] bg-gradient-to-r from-[#55CDFC] to-[#3EB0E2] py-1.5 text-center text-sm font-semibold hover:from-[#2A9FD8] hover:to-[#1E8BC4] dark:border-[#C3778C] dark:from-[#F7A8B8] dark:to-[#D08A9E] dark:hover:from-[#C3778C] dark:hover:to-[#A86479]"
           to="/c/new"
           :tabindex="isExpanded ? 0 : -1"
         >
           New Chat
         </RouterLink>
-        <div class="overflow-y-auto flex-grow min-h-0">
-          <div v-for="group in keys(groups)" v-bind:key="group">
-            <p
-              class="text-xs font-semibold text-[#55CDFC] dark:text-[#F7A8B8]"
-              v-if="groups[group].length"
-            >
-              {{ group }}
-            </p>
-            <RouterLink
-              v-for="c in groups[group]"
-              v-bind:key="c.id"
-              :to="{ name: 'c', params: { id: c.id } }"
-              class="flex flex-row items-center p-2 rounded-xl hover:bg-gray-300/10 text-sm"
-            >
-              <span class="block truncate" :title="c.name ?? undefined">{{
-                c.name ?? 'Untitled'
-              }}</span>
-            </RouterLink>
+        <div class="min-h-0 flex-grow overflow-y-auto">
+          <div v-if="state === 'idle'">
+            <div v-for="group in keys(groups)" v-bind:key="group">
+              <p
+                class="text-xs font-semibold text-[#55CDFC] dark:text-[#F7A8B8]"
+                v-if="groups[group].length"
+              >
+                {{ group }}
+              </p>
+              <RouterLink
+                v-for="c in groups[group]"
+                v-bind:key="c.id"
+                :to="{ name: 'c', params: { id: c.id } }"
+                class="flex flex-row items-center rounded-xl p-2 text-sm hover:bg-gray-300/10"
+              >
+                <span class="block truncate" :title="c.name ?? undefined">{{
+                  c.name ?? 'Untitled'
+                }}</span>
+              </RouterLink>
+            </div>
+          </div>
+          <div v-else class="flex h-full w-full items-center justify-center">
+            <Loader v-if="state === 'loading'" />
+            <div v-else class="text-center">
+              <button @click="loadConversations" class="group text-sm font-semibold">
+                <span class="block text-[#f82447] group-hover:hidden">Error</span>
+                <span class="hidden text-[#55CDFC] group-hover:inline dark:text-[#F7A8B8]">
+                  Retry
+                </span>
+              </button>
+              <p class="text-xs">check the browser console for details</p>
+            </div>
           </div>
         </div>
-        <div class="flex-shrink-0 flex pt-1">
+        <div class="flex flex-shrink-0 pt-1">
           <RouterLink
             v-if="!session.data"
             to="/login"
-            class="w-full flex items-center space-x-2 p-2 rounded-xl hover:bg-gray-300/10"
+            class="flex w-full items-center space-x-2 rounded-xl p-2 hover:bg-gray-300/10"
           >
-            <LogInIcon class="w-4 h-4" />
+            <LogInIcon class="h-4 w-4" />
             <p>Login</p>
           </RouterLink>
           <button
             v-else
-            class="w-full flex items-center space-x-2 p-2 rounded-xl hover:bg-gray-300/10"
+            class="flex w-full items-center space-x-2 rounded-xl p-2 hover:bg-gray-300/10"
           >
             <img
               v-if="session.data?.user?.image"
               :src="session.data.user.image"
               alt="User Avatar"
-              class="w-9 h-9 rounded-full"
+              class="h-9 w-9 rounded-full"
             />
             <div class="flex flex-col items-start">
-              <p class="text-sm font-semibold m-0">
+              <p class="m-0 text-sm font-semibold">
                 {{ session.data.user.name ?? 'User' }}
               </p>
-              <p class="text-xs text-gray-500 dark:text-gray-400 m-0">
+              <p class="m-0 text-xs text-gray-500 dark:text-gray-400">
                 {{ 'Pro' /* TODO */ }}
               </p>
             </div>
@@ -94,14 +108,30 @@ import { LogInIcon, PlusIcon, SearchIcon, SidebarIcon } from 'lucide-vue-next';
 import { storeToRefs } from 'pinia';
 import { computed, onMounted, onUnmounted, type Ref, ref } from 'vue';
 import { RouterLink } from 'vue-router';
+import Loader from './loader.vue';
 
 const session = useSession();
 
 const isExpanded = defineModel<boolean>({ required: true });
 const circumstances = ref<Partial<{ force: boolean; narrow: boolean }>>({});
 
+const state = ref<'idle' | 'loading' | 'error'>('loading');
 const conversationStore = useConversationStore();
 const { conversations } = storeToRefs(conversationStore);
+loadConversations();
+
+function loadConversations() {
+  state.value = 'loading';
+  conversationStore
+    .$fetch()
+    .then(() => {
+      state.value = 'idle';
+    })
+    .catch(e => {
+      state.value = 'error';
+      console.error(e);
+    });
+}
 
 type Conversations = typeof conversations extends Ref<infer U> ? U : never;
 

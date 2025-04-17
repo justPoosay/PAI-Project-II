@@ -1,7 +1,7 @@
 <template>
-  <div class="flex justify-center items-center">
+  <div class="flex items-center justify-center">
     <div
-      class="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"
+      class="h-8 w-8 animate-spin rounded-full border-4 border-white border-t-transparent"
       aria-label="Loading..."
     />
   </div>

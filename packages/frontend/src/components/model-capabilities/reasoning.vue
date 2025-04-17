@@ -1,5 +1,5 @@
 <template>
-  <div class="inline-flex items-center justify-center bg-purple-500/10 p-1 rounded-md">
+  <div class="inline-flex items-center justify-center rounded-md bg-purple-500/10 p-1">
     <BrainIcon class="h-4 w-4 text-purple-500" />
   </div>
 </template>

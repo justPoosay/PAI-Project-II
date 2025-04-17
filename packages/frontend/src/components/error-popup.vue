@@ -9,7 +9,7 @@
   >
     <div
       v-if="show"
-      class="absolute bottom-32 left-1/2 -translate-x-1/2 z-20 px-4 py-2 rounded-lg bg-red-500/75 backdrop-blur-sm text-white shadow-lg"
+      class="absolute bottom-32 left-1/2 z-20 -translate-x-1/2 rounded-lg bg-red-500/75 px-4 py-2 text-white shadow-lg backdrop-blur-sm"
     >
       <h5 class="font-semibold">{{ error?.title }}</h5>
       <p>{{ error?.message }}</p>
