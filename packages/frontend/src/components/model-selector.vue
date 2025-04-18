@@ -1,5 +1,5 @@
 <template>
-  <PopoverRoot>
+  <PopoverRoot v-model:open="isOpen">
     <PopoverTrigger
       class="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm font-semibold hover:bg-gray-200/5"
     >
@@ -17,7 +17,7 @@
             v-for="model in availableModels"
             :key="model"
             class="flex w-full items-center justify-between gap-10 rounded-md px-4 py-3 text-left text-sm font-bold transition hover:bg-gray-200/5"
-            @click="selected = model"
+            @click="selectModel(model)"
           >
             <div class="flex items-center gap-2">
               <component
@@ -53,6 +53,7 @@ import { ChevronUp } from 'lucide-vue-next';
 import { storeToRefs } from 'pinia';
 import { PopoverContent, PopoverPortal, PopoverRoot, PopoverTrigger } from 'radix-vue';
 import type { DefineComponent } from 'vue';
+import { ref } from 'vue';
 
 const capabilities = Object.freeze({
   imageInput: [ImageInput, 'Supports image uploads and analysis'],
@@ -73,4 +74,11 @@ const selected = defineModel<typeof Model.infer>({ required: true });
 
 const modelStore = useModelStore();
 const { models: availableModels } = storeToRefs(modelStore);
+
+const isOpen = ref(false);
+
+function selectModel(modelName: typeof Model.infer) {
+  selected.value = modelName;
+  isOpen.value = false;
+}
 </script>
