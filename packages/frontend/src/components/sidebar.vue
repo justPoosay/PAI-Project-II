@@ -1,16 +1,19 @@
 <template>
   <div
     :data-expanded="isExpanded"
-    class="z-[99999999999] flex h-screen w-0 flex-col transition-all duration-100 ease-out data-[expanded=true]:w-64 max-lg:fixed max-lg:data-[expanded=true]:border-r max-lg:data-[expanded=true]:border-[#FFD700] max-lg:data-[expanded=true]:bg-[#F5F0E0] max-lg:data-[expanded=true]:shadow-md sm:max-lg:data-[expanded=true]:rounded-r-xl max-lg:data-[expanded=true]:dark:border-[#FF69B4] max-lg:data-[expanded=true]:dark:bg-[#2A222A]"
+    class="z-[99999999999] flex h-screen w-0 flex-col transition-all duration-100 ease-out data-[expanded=false]:pointer-events-none data-[expanded=true]:w-64 max-lg:fixed max-lg:data-[expanded=true]:border-r max-lg:data-[expanded=true]:border-[#FFD700] max-lg:data-[expanded=true]:bg-[#F5F0E0] max-lg:data-[expanded=true]:shadow-md sm:max-lg:data-[expanded=true]:rounded-r-xl max-lg:data-[expanded=true]:dark:border-[#FF69B4] max-lg:data-[expanded=true]:dark:bg-[#2A222A]"
   >
     <div class="flex h-full w-64 flex-col p-1">
       <div class="relative flex w-fit flex-shrink-0 flex-row p-1">
-        <button @click="toggleSidebar" class="z-20 rounded-md p-2 hover:bg-gray-300/10">
+        <button
+          @click="toggleSidebar"
+          class="pointer-events-auto z-20 rounded-md p-2 hover:bg-gray-300/10"
+        >
           <SidebarIcon class="h-4 w-4" />
         </button>
         <div
           :data-expanded="isExpanded"
-          class="flex flex-row transition-all data-[expanded=true]:pointer-events-none data-[expanded=true]:-translate-x-full data-[expanded=true]:opacity-0 data-[expanded=false]:delay-100"
+          class="pointer-events-auto flex flex-row transition-all data-[expanded=true]:pointer-events-none data-[expanded=true]:-translate-x-full data-[expanded=true]:opacity-0 data-[expanded=false]:delay-100"
         >
           <button @click="'TODO'" class="z-20 rounded-md p-2 hover:bg-gray-300/10">
             <SearchIcon class="h-4 w-4" />
