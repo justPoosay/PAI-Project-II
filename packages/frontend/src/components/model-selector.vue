@@ -16,7 +16,7 @@
           <button
             v-for="model in availableModels"
             :key="model"
-            class="flex w-full items-center justify-between rounded-sm px-4 py-3 text-left text-sm font-semibold transition hover:bg-gray-200/5"
+            class="flex w-full items-center justify-between gap-10 rounded-md px-4 py-3 text-left text-sm font-bold transition hover:bg-gray-200/5"
             @click="selected = model"
           >
             <div class="flex items-center gap-2">
@@ -26,7 +26,14 @@
               />
               {{ modelFullName(model) }}
             </div>
-            <div class="flex items-center"></div>
+            <div class="flex items-center space-x-1.5">
+              <component
+                v-for="capability in models[model].capabilities"
+                :key="capability"
+                :is="capabilities[capability][0]"
+                :title="capabilities[capability][1]"
+              />
+            </div>
           </button>
         </div>
       </PopoverContent>
@@ -35,6 +42,9 @@
 </template>
 
 <script setup lang="ts">
+import ImageInput from '@/components/model-capabilities/image-input.vue';
+import Reasoning from '@/components/model-capabilities/reasoning.vue';
+import ToolUsage from '@/components/model-capabilities/tool-usage.vue';
 import { icons } from '@/lib/icons';
 import { modelFullName } from '@/lib/utils';
 import { useModelStore } from '@/stores/models';
@@ -42,6 +52,22 @@ import { models, type Model } from 'common';
 import { ChevronUp } from 'lucide-vue-next';
 import { storeToRefs } from 'pinia';
 import { PopoverContent, PopoverPortal, PopoverRoot, PopoverTrigger } from 'radix-vue';
+import type { DefineComponent } from 'vue';
+
+const capabilities = Object.freeze({
+  imageInput: [ImageInput, 'Supports image uploads and analysis'],
+  reasoning: [Reasoning, 'Has reasoning capabilities'],
+  toolUsage: [ToolUsage, 'Can use external tools']
+} satisfies {
+  [K in (typeof models)[keyof typeof models]['capabilities'][number]]: [
+    DefineComponent<
+      any, // eslint-disable-line @typescript-eslint/no-explicit-any
+      any, // eslint-disable-line @typescript-eslint/no-explicit-any
+      any // eslint-disable-line @typescript-eslint/no-explicit-any
+    >,
+    string
+  ];
+});
 
 const selected = defineModel<typeof Model.infer>({ required: true });
 
