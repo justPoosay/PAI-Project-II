@@ -540,22 +540,25 @@ watch(input, () => {
 
 <style lang="sass">
 .markdown-content
-  @apply break-words
+  @apply break-words text-[#333333] dark:text-gray-200
 
   a
-    @apply text-sky-400 hover:underline dark:text-blue-500
+    @apply text-sky-600 hover:underline dark:text-pink-400
 
-  pre:not(:has(code.hljs))
-    @apply rounded overflow-x-auto
-
-  code
-    @apply font-sf_mono
-
-  // \`\`\`\n<content>\n\`\`\`
   pre:has(code.hljs)
-    @apply backdrop-blur-sm text-sm overflow-x-auto max-w-full
+    @apply backdrop-blur-sm text-sm overflow-x-auto max-w-full rounded-md border-t-0 rounded-t-none border border-black/10 dark:border-white/10
     code
-      @apply block p-2 whitespace-pre-wrap break-all
+      @apply block p-2 whitespace-pre-wrap break-all font-sf_mono
+
+  // Code blocks without language ```
+  pre:not(:has(code.hljs))
+    @apply rounded overflow-x-auto bg-sky-50 dark:bg-zinc-800 p-2 my-2 border border-black/10 dark:border-white/10
+    code
+      @apply font-sf_mono text-sm
+
+  // Inline code `code`
+  code:not(.hljs)
+    @apply bg-sky-100 dark:bg-pink-950/50 backdrop-blur-sm rounded px-1 py-0.5 text-sm font-sf_mono text-sky-800 dark:text-pink-300 border border-sky-200 dark:border-pink-800/50
 
   strong
     @apply font-bold
@@ -563,56 +566,49 @@ watch(input, () => {
   em
     @apply italic
 
-  // `<content>`
-  code:not(.hljs)
-    @apply bg-white/[2%] dark:bg-[#101010] backdrop-blur-sm rounded px-1 py-0.5 text-sm
+  // Headings
+  h1, h2, h3, h4, h5, h6
+    @apply font-bold mt-4 mb-2 pb-1
 
-  // # <content>
   h1
-    @apply text-3xl font-bold mt-2 mb-2
-
-  // ## <content>
+    @apply text-3xl
   h2
-    @apply text-2xl font-bold mt-2 mb-2
-
-  // ### <content>
+    @apply text-2xl
   h3
-    @apply text-xl font-bold mt-2 mb-2
-
-  // #### <content>
+    @apply text-xl
   h4
-    @apply text-lg font-bold mt-2 mb-2
+    @apply text-lg
+  h5
+    @apply text-base
+  h6
+    @apply text-sm
 
-  // <i>. <content>
+  // Lists
   ol
-    @apply list-decimal list-outside ml-6 my-1
+    @apply list-decimal list-outside ml-6 my-2
     & ol, & ul
-      @apply mt-2 mb-2
+      @apply mt-1 mb-1
 
-  // - <content>
   ul
-    @apply list-disc list-outside ml-6 my-1
+    @apply list-disc list-outside ml-6 my-2
     & ul, & ol
-      @apply mt-2 mb-2
+      @apply mt-1 mb-1
 
-  // Nested list items
   li
     @apply mb-1
     & > ul, & > ol
       @apply ml-4
 
   hr
-    @apply border-t border-white/30 my-4
+    @apply border-t border-sky-200 dark:border-pink-800/50 my-4
 
   // Blockquote
   blockquote
-    @apply border-l-4 border-white/30 p-1 pl-3 italic bg-white/5 rounded
-    &:not(:last-child)
-      @apply mb-4
+    @apply border-l-4 border-sky-300 dark:border-pink-600/80 p-2 pl-3 italic bg-sky-50 dark:bg-pink-950/30 rounded my-3 text-gray-700 dark:text-gray-300
+    p // Remove default margins inside blockquote
+      @apply m-0
 
-    &:not(:first-child)
-      @apply mt-4
-
+    // Callouts like [!NOTE]
     &[data-type="note"],
     &[data-type="tip"],
     &[data-type="important"],
@@ -621,62 +617,65 @@ watch(input, () => {
     &[data-type="error"]
       @apply not-italic
       .callout-title
-        @apply font-bold
+        @apply font-bold flex items-center gap-1.5 mb-1 // Style title
 
     &[data-type="note"],
     &[data-type="tip"]
-      @apply border-blue-500
+      @apply border-sky-500 dark:border-pink-500
       .callout-title
-        @apply text-blue-500
+        @apply text-sky-600 dark:text-pink-400
 
     &[data-type="important"]
-      @apply border-violet-700
+      @apply border-violet-500 dark:border-violet-400
       .callout-title
-        @apply text-violet-500
+        @apply text-violet-600 dark:text-violet-400
 
     &[data-type="warning"]
-      @apply border-yellow-500
+      @apply border-yellow-500 dark:border-yellow-400
       .callout-title
-        @apply text-yellow-500
+        @apply text-yellow-600 dark:text-yellow-400
 
     &[data-type="caution"],
     &[data-type="error"]
-      @apply border-red-500
+      @apply border-red-500 dark:border-red-400
       .callout-title
-        @apply text-red-500
+        @apply text-red-600 dark:text-red-400
 
   // Table
   table
-    @apply w-full border-collapse my-4
+    @apply w-full border-collapse my-4 text-sm border border-sky-200 dark:border-white/20
     th, td
-      @apply border border-white/30 p-2
+      @apply border border-sky-200 dark:border-white/20 p-2 text-left
 
     th
-      @apply bg-white/10 font-bold
+      @apply bg-sky-100 dark:bg-white/10 font-semibold
 
     tr:nth-child(even)
-      @apply bg-white/5
+      @apply bg-sky-50/50 dark:bg-white/5
 
+// Highlight.js theme overrides
 .hljs
-  @apply bg-white/5 dark:bg-[#101010]
+  @apply bg-transparent dark:bg-transparent // Use parent pre background
 
 .hljs-container
-  @apply flex flex-col light:shadow-md
+  @apply flex flex-col
   &:not(:last-child)
     @apply mb-1
   &:not(:first-child)
     @apply mt-1
 
-.hljs-header
-  @apply bg-white/10 dark:bg-[#181818] flex items-center justify-between py-2 px-3 text-sm mt-1
+.hljs-header // Style for code block header (e.g., language name)
+  @apply bg-sky-100 dark:bg-zinc-700 flex items-center justify-between py-1 px-3 text-xs text-gray-600 dark:text-gray-400 rounded-t-md border-b border-black/10 dark:border-white/10
 
+// Tooltip styles
 .v-popper--theme-tooltip
   .v-popper__inner
-    @apply bg-white/15 backdrop-blur-md dark:bg-vue-black-tooltip dark:border-[1px] dark:border-[#847A6C]
+    @apply bg-white/15 backdrop-blur-md dark:bg-vue-black-tooltip dark:border-[1px] dark:border-[#847A6C] text-xs rounded-md shadow-lg
 
   .v-popper__arrow-outer
     @apply hidden
 
+// Disable transitions for light mode tooltips (fix for flickering)
 @media (prefers-color-scheme: light)
   .v-popper__popper
     transition: none !important
