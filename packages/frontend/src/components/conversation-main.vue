@@ -4,24 +4,17 @@
     <!-- Chat Messages -->
     <div
       v-if="!messages.loading && !messages.error && messages.array.length"
-      class="flex-1 overflow-y-auto overflow-x-hidden p-4 pb-32 dark:pb-28"
+      class="flex-1 overflow-y-auto overflow-x-hidden p-4 pb-28"
     >
-      <div class="mx-auto max-w-5xl">
-        <div v-for="(message, i) in messages.array" :key="i" class="relative mb-2">
+      <div class="mx-auto max-w-5xl space-y-8">
+        <div v-for="(message, i) in messages.array" :key="i" class="relative">
           <div
             :data-self="message.role === 'user'"
-            class="flex items-end justify-start space-x-2 data-[self=true]:justify-end dark:items-start"
+            class="flex items-start justify-start space-x-2 data-[self=true]:justify-end"
           >
-            <component
-              v-if="message.role === 'assistant'"
-              class="h-6 w-6 max-md:hidden dark:mt-2"
-              :alt="message.author"
-              :is="icons[models[message.author].icon]"
-              v-tooltip="{ content: modelFullName(message.author), placement: 'left' }"
-            />
             <div
               :data-self="message.role === 'user'"
-              class="light:bg-[#D8E6F0] relative max-w-[80%] rounded-tl-2xl rounded-tr-2xl p-2 shadow-lg data-[self=false]:rounded-br-2xl data-[self=true]:rounded-bl-2xl data-[self=true]:bg-[#B3D6E6] data-[self=false]:pb-3 max-md:max-w-full dark:max-w-[90%] dark:rounded-lg dark:shadow-none dark:data-[self=false]:rounded-br-lg dark:data-[self=true]:rounded-bl-lg dark:data-[self=true]:bg-[#3E2A3E]"
+              class="group relative max-w-[90%] rounded-lg border-[#a2d0e5] p-2 data-[self=true]:border data-[self=true]:bg-[#B3D6E6] data-[self=false]:pb-3 data-[self=true]:shadow-sm max-md:max-w-full dark:border-[#422f42] dark:data-[self=true]:bg-[#3E2A3E]"
             >
               <template v-if="getParts(message).length">
                 <template v-for="(part, partIndex) of getParts(message)">
@@ -77,7 +70,7 @@
                     message.role === 'assistant' &&
                     (finished(message) || (!finished(message) && !abortController))
                   "
-                  class="light:bg-white/15 light:absolute light:-bottom-3 light:left-1 light:shadow-md flex rounded-md p-0.5 backdrop-blur-sm dark:space-x-1.5 dark:pl-0"
+                  class="flex space-x-1.5 rounded-md p-0.5 pl-0 backdrop-blur-sm"
                 >
                   <button
                     v-if="finished(message)"
@@ -85,17 +78,15 @@
                     @click="copyToClipboard(getContent(message))"
                     class="rounded-md p-1 transition hover:bg-white/5"
                   >
-                    <CopyIcon class="h-3 w-3 dark:h-5 dark:w-5" />
+                    <CopyIcon class="h-5 w-5" />
                   </button>
                   <button
                     v-if="lastMessage === message"
                     v-tooltip="'Regenerate'"
                     @click="regenerateLastMessage"
-                    class="group rounded-md p-1 transition hover:bg-white/5"
+                    class="rounded-md p-1 transition hover:bg-white/5"
                   >
-                    <RefreshCwIcon
-                      class="h-3 w-3 transition-all duration-500 group-hover:rotate-[360deg] dark:h-5 dark:w-5"
-                    />
+                    <RefreshCwIcon class="h-5 w-5 transition-all duration-500" />
                   </button>
                 </div>
               </Transition>
@@ -181,11 +172,10 @@ import ErrorPopup from '@/components/error-popup.vue';
 import Loader from '@/components/loader.vue';
 import ModelSelector from '@/components/model-selector.vue';
 import ToolResult from '@/components/tool-result.vue';
-import { icons } from '@/lib/icons';
 import { parseMarkdown } from '@/lib/markdown.ts';
 import { trpc } from '@/lib/trpc';
 import type { Nullish } from '@/lib/types.ts';
-import { capitalize, modelFullName, safeParse } from '@/lib/utils.ts';
+import { capitalize, safeParse } from '@/lib/utils.ts';
 import router from '@/router';
 import { useConversationStore } from '@/stores/conversations.ts';
 import { useModelStore } from '@/stores/models.ts';
