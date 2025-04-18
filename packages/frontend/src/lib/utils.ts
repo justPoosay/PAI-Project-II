@@ -2,15 +2,6 @@ import type { Nullish } from '@/lib/types';
 import { models, type Model, type ModelInfo } from 'common';
 import SuperJSON from 'superjson';
 
-export function isValidJSON(str: string): boolean {
-  try {
-    JSON.parse(str);
-    return true;
-  } catch (e) {
-    return false;
-  }
-}
-
 // eslint-disable-next-line
 export function safeParse<T = any, F = null>(str: Nullish<string>, fallback = null as F): T | F {
   if (!str) return fallback;
@@ -31,21 +22,6 @@ export async function calculateHash(buffer: ArrayBuffer) {
   const hex = array.map(b => b.toString(16).padStart(2, '0')).join('');
   const base64 = btoa(String.fromCharCode(...array));
   return { hex, base64 };
-}
-
-export function omit<T extends Record<string, unknown>, K extends keyof T>(
-  obj: T,
-  keys: K[]
-): Omit<T, K> {
-  const copy = { ...obj };
-  for (const key of keys) {
-    delete copy[key];
-  }
-  return copy;
-}
-
-export function includes<T>(arr: T[], item: T): boolean {
-  return arr.includes(item);
 }
 
 export const modelFullName = (model: typeof Model.infer) =>

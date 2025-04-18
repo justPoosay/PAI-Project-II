@@ -19,11 +19,8 @@ export const useConversationStore = defineStore('conversations', () => {
   }
 
   type ModifyData = {
-    id: string;
-    name?: string | null;
-    model?: typeof Model.infer;
     requestChange?: boolean;
-  };
+  } & Parameters<typeof trpc.conversation.modify.mutate>[0];
 
   async function $modify({ requestChange = true, ...data }: ModifyData) {
     const index = conversations.value.findIndex(c => c.id === data.id);

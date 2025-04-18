@@ -1,8 +1,10 @@
 import { type } from 'arktype';
 
 export const Model = type(
-  "'gpt-4o' | 'gpt-4o-mini' | 'claude-3-5-sonnet' | 'grok-3' | 'llama-3.3-70b-versatile' | 'o3-mini' | 'deepseek-r1-distill-llama-70b' | 'deepseek-r1-distill-qwen-32b' | 'claude-3-7-sonnet'"
+  "'gpt-4o' | 'gpt-4o-mini' | 'claude-3-5-sonnet' | 'grok-3' | 'llama-3.3-70b-versatile' | 'o3-mini' | 'deepseek-r1-distill-llama-70b' | 'deepseek-r1-distill-qwen-32b' | 'claude-3-7-sonnet' | 'o4-mini'"
 );
+
+export const Effort = type("'low' | 'medium' | 'high'");
 
 export const Attachment = type({
   id: 'string',
@@ -56,6 +58,7 @@ export const Conversation = type({
   id: 'string',
   name: 'string | null',
   model: Model,
+  'reasoningEffort?': Effort,
   updated_at: 'Date'
 });
 

@@ -12,6 +12,7 @@ export const conversationsRouter = router({
   create: publicProcedure.input(type({ 'model?': Model })).mutation(opts =>
     opts.ctx.db.conversations.create({
       model: opts.input.model ?? getAvailableModels()[0] ?? 'o3-mini',
+      reasoningEffort: 'high',
       name: null,
       messages: [],
       archived: false

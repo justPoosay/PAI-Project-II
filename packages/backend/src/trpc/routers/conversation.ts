@@ -1,5 +1,5 @@
 import { type } from 'arktype';
-import { Model } from 'common';
+import { Effort, Model } from 'common';
 import { publicProcedure, router } from '../trpc';
 
 export const conversationRouter = router({
@@ -13,7 +13,8 @@ export const conversationRouter = router({
       type({
         id: 'string',
         'name?': 'string | null',
-        'model?': Model
+        'model?': Model,
+        'reasoningEffort?': Effort
       })
     )
     .mutation(async opts => opts.ctx.db.conversations.update(opts.input.id, opts.input)),

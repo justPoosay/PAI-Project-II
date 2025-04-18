@@ -159,8 +159,12 @@
               <CircleStopIcon class="h-5 w-5 group-data-[action=send]:hidden" />
             </button>
           </div>
-          <div class="flex">
+          <div class="flex gap-1">
             <ModelSelector v-model="model" />
+            <EffortSelector
+              v-model="reasoningEffort"
+              v-if="includes(models[model].capabilities, 'effortControl')"
+            />
           </div>
         </div>
       </div>
@@ -172,6 +176,7 @@
 import 'floating-vue/dist/style.css';
 import 'highlight.js/styles/github-dark.min.css';
 
+import EffortSelector from '@/components/effort-selector.vue';
 import ErrorPopup from '@/components/error-popup.vue';
 import Loader from '@/components/loader.vue';
 import ModelSelector from '@/components/model-selector.vue';
@@ -180,7 +185,7 @@ import { icons } from '@/lib/icons';
 import { parseMarkdown } from '@/lib/markdown.ts';
 import { trpc } from '@/lib/trpc';
 import type { Nullish } from '@/lib/types.ts';
-import { capitalize, includes, modelFullName, safeParse } from '@/lib/utils.ts';
+import { capitalize, modelFullName, safeParse } from '@/lib/utils.ts';
 import router from '@/router';
 import { useConversationStore } from '@/stores/conversations.ts';
 import { useModelStore } from '@/stores/models.ts';
@@ -188,12 +193,14 @@ import { type } from 'arktype';
 import {
   AssistantMessage,
   Conversation,
+  Effort,
   Message,
   MessageChunk,
   models,
   SSE,
   type Model
 } from 'common';
+import { includes } from 'common/utils';
 import {
   CheckIcon,
   ChevronUpIcon,
@@ -224,6 +231,7 @@ const messages = ref<{ loading: boolean; error: string | null; array: (typeof Me
   error: null,
   array: []
 });
+const fetchToken = ref(0);
 const conversation = ref<typeof Conversation.infer | null>(
   conversationStore.conversations.find(c => c.id === route.params.id) ?? null
 );
@@ -249,19 +257,34 @@ function copyToClipboard(text: string) {
 }
 
 const model = ref<typeof Model.infer>(modelStore.models[0] ?? 'o3-mini');
+const reasoningEffort = ref<typeof Effort.infer>('high');
+
 watch(model, function (newValue, oldValue) {
   if (newValue !== oldValue && conversation.value && conversation.value.model !== newValue) {
     conversationStore.$modify({ id: conversation.value.id, model: newValue });
   }
 });
 
+watch(reasoningEffort, function (newValue, oldValue) {
+  if (
+    newValue !== oldValue &&
+    conversation.value &&
+    conversation.value.reasoningEffort !== newValue
+  ) {
+    conversationStore.$modify({ id: conversation.value.id, reasoningEffort: newValue });
+  }
+});
+
 function init(id: string) {
+  fetchToken.value++;
+  const token = fetchToken.value;
   const isNew = id === 'new';
 
   messages.value = { loading: false, error: null, array: [] };
   const c = conversationStore.conversations.find(c => c.id === id) ?? null;
   conversation.value = c;
   model.value = c?.model ?? modelStore.models[0] ?? 'o3-mini';
+  reasoningEffort.value = c?.reasoningEffort ?? 'high';
   error.value = null;
   showError.value = false;
 
@@ -269,10 +292,10 @@ function init(id: string) {
     return;
   }
 
-  fetchMessages(id);
+  fetchMessages(id, token);
 }
 
-function fetchMessages(id: string) {
+function fetchMessages(id: string, token: number) {
   function equals(a: typeof Message.infer, b: typeof Message.infer) {
     if (a.role !== b.role) return false;
 
@@ -289,6 +312,7 @@ function fetchMessages(id: string) {
   trpc.conversation.getMessages
     .query({ id })
     .then(msgs => {
+      if (token !== fetchToken.value) return;
       messages.value.loading = false;
 
       if (messages.value.array.length > msgs.length) {
@@ -303,11 +327,13 @@ function fetchMessages(id: string) {
       localStorage.setItem(id, SuperJSON.stringify(msgs));
     })
     .catch(e => {
+      if (token !== fetchToken.value) return;
       messages.value.loading = false;
       messages.value.error = e.message;
     });
 
   const out = Message.array()(safeParse(localStorage.getItem(id)));
+  if (token !== fetchToken.value) return;
   if (!(out instanceof type.errors)) {
     messages.value.array = out;
     return (messages.value.loading = false);

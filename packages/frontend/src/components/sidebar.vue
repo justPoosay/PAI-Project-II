@@ -1,13 +1,13 @@
 <template>
   <div
     :data-expanded="isExpanded"
-    class="z-[99999999999] flex h-screen w-0 flex-col transition-all duration-100 ease-out data-[expanded=false]:pointer-events-none data-[expanded=true]:w-64 max-lg:fixed max-lg:data-[expanded=true]:border-r max-lg:data-[expanded=true]:border-[#FFD700] max-lg:data-[expanded=true]:bg-[#F5F0E0] max-lg:data-[expanded=true]:shadow-md sm:max-lg:data-[expanded=true]:rounded-r-xl max-lg:data-[expanded=true]:dark:border-[#FF69B4] max-lg:data-[expanded=true]:dark:bg-[#2A222A]"
+    class="z-[99999999999] flex h-screen w-0 animate-[rotate-gradient_5s_linear_infinite] flex-col border-transparent bg-clip-padding transition-all duration-100 ease-out [--bg:#DDE6F0] data-[expanded=false]:pointer-events-none data-[expanded=true]:w-64 max-lg:fixed max-lg:[background:linear-gradient(var(--bg),var(--bg))_padding-box,linear-gradient(var(--angle,225deg),#FF000E,#FF7300,#FAD220,#138F3E,#3558A0,#880082)_border-box] max-lg:data-[expanded=true]:border-r-2 max-lg:data-[expanded=true]:shadow-md dark:[--bg:#2A1F2A] dark:max-lg:data-[expanded=true]:border-r"
   >
     <div class="flex h-full w-64 flex-col p-1">
       <div class="relative flex w-fit flex-shrink-0 flex-row p-1">
         <button
           @click="toggleSidebar"
-          class="pointer-events-auto z-20 rounded-md p-2 hover:bg-gray-300/10"
+          class="pointer-events-auto z-20 rounded-md p-2 hover:bg-black/5 dark:hover:bg-gray-200/5"
         >
           <SidebarIcon class="h-4 w-4" />
         </button>
@@ -15,10 +15,13 @@
           :data-expanded="isExpanded"
           class="pointer-events-auto flex flex-row transition-all data-[expanded=true]:pointer-events-none data-[expanded=true]:-translate-x-full data-[expanded=true]:opacity-0 data-[expanded=false]:delay-100"
         >
-          <button @click="'TODO'" class="z-20 rounded-md p-2 hover:bg-gray-300/10">
+          <button
+            @click="'TODO'"
+            class="z-20 rounded-md p-2 hover:bg-black/5 dark:hover:bg-gray-200/5"
+          >
             <SearchIcon class="h-4 w-4" />
           </button>
-          <RouterLink class="rounded-md p-2 hover:bg-gray-300/10" to="/c/new">
+          <RouterLink class="rounded-md p-2 hover:bg-black/5 dark:hover:bg-gray-200/5" to="/c/new">
             <PlusIcon class="h-4 w-4" />
           </RouterLink>
         </div>
@@ -48,7 +51,7 @@
                 v-for="c in groups[group]"
                 v-bind:key="c.id"
                 :to="{ name: 'c', params: { id: c.id } }"
-                class="flex flex-row items-center rounded-xl p-2 text-sm hover:bg-gray-300/10"
+                class="flex flex-row items-center rounded-xl p-2 text-sm hover:bg-black/5 dark:hover:bg-gray-200/5"
               >
                 <span class="block truncate" :title="c.name ?? undefined">{{
                   c.name ?? 'Untitled'
@@ -73,14 +76,14 @@
           <RouterLink
             v-if="!session.data"
             to="/login"
-            class="flex w-full items-center space-x-2 rounded-xl p-2 hover:bg-gray-300/10"
+            class="flex w-full items-center space-x-2 rounded-xl p-2 hover:bg-black/5 dark:hover:bg-gray-200/5"
           >
             <LogInIcon class="h-4 w-4" />
             <p>Login</p>
           </RouterLink>
           <button
             v-else
-            class="flex w-full items-center space-x-2 rounded-xl p-2 hover:bg-gray-300/10"
+            class="flex w-full items-center space-x-2 rounded-xl p-2 hover:bg-black/5 dark:hover:bg-gray-200/5"
           >
             <AvatarRoot class="h-9 w-9 select-none rounded-full bg-gray-300 dark:bg-gray-700">
               <AvatarImage

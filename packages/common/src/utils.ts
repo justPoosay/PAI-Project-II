@@ -30,3 +30,7 @@ export function pick<T extends object, K extends keyof T>(obj: T, keys: K[]): Pi
   }
   return copy;
 }
+
+export function includes<T>(arr: T[] | Set<T>, item: T | (unknown & {})): boolean {
+  return Array.isArray(arr) ? arr.includes(item as T) : arr.has(item as T);
+}

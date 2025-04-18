@@ -6,18 +6,26 @@ import type { LanguageModelV1 } from 'ai';
 import type { Model } from './schemas';
 
 export interface ModelInfo {
-  capabilities: Array<'toolUsage' | 'imageInput' | 'reasoning' | (string & {})>;
+  capabilities: Array<'toolUsage' | 'imageInput' | 'reasoning' | 'effortControl' | (string & {})>;
   name: string;
   text?: string;
   icon: string;
   description?: string;
   model: LanguageModelV1;
   env: string;
+  options?: Record<string, string[]>;
 }
 
 export const models = Object.freeze({
+  'o4-mini': {
+    capabilities: ['toolUsage', 'reasoning', 'imageInput', 'effortControl'],
+    name: 'o4-mini',
+    icon: 'openai',
+    model: openai('o4-mini'),
+    env: 'OPENAI_API_KEY'
+  },
   'o3-mini': {
-    capabilities: ['toolUsage', 'reasoning'],
+    capabilities: ['toolUsage', 'reasoning', 'effortControl'],
     name: 'o3-mini',
     icon: 'openai',
     model: openai('o3-mini'),

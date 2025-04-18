@@ -1,14 +1,10 @@
 import { type } from 'arktype';
-import { Message, Model } from 'common';
+import { Conversation, Message } from 'common';
 
-export const ConversationEntity = type({
-  id: 'string',
-  name: 'string | null',
-  model: Model,
+export const ConversationEntity = Conversation.and({
   messages: Message.array(),
   archived: 'boolean',
-  created_at: 'Date',
-  updated_at: 'Date'
+  created_at: 'Date'
 });
 
 export type TConversationEntity = typeof ConversationEntity.infer;
