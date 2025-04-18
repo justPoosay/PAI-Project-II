@@ -1,7 +1,7 @@
 import { type } from 'arktype';
 
 export const Model = type(
-  "'gpt-4o' | 'gpt-4o-mini' | 'claude-3-5-sonnet' | 'grok-2' | 'grok-beta' | 'llama-3.3-70b-versatile' | 'mixtral-8x7b-32768' | 'o3-mini'"
+  "'gpt-4o' | 'gpt-4o-mini' | 'claude-3-5-sonnet' | 'grok-3' | 'llama-3.3-70b-versatile' | 'o3-mini' | 'deepseek-r1-distill-llama-70b' | 'deepseek-r1-distill-qwen-32b' | 'claude-3-7-sonnet'"
 );
 
 export const Attachment = type({

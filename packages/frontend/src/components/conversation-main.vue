@@ -12,13 +12,12 @@
             :data-self="message.role === 'user'"
             class="flex items-end justify-start space-x-2 data-[self=true]:justify-end dark:items-start"
           >
-            <img
+            <component
               v-if="message.role === 'assistant'"
               class="h-6 w-6 max-md:hidden dark:mt-2"
               :alt="message.author"
-              :src="models[message.author].logoSrc"
-              width="24"
-              v-tooltip="{ content: models[message.author].name, placement: 'left' }"
+              :is="icons[models[message.author].icon]"
+              v-tooltip="{ content: modelFullName(message.author), placement: 'left' }"
             />
             <div
               :data-self="message.role === 'user'"
@@ -131,78 +130,37 @@
         <div
           class="flex flex-col items-start rounded-2xl rounded-b-none border border-b-0 border-[#55CDFC]/10 bg-[#55CDFC]/15 p-1 dark:border-[#f7a8b8]/5 dark:bg-[#f7a8b8] dark:bg-opacity-[4%]"
         >
-          <div v-if="uploads.length" class="flex">
-            <div v-for="file in uploads" class="relative" v-bind:key="file.hash">
-              <button
-                class="absolute -top-1.5 right-0 rounded-full p-[1px]"
-                @click="uploads = uploads.filter(f => f.hash !== file.hash)"
-              >
-                <XIcon class="h-4 w-4" />
-              </button>
-              <img
-                v-if="file.image"
-                :key="file.hash"
-                :src="file.href"
-                :data-disabled="!models[model].capabilities.includes('imageInput')"
-                class="mr-2 h-12 w-12 overflow-hidden rounded-lg data-[disabled=true]:grayscale"
-                alt="File"
-              />
-            </div>
+          <div class="flex w-full flex-row items-start space-x-1.5 p-1.5 pb-0">
+            <textarea
+              v-model="input"
+              @keydown="handleKeyDown"
+              placeholder="Type a message..."
+              class="light:placeholder:text-black/70 max-h-[10rem] min-h-[3rem] w-full resize-none overflow-y-auto bg-transparent focus:outline-none"
+            />
+            <!-- buttons -->
+            <label
+              :aria-disabled="!includes(models[model].capabilities, 'imageInput')"
+              class="rounded-xl p-2 transition hover:bg-black/10 aria-[disabled=false]:cursor-pointer aria-[disabled=true]:text-[#333333]/40 dark:hover:bg-white/5 dark:aria-[disabled=true]:text-white/40"
+              :title="
+                includes(models[model].capabilities, 'imageInput')
+                  ? 'Upload File'
+                  : 'This model does not support file input'
+              "
+              for="file"
+            >
+              <PaperclipIcon class="h-5 w-5" />
+            </label>
+            <button
+              @click="handleSend"
+              :data-action="abortController ? 'abort' : 'send'"
+              class="group rounded-xl bg-gradient-to-br from-[#5BCEFA] to-[#F5A9B8] p-2 transition-colors duration-300 ease-in-out hover:from-[#4AB0D1] hover:to-[#E994A3] hover:shadow-lg"
+            >
+              <SendIcon class="h-5 w-5 group-data-[action=abort]:hidden" />
+              <CircleStopIcon class="h-5 w-5 group-data-[action=send]:hidden" />
+            </button>
           </div>
-          <textarea
-            v-model="input"
-            @keydown="handleKeyDown"
-            placeholder="Type a message..."
-            class="light:placeholder:text-black/70 max-h-[10rem] min-h-[4rem] w-full resize-none overflow-y-auto bg-transparent p-1 focus:outline-none"
-            rows="2"
-          />
-          <div class="flex w-full items-end justify-between">
-            <!-- <input
-              type="file"
-              multiple
-              accept="image/*"
-              class="hidden"
-              id="file"
-              @change.prevent="upload(($event.target as HTMLInputElement)?.files ?? undefined)"
-              :disabled="!models[model].capabilities.includes('imageInput')"
-            /> -->
-            <div class="flex">
-              <ModelSelector v-model="model" />
-            </div>
-            <div class="flex items-center">
-              <label
-                :aria-disabled="!models[model].capabilities.includes('imageInput')"
-                class="mt-1 rounded-full p-1 transition aria-[disabled=false]:cursor-pointer aria-[disabled=true]:text-white/25"
-                :title="
-                  models[model].capabilities.includes('imageInput')
-                    ? 'Upload File'
-                    : 'This model does not support file input'
-                "
-                for="file"
-              >
-                <PaperclipIcon class="h-4 w-4" />
-              </label>
-              <button
-                v-if="!abortController"
-                @click="sendMessage"
-                class="mt-1 rounded-full p-1 transition hover:bg-white/5"
-              >
-                <SendIcon class="h-4 w-4" />
-              </button>
-              <button
-                v-else
-                @click="
-                  abortController.abort();
-                  (
-                    messages.array[messages.array.length - 1] as typeof AssistantMessage.infer
-                  ).chunks.push(null);
-                  abortController = null;
-                "
-                class="mt-1 rounded-full p-1 transition hover:bg-white/5"
-              >
-                <CircleStopIcon class="h-4 w-4" />
-              </button>
-            </div>
+          <div class="flex">
+            <ModelSelector v-model="model" />
           </div>
         </div>
       </div>
@@ -218,10 +176,11 @@ import ErrorPopup from '@/components/error-popup.vue';
 import Loader from '@/components/loader.vue';
 import ModelSelector from '@/components/model-selector.vue';
 import ToolResult from '@/components/tool-result.vue';
+import { icons } from '@/lib/icons';
 import { parseMarkdown } from '@/lib/markdown.ts';
 import { trpc } from '@/lib/trpc';
 import type { Nullish } from '@/lib/types.ts';
-import { capitalize, safeParse } from '@/lib/utils.ts';
+import { capitalize, includes, modelFullName, safeParse } from '@/lib/utils.ts';
 import router from '@/router';
 import { useConversationStore } from '@/stores/conversations.ts';
 import { useModelStore } from '@/stores/models.ts';
@@ -250,14 +209,11 @@ import {
   SearchIcon,
   SendIcon,
   SunIcon,
-  XIcon,
   type LucideProps
 } from 'lucide-vue-next';
 import SuperJSON from 'superjson';
 import { computed, nextTick, onMounted, ref, watch, type FunctionalComponent } from 'vue';
 import { onBeforeRouteUpdate, useRoute } from 'vue-router';
-
-type FileData = Record<string, undefined>; //Omit<(typeof routes.upload.infer)[0], 'id'> & { id?: string; href: string };
 
 const route = useRoute();
 const conversationStore = useConversationStore();
@@ -272,7 +228,6 @@ const conversation = ref<typeof Conversation.infer | null>(
   conversationStore.conversations.find(c => c.id === route.params.id) ?? null
 );
 const input = ref('');
-const uploads = ref<FileData[]>([]);
 const error = ref<Omit<Extract<typeof SSE.infer, { kind: 'error' }>, 'kind' | 'for'> | null>(null);
 const showError = ref(false);
 const abortController = ref<AbortController | null>(null);
@@ -439,13 +394,20 @@ function getParts(msg: typeof Message.infer) {
   return parts;
 }
 
-async function sendMessage() {
+async function handleSend() {
+  if (abortController.value) {
+    abortController.value.abort();
+    (messages.value.array.at(-1) as typeof AssistantMessage.infer).chunks.push(null);
+    abortController.value = null;
+    return;
+  }
+
   if (messages.value.array.at(-1)?.role === 'user') {
     return;
   }
 
   const content = input.value.trim();
-  if (content || uploads.value.length) {
+  if (content) {
     let id: string = route.params.id as string;
 
     if (route.params.id === 'new') {
@@ -454,8 +416,6 @@ async function sendMessage() {
       skipNextInit = true;
       await router.push({ name: 'c', params: { id } });
     }
-
-    const attachments = models[model.value].capabilities.includes('imageInput') ? [] : undefined;
 
     messages.value.array.push(
       {
@@ -472,7 +432,6 @@ async function sendMessage() {
     localStorage.setItem(id, JSON.stringify(messages.value.array));
 
     input.value = '';
-    if (attachments) uploads.value = [];
 
     await requestCompletion({
       conversationId: id,
@@ -533,13 +492,13 @@ async function regenerateLastMessage() {
 function handleKeyDown(e: KeyboardEvent) {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
-    sendMessage();
+    handleSend();
   }
   autoResize(e.target as HTMLTextAreaElement);
 }
 
 function autoResize(textarea: HTMLTextAreaElement) {
-  textarea.style.height = '4rem'; // Reset height to min (2 rows)
+  textarea.style.height = '3rem'; // Reset height to min (2 rows)
   const scrollHeight = textarea.scrollHeight;
   textarea.style.height = Math.min(scrollHeight, 160) + 'px'; // 160px = 10rem
 }

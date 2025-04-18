@@ -79,12 +79,18 @@
             v-else
             class="flex w-full items-center space-x-2 rounded-xl p-2 hover:bg-gray-300/10"
           >
-            <img
-              v-if="session.data?.user?.image"
-              :src="session.data.user.image"
-              alt="User Avatar"
-              class="h-9 w-9 rounded-full"
-            />
+            <AvatarRoot class="h-9 w-9 select-none rounded-full bg-gray-300 dark:bg-gray-700">
+              <AvatarImage
+                class="h-full w-full rounded-[inherit] object-cover"
+                :src="session.data.user.image ?? ''"
+                :alt="session.data.user.name"
+              />
+              <AvatarFallback
+                class="flex h-full w-full items-center justify-center font-semibold text-emerald-500"
+              >
+                {{ session.data.user.name.charAt(0) || 'U' }}
+              </AvatarFallback>
+            </AvatarRoot>
             <div class="flex flex-col items-start">
               <p class="m-0 text-sm font-semibold">
                 {{ session.data.user.name ?? 'User' }}
@@ -101,14 +107,15 @@
 </template>
 
 <script setup lang="ts">
+import Loader from '@/components/loader.vue';
 import { useSession } from '@/lib/auth-client';
 import { useConversationStore } from '@/stores/conversations.ts';
 import { keys } from 'common/utils';
 import { LogInIcon, PlusIcon, SearchIcon, SidebarIcon } from 'lucide-vue-next';
 import { storeToRefs } from 'pinia';
+import { AvatarFallback, AvatarImage, AvatarRoot } from 'radix-vue';
 import { computed, onMounted, onUnmounted, type Ref, ref } from 'vue';
 import { RouterLink } from 'vue-router';
-import Loader from './loader.vue';
 
 const session = useSession();
 

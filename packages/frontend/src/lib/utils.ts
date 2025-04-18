@@ -1,5 +1,6 @@
+import type { Nullish } from '@/lib/types';
+import { models, type Model, type ModelInfo } from 'common';
 import SuperJSON from 'superjson';
-import type { Nullish } from './types';
 
 export function isValidJSON(str: string): boolean {
   try {
@@ -42,3 +43,11 @@ export function omit<T extends Record<string, unknown>, K extends keyof T>(
   }
   return copy;
 }
+
+export function includes<T>(arr: T[], item: T): boolean {
+  return arr.includes(item);
+}
+
+export const modelFullName = (model: typeof Model.infer) =>
+  models[model].name +
+  ((models[model] as ModelInfo).text ? ` (${(models[model] as ModelInfo).text})` : '');
