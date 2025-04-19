@@ -6,7 +6,12 @@ export const conversationRouter = router({
   delete: publicProcedure
     .input(type({ id: 'string' }))
     .mutation(
-      async opts => void (await opts.ctx.db.conversations.update(opts.input.id, { archived: true }))
+      async opts =>
+        void (await opts.ctx.db.conversations.update(
+          { id: opts.input.id },
+          { id: opts.input.id, deleted: true },
+          true
+        ))
     ),
   modify: publicProcedure
     .input(
@@ -17,12 +22,14 @@ export const conversationRouter = router({
         'reasoningEffort?': Effort
       })
     )
-    .mutation(async opts => opts.ctx.db.conversations.update(opts.input.id, opts.input)),
+    .mutation(async opts =>
+      opts.ctx.db.conversations.update({ id: opts.input.id, deleted: false }, opts.input)
+    ),
   getMessages: publicProcedure
     .input(type({ id: 'string' }))
     .query(async opts =>
       opts.ctx.db.conversations
-        .findOne(opts.input.id, { archived: false })
+        .findOne({ id: opts.input.id, deleted: false })
         .then(v => v?.messages ?? [])
     )
 });

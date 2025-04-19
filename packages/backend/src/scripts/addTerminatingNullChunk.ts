@@ -1,9 +1,8 @@
 import { pick } from 'common/utils';
-import { closeDB } from '../lib/database';
-import { ConversationService } from '../lib/database/services/ConversationService';
+import { closeDB, ConversationService } from '../lib/db';
 
 export default async function addTerminatingNullChunk() {
-  const conversations = await ConversationService.find();
+  const conversations = await ConversationService.find({ deleted: false });
   const updated = conversations.map(c => ({
     ...c,
     messages: c.messages.map(m =>
@@ -13,7 +12,9 @@ export default async function addTerminatingNullChunk() {
     )
   }));
 
-  await Promise.all(updated.map(c => ConversationService.update(c.id, pick(c, ['messages']))));
+  await Promise.all(
+    updated.map(c => ConversationService.update({ id: c.id }, pick(c, ['messages'])))
+  );
 
   await closeDB();
 }

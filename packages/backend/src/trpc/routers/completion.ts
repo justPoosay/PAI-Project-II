@@ -14,14 +14,14 @@ export const completionRouter = publicProcedure
   )
   .query(async function* ({ input, ctx }) {
     // 1) load & append the new “user” and empty “assistant” messages
-    const c = await ctx.db.conversations.findOne(input.for, { archived: false });
+    const c = await ctx.db.conversations.findOne({ id: input.for, deleted: false });
     if (!c) return;
 
     c.messages.push(
       { role: 'user', content: input.message },
       { role: 'assistant', chunks: [], author: c.model }
     );
-    await ctx.db.conversations.update(c.id, { messages: c.messages });
+    await ctx.db.conversations.update({ id: c.id }, { messages: c.messages });
 
     // 2) set up the stream
     const allowed = ['reasoning', 'text-delta', 'tool-call', 'tool-result'] satisfies Exclude<
@@ -97,6 +97,6 @@ export const completionRouter = publicProcedure
       yield errorChunk;
     } finally {
       // 6) persist the final state of the conversation
-      await ctx.db.conversations.update(c.id, { messages: c.messages });
+      await ctx.db.conversations.update({ id: c.id }, { messages: c.messages });
     }
   });

@@ -175,11 +175,10 @@ import ToolResult from '@/components/tool-result.vue';
 import { parseMarkdown } from '@/lib/markdown.ts';
 import { trpc } from '@/lib/trpc';
 import type { Nullish } from '@/lib/types.ts';
-import { capitalize, safeParse } from '@/lib/utils.ts';
+import { capitalize } from '@/lib/utils.ts';
 import router from '@/router';
 import { useConversationStore } from '@/stores/conversations.ts';
 import { useModelStore } from '@/stores/models.ts';
-import { type } from 'arktype';
 import {
   AssistantMessage,
   Conversation,
@@ -208,7 +207,6 @@ import {
   SunIcon,
   type LucideProps
 } from 'lucide-vue-next';
-import SuperJSON from 'superjson';
 import { computed, nextTick, onMounted, ref, watch, type FunctionalComponent } from 'vue';
 import { onBeforeRouteUpdate, useRoute } from 'vue-router';
 
@@ -288,48 +286,18 @@ function init(id: string) {
 }
 
 function fetchMessages(id: string, token: number) {
-  function equals(a: typeof Message.infer, b: typeof Message.infer) {
-    if (a.role !== b.role) return false;
-
-    if (a.role === 'user') {
-      return a.content === (b as typeof a).content;
-    }
-
-    return (
-      a.chunks.length === (b as typeof a).chunks.length &&
-      a.chunks.every((v, i) => v === (b as typeof a).chunks[i])
-    );
-  }
-
   trpc.conversation.getMessages
     .query({ id })
     .then(msgs => {
       if (token !== fetchToken.value) return;
       messages.value.loading = false;
-
-      if (messages.value.array.length > msgs.length) {
-        const lastIndex = msgs.length - 1;
-        const local = messages.value.array[lastIndex]!;
-        const remote = msgs[lastIndex]!;
-        // if both messages are the same and the last message is not finished, don't update
-        if (equals(local, remote) && !finished(messages.value.array.at(-1))) return;
-      }
-
       messages.value.array = msgs;
-      localStorage.setItem(id, SuperJSON.stringify(msgs));
     })
     .catch(e => {
       if (token !== fetchToken.value) return;
       messages.value.loading = false;
-      messages.value.error = e.message;
+      messages.value.error = `${e}`;
     });
-
-  const out = Message.array()(safeParse(localStorage.getItem(id)));
-  if (token !== fetchToken.value) return;
-  if (!(out instanceof type.errors)) {
-    messages.value.array = out;
-    return (messages.value.loading = false);
-  }
 
   messages.value.loading = true;
 }

@@ -1,6 +1,6 @@
 import { type FetchCreateContextFnOptions } from '@trpc/server/adapters/fetch';
 import { auth } from '../lib/auth';
-import { ConversationService } from '../lib/database/services/ConversationService';
+import { ConversationService } from '../lib/db';
 import logger from '../lib/logger';
 
 export async function createContext({ req, resHeaders, info }: FetchCreateContextFnOptions) {
