@@ -45,6 +45,14 @@ export const models = Object.freeze({
     model: anthropic('claude-3-7-sonnet-20250219'),
     env: 'ANTHROPIC_API_KEY'
   },
+  'claude-3-7-sonnet-thinking': {
+    capabilities: ['toolUsage', 'reasoning', 'effortControl'],
+    name: 'Claude 3.7 Sonnet',
+    text: 'Thinking',
+    icon: 'anthropic',
+    model: anthropic('claude-3-7-sonnet-20250219'),
+    env: 'ANTHROPIC_API_KEY'
+  },
   'gpt-4o': {
     capabilities: ['toolUsage', 'imageInput'],
     name: 'ChatGPT 4o',

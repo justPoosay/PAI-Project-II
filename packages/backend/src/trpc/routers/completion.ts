@@ -1,6 +1,6 @@
 import { streamText } from 'ai';
 import { type } from 'arktype';
-import { models, type MessageChunk } from 'common';
+import { Effort, models, type MessageChunk } from 'common';
 import { includes } from 'common/utils';
 import { getTextContent } from '../../core/utils';
 import { publicProcedure } from '../trpc';
@@ -36,9 +36,27 @@ export const completionRouter = publicProcedure
       ...(includes(models[c.model].capabilities, 'effortControl')
         ? {
             providerOptions: {
-              openai: {
-                reasoningEffort: c.reasoningEffort ?? 'low'
-              }
+              ...{
+                'openai.chat': {
+                  openai: {
+                    reasoningEffort: c.reasoningEffort ?? 'low'
+                  }
+                },
+                'anthropic.messages': {
+                  anthropic: {
+                    thinking: {
+                      type: 'enabled',
+                      budgetTokens: (
+                        {
+                          low: 1024,
+                          medium: 2048,
+                          high: 4096
+                        } satisfies { [K in typeof Effort.infer]: number }
+                      )[c.reasoningEffort ?? 'low']
+                    }
+                  }
+                }
+              }[models[c.model].model.provider]
             }
           }
         : {})

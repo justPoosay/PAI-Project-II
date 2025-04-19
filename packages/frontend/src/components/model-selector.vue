@@ -46,7 +46,6 @@
 <script setup lang="ts">
 import ImageInput from '@/components/model-capabilities/image-input.vue';
 import Reasoning from '@/components/model-capabilities/reasoning.vue';
-import ToolUsage from '@/components/model-capabilities/tool-usage.vue';
 import { icons } from '@/lib/icons';
 import { modelFullName } from '@/lib/utils';
 import { useModelStore } from '@/stores/models';
@@ -60,8 +59,7 @@ import { ref } from 'vue';
 
 const capabilities = Object.freeze({
   imageInput: [ImageInput, 'Supports image uploads and analysis'],
-  reasoning: [Reasoning, 'Has reasoning capabilities'],
-  toolUsage: [ToolUsage, 'Can use external tools']
+  reasoning: [Reasoning, 'Has reasoning capabilities']
 } satisfies Partial<{
   [K in (typeof models)[keyof typeof models]['capabilities'][number]]: [
     DefineComponent<

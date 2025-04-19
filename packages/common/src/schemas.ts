@@ -1,7 +1,7 @@
 import { type } from 'arktype';
 
 export const Model = type(
-  "'gpt-4o' | 'gpt-4o-mini' | 'claude-3-5-sonnet' | 'grok-3' | 'llama-3.3-70b-versatile' | 'o3-mini' | 'deepseek-r1-distill-llama-70b' | 'deepseek-r1-distill-qwen-32b' | 'claude-3-7-sonnet' | 'o4-mini'"
+  "'gpt-4o' | 'gpt-4o-mini' | 'claude-3-5-sonnet' | 'grok-3' | 'llama-3.3-70b-versatile' | 'o3-mini' | 'deepseek-r1-distill-llama-70b' | 'deepseek-r1-distill-qwen-32b' | 'claude-3-7-sonnet' | 'o4-mini' | 'claude-3-7-sonnet-thinking'"
 );
 
 export const Effort = type("'low' | 'medium' | 'high'");

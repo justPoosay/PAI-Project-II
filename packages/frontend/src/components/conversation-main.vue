@@ -266,6 +266,8 @@ watch(reasoningEffort, function (newValue, oldValue) {
 });
 
 function init(id: string) {
+  console.log('[INIT]', id);
+
   fetchToken.value++;
   const token = fetchToken.value;
   const isNew = id === 'new';
@@ -341,7 +343,6 @@ onBeforeRouteUpdate((to, from, next) => {
       skipNextInit = false;
       return next();
     }
-    console.log('init(' + to.params.id + ')');
     init(to.params.id as string);
   }
   return next();
