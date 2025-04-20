@@ -1,8 +1,8 @@
+import { TRPCError } from '@trpc/server';
 import { type } from 'arktype';
 import { Model } from 'common';
 import { ObjectId } from 'mongodb';
 import { publicProcedure, router } from '../trpc';
-import { TRPCError } from '@trpc/server';
 
 export const conversationsRouter = router({
   get: publicProcedure.query(opts => {
