@@ -1,18 +1,20 @@
 import { trpc } from '@/lib/trpc';
-import { Conversation, Model } from 'common';
+import { Model } from 'common';
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 
+export type Conversation =
+  Awaited<ReturnType<typeof trpc.conversations.get.query>> extends Array<infer T> ? T : never;
+
 export const useConversationStore = defineStore('conversations', () => {
-  const conversations = ref<(typeof Conversation.infer)[]>([]);
+  const conversations = ref<Conversation[]>([]);
 
   async function $fetch() {
     conversations.value = await trpc.conversations.get.query();
+    console.log('conversations', conversations.value);
   }
 
-  async function $create(
-    data: { model?: typeof Model.infer } = {}
-  ): Promise<typeof Conversation.infer> {
+  async function $create(data: { model?: typeof Model.infer } = {}) {
     const c = await trpc.conversations.create.mutate(data);
     conversations.value.unshift(c);
     return c;
@@ -23,7 +25,11 @@ export const useConversationStore = defineStore('conversations', () => {
   } & Parameters<typeof trpc.conversation.modify.mutate>[0];
 
   async function $modify({ requestChange = true, ...data }: ModifyData) {
-    const index = conversations.value.findIndex(c => c.id === data.id);
+    const index = conversations.value.findIndex(c => String(c._id) === data.id);
+
+    if (index === -1 || !conversations.value[index] || conversations.value[index].deleted) {
+      return;
+    }
 
     if (requestChange) {
       const c = await trpc.conversation.modify.mutate(data);
@@ -36,7 +42,7 @@ export const useConversationStore = defineStore('conversations', () => {
     conversations.value[index] = {
       ...conversations.value[index]!,
       ...data,
-      updated_at: new Date()
+      updatedAt: new Date()
     };
   }
 

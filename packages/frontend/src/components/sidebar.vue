@@ -49,8 +49,8 @@
               </p>
               <RouterLink
                 v-for="c in groups[group]"
-                v-bind:key="c.id"
-                :to="{ name: 'c', params: { id: c.id } }"
+                v-bind:key="String(c._id)"
+                :to="{ name: 'c', params: { id: String(c._id) } }"
                 class="flex flex-row items-center rounded-xl p-2 text-sm hover:bg-black/5 dark:hover:bg-gray-200/5"
               >
                 <span class="block truncate" :title="c.name ?? undefined">{{
@@ -102,7 +102,7 @@
                 {{ session.data.user.name ?? 'User' }}
               </p>
               <p class="m-0 text-xs text-gray-500 dark:text-gray-400">
-                {{ 'Pro' /* TODO */ }}
+                {{ capitalize(session.data.user.tier) }}
               </p>
             </div>
           </button>
@@ -115,6 +115,7 @@
 <script setup lang="ts">
 import Loader from '@/components/loader.vue';
 import { useSession } from '@/lib/auth-client';
+import { capitalize } from '@/lib/utils';
 import { useConversationStore } from '@/stores/conversations.ts';
 import { keys } from 'common/utils';
 import { LogInIcon, PlusIcon, SearchIcon, SidebarIcon } from 'lucide-vue-next';
@@ -130,7 +131,10 @@ const circumstances = ref<Partial<{ force: boolean; narrow: boolean }>>({});
 
 const state = ref<'idle' | 'loading' | 'error'>('loading');
 const conversationStore = useConversationStore();
-const { conversations } = storeToRefs(conversationStore);
+const refs = storeToRefs(conversationStore);
+const conversations = computed(() => {
+  return refs.conversations.value.filter(c => !c.deleted);
+});
 loadConversations();
 
 function loadConversations() {
@@ -179,9 +183,11 @@ const groups = computed(function () {
 
   return conversations.value.reduce(
     (acc, v) => {
-      const group =
-        Object.keys(groups).find(g => groups[g as keyof typeof groups](v.updated_at)) ?? 'Older';
-      acc[group as keyof typeof acc].push(v);
+      if (!v.deleted) {
+        const group =
+          Object.keys(groups).find(g => groups[g as keyof typeof groups](v.updatedAt)) ?? 'Older';
+        acc[group as keyof typeof acc].push(v);
+      }
       return acc;
     },
     Object.fromEntries(Object.keys(groups).map(v => [v, [] as Conversations])) as Record<

@@ -1,4 +1,4 @@
-import ConversationView from '@/views/conversation-view.vue';
+import { getSession } from '@/lib/auth-client';
 import { createRouter, createWebHistory } from 'vue-router';
 
 const router = createRouter({
@@ -12,12 +12,18 @@ const router = createRouter({
     {
       path: '/c/:id',
       name: 'c',
-      component: ConversationView
+      component: () => import('@/views/conversation-view.vue')
     },
     {
       path: '/login',
       name: 'login',
-      component: () => import('@/views/login-view.vue')
+      component: () => import('@/views/login-view.vue'),
+      async beforeEnter(_, from) {
+        const session = await getSession();
+        if (session.data) {
+          return from;
+        }
+      }
     }
   ]
 });

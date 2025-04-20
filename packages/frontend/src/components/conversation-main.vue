@@ -177,18 +177,9 @@ import { trpc } from '@/lib/trpc';
 import type { Nullish } from '@/lib/types.ts';
 import { capitalize } from '@/lib/utils.ts';
 import router from '@/router';
-import { useConversationStore } from '@/stores/conversations.ts';
+import { useConversationStore, type Conversation } from '@/stores/conversations.ts';
 import { useModelStore } from '@/stores/models.ts';
-import {
-  AssistantMessage,
-  Conversation,
-  Effort,
-  Message,
-  MessageChunk,
-  models,
-  SSE,
-  type Model
-} from 'common';
+import { AssistantMessage, Effort, Message, MessageChunk, models, SSE, type Model } from 'common';
 import { includes } from 'common/utils';
 import {
   CheckIcon,
@@ -207,11 +198,13 @@ import {
   SunIcon,
   type LucideProps
 } from 'lucide-vue-next';
+import { storeToRefs } from 'pinia';
 import { computed, nextTick, onMounted, ref, watch, type FunctionalComponent } from 'vue';
 import { onBeforeRouteUpdate, useRoute } from 'vue-router';
 
 const route = useRoute();
 const conversationStore = useConversationStore();
+const refs = storeToRefs(conversationStore);
 const modelStore = useModelStore();
 
 const messages = ref<{ loading: boolean; error: string | null; array: (typeof Message.infer)[] }>({
@@ -220,8 +213,12 @@ const messages = ref<{ loading: boolean; error: string | null; array: (typeof Me
   array: []
 });
 const fetchToken = ref(0);
-const conversation = ref<typeof Conversation.infer | null>(
-  conversationStore.conversations.find(c => c.id === route.params.id) ?? null
+const conversation = computed(
+  () =>
+    refs.conversations.value.find(
+      (c): c is Extract<Conversation, { deleted: false }> =>
+        !c.deleted && String(c._id) === route.params.id
+    ) ?? null
 );
 const input = ref('');
 const error = ref<Omit<Extract<typeof SSE.infer, { kind: 'error' }>, 'kind' | 'for'> | null>(null);
@@ -249,7 +246,7 @@ const reasoningEffort = ref<typeof Effort.infer>('high');
 
 watch(model, function (newValue, oldValue) {
   if (newValue !== oldValue && conversation.value && conversation.value.model !== newValue) {
-    conversationStore.$modify({ id: conversation.value.id, model: newValue });
+    conversationStore.$modify({ id: String(conversation.value._id), model: newValue });
   }
 });
 
@@ -259,7 +256,7 @@ watch(reasoningEffort, function (newValue, oldValue) {
     conversation.value &&
     conversation.value.reasoningEffort !== newValue
   ) {
-    conversationStore.$modify({ id: conversation.value.id, reasoningEffort: newValue });
+    conversationStore.$modify({ id: String(conversation.value._id), reasoningEffort: newValue });
   }
 });
 
@@ -271,10 +268,8 @@ function init(id: string) {
   const isNew = id === 'new';
 
   messages.value = { loading: false, error: null, array: [] };
-  const c = conversationStore.conversations.find(c => c.id === id) ?? null;
-  conversation.value = c;
-  model.value = c?.model ?? modelStore.models[0] ?? 'o3-mini';
-  reasoningEffort.value = c?.reasoningEffort ?? 'high';
+  model.value = conversation.value?.model ?? modelStore.models[0] ?? 'o3-mini';
+  reasoningEffort.value = conversation.value?.reasoningEffort ?? 'high';
   error.value = null;
   showError.value = false;
 
@@ -286,6 +281,8 @@ function init(id: string) {
 }
 
 function fetchMessages(id: string, token: number) {
+  console.log('[FETCH]', id);
+
   trpc.conversation.getMessages
     .query({ id })
     .then(msgs => {
@@ -397,7 +394,7 @@ async function handleSend() {
 
     if (route.params.id === 'new') {
       const c = await conversationStore.$create({ model: model.value });
-      id = c.id;
+      id = String(c._id);
       skipNextInit = true;
       await router.push({ name: 'c', params: { id } });
     }

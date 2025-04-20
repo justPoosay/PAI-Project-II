@@ -1,32 +1,54 @@
+import { TRPCError } from '@trpc/server';
 import { type } from 'arktype';
 import { Effort, Model } from 'common';
+import { ObjectId } from 'mongodb';
 import { publicProcedure, router } from '../trpc';
 
 export const conversationRouter = router({
-  delete: publicProcedure.input(type({ id: 'string' })).mutation(async opts => {
-    await opts.ctx.db.conversations.update(
-      { id: opts.input.id },
-      { id: opts.input.id, deleted: true },
+  delete: publicProcedure.input(type({ id: 'string.hex==24' })).mutation(async ({ ctx, input }) => {
+    if (!ctx.auth?.user) {
+      throw new TRPCError({ code: 'UNAUTHORIZED' });
+    }
+
+    const userId = new ObjectId(ctx.auth.user.id);
+    await ctx.db.conversations.update(
+      { _id: new ObjectId(input.id), userId },
+      { deleted: true, userId },
       true
     );
   }),
   modify: publicProcedure
     .input(
       type({
-        id: 'string',
+        id: 'string.hex==24',
         'name?': 'string | null',
         'model?': Model,
         'reasoningEffort?': Effort
       })
     )
-    .mutation(async opts =>
-      opts.ctx.db.conversations.update({ id: opts.input.id, deleted: false }, opts.input)
-    ),
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.auth?.user) {
+        throw new TRPCError({ code: 'UNAUTHORIZED' });
+      }
+
+      return ctx.db.conversations.update(
+        { _id: new ObjectId(input.id), deleted: false, userId: new ObjectId(ctx.auth.user.id) },
+        input
+      );
+    }),
   getMessages: publicProcedure
-    .input(type({ id: 'string' }))
-    .query(async opts =>
-      opts.ctx.db.conversations
-        .findOne({ id: opts.input.id, deleted: false })
-        .then(v => v?.messages ?? [])
-    )
+    .input(type({ id: 'string.hex==24' }))
+    .query(async ({ ctx, input }) => {
+      if (!ctx.auth?.user) {
+        throw new TRPCError({ code: 'UNAUTHORIZED' });
+      }
+
+      return ctx.db.conversations
+        .findOne({
+          _id: new ObjectId(input.id),
+          deleted: false,
+          userId: new ObjectId(ctx.auth.user.id)
+        })
+        .then(v => v?.messages ?? []);
+    })
 });

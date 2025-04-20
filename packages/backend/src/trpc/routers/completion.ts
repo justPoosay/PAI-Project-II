@@ -1,7 +1,8 @@
+import { TRPCError } from '@trpc/server';
 import { streamText } from 'ai';
 import { type } from 'arktype';
-import { Effort, models, type MessageChunk } from 'common';
-import { includes } from 'common/utils';
+import { models, type MessageChunk } from 'common';
+import { ObjectId } from 'mongodb';
 import { getTextContent } from '../../core/utils';
 import { publicProcedure } from '../trpc';
 
@@ -9,84 +10,88 @@ export const completionRouter = publicProcedure
   .input(
     type({
       message: 'string>0',
-      for: 'string'
+      for: 'string.hex==24'
     })
   )
-  .query(async function* ({ input, ctx }) {
-    // 1) load & append the new “user” and empty “assistant” messages
-    const c = await ctx.db.conversations.findOne({ id: input.for, deleted: false });
+  .query(async function* ({ input, ctx, signal }) {
+    if (!ctx.auth?.user) {
+      throw new TRPCError({ code: 'UNAUTHORIZED' });
+    }
+
+    const _id = new ObjectId(input.for);
+    const c = await ctx.db.conversations.findOne({
+      _id,
+      deleted: false,
+      userId: new ObjectId(ctx.auth.user.id)
+    });
     if (!c) return;
 
-    c.messages.push(
-      { role: 'user', content: input.message },
-      { role: 'assistant', chunks: [], author: c.model }
-    );
-    await ctx.db.conversations.update({ id: c.id }, { messages: c.messages });
+    const model = c.model ?? 'o4-mini';
+    const reasoningEffort = c.reasoningEffort;
 
-    // 2) set up the stream
-    const allowed = ['reasoning', 'text-delta', 'tool-call', 'tool-result'] satisfies Exclude<
-      NonNullable<typeof MessageChunk.infer>['type'],
-      'error'
-    >[];
-    const stream = streamText({
-      model: models[c.model].model,
+    c.messages.push({ role: 'user', content: input.message });
+    c.messages.push({ role: 'assistant', chunks: [], author: model });
+
+    await ctx.db.conversations.update({ _id }, { messages: c.messages });
+
+    const options: Parameters<typeof streamText>[0] = {
+      model: models[model].model,
       messages: c.messages.map(m =>
         m.role === 'user' ? m : { role: 'assistant', content: getTextContent(m.chunks) }
       ),
-      ...(includes(models[c.model].capabilities, 'effortControl')
-        ? {
-            providerOptions: {
-              ...{
-                'openai.chat': {
-                  openai: {
-                    reasoningEffort: c.reasoningEffort ?? 'low'
-                  }
-                },
-                'anthropic.messages': {
-                  anthropic: {
-                    thinking: {
-                      type: 'enabled',
-                      budgetTokens: (
-                        {
-                          low: 1024,
-                          medium: 2048,
-                          high: 4096
-                        } satisfies { [K in typeof Effort.infer]: number }
-                      )[c.reasoningEffort ?? 'low']
-                    }
-                  }
-                }
-              }[models[c.model].model.provider]
-            }
+      abortSignal: signal
+    };
+
+    if (model === 'claude-3-7-sonnet-thinking' && reasoningEffort) {
+      let budgetTokens = 1024;
+      if (reasoningEffort === 'medium') budgetTokens = 2048;
+      if (reasoningEffort === 'high') budgetTokens = 4096;
+
+      options.providerOptions = {
+        anthropic: {
+          thinking: {
+            type: 'enabled',
+            budgetTokens
           }
-        : {})
-    });
+        }
+      };
+    }
+
+    if ((model === 'o4-mini' || model === 'o3-mini') && reasoningEffort) {
+      options.providerOptions = {
+        openai: {
+          reasoningEffort
+        }
+      };
+    }
+
+    const stream = streamText(options);
 
     try {
-      // 3) for‑await directly on the ai.fullStream
       for await (const chunk of stream.fullStream) {
-        if (!includes(allowed, chunk.type)) continue;
-        const correctlyTypedChunk = chunk as Extract<
-          typeof chunk,
-          { type: (typeof allowed)[number] }
-        >;
-        // push into conversation state
+        if (
+          chunk.type !== 'tool-call' &&
+          chunk.type !== 'text-delta' &&
+          chunk.type !== 'reasoning'
+        ) {
+          continue;
+        }
+
         const last = c.messages.at(-1)!;
         if (last.role === 'assistant') {
-          last.chunks.push(correctlyTypedChunk);
+          last.chunks.push(chunk);
         }
-        // stream it back to the client
-        yield correctlyTypedChunk;
+
+        yield chunk;
       }
 
-      // 4) signal “end of stream” (same as null)
       const last = c.messages.at(-1)!;
       if (last.role === 'assistant') {
         last.chunks.push(null);
       }
+
       yield null;
     } catch (err) {
-      // 5) on error, push to state + client
       const message =
         err instanceof Error && err.name === 'AbortError' ? 'Aborted by user' : `${err}`;
       const errorChunk: typeof MessageChunk.infer = { type: 'error', message };
@@ -96,7 +101,6 @@ export const completionRouter = publicProcedure
       }
       yield errorChunk;
     } finally {
-      // 6) persist the final state of the conversation
-      await ctx.db.conversations.update({ id: c.id }, { messages: c.messages });
+      await ctx.db.conversations.update({ _id }, { messages: c.messages });
     }
   });

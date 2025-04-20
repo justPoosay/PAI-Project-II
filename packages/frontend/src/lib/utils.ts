@@ -27,3 +27,5 @@ export async function calculateHash(buffer: ArrayBuffer) {
 export const modelFullName = (model: typeof Model.infer) =>
   models[model].name +
   ((models[model] as ModelInfo).text ? ` (${(models[model] as ModelInfo).text})` : '');
+
+export const selfOrFirst = <T>(it: T | T[]) => (Array.isArray(it) ? it[0] : it);

@@ -56,10 +56,10 @@ export const Message = type.or(UserMessage, AssistantMessage);
 
 export const Conversation = type({
   id: 'string',
-  name: 'string | null',
-  model: Model,
+  'name?': 'string | null',
+  'model?': Model,
   'reasoningEffort?': Effort,
-  updated_at: 'Date'
+  updatedAt: 'Date'
 });
 
 export const SSE = type.or(

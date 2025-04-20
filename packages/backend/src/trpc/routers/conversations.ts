@@ -1,23 +1,30 @@
 import { type } from 'arktype';
 import { Model } from 'common';
-import { getAvailableModels } from '../../core/utils';
+import { ObjectId } from 'mongodb';
 import { publicProcedure, router } from '../trpc';
+import { TRPCError } from '@trpc/server';
 
 export const conversationsRouter = router({
-  get: publicProcedure.query(opts =>
-    opts.ctx.db.conversations
-      .find({ deleted: false })
-      .then(v => v.sort((a, b) => b.updated_at.getTime() - a.updated_at.getTime()))
-  ),
-  create: publicProcedure.input(type({ 'model?': Model })).mutation(opts =>
-    opts.ctx.db.conversations.create<
-      Extract<typeof opts.ctx.db.conversations._schema.infer, { deleted: false }>
-    >({
-      deleted: false,
-      model: opts.input.model ?? getAvailableModels()[0] ?? 'o3-mini',
-      reasoningEffort: 'high',
+  get: publicProcedure.query(opts => {
+    if (!opts.ctx.auth?.user) {
+      throw new TRPCError({ code: 'UNAUTHORIZED' });
+    }
+
+    return opts.ctx.db.conversations.find({
+      userId: new ObjectId(opts.ctx.auth.user.id)
+    });
+  }),
+  create: publicProcedure.input(type({ 'model?': Model })).mutation(({ ctx }) => {
+    if (!ctx.auth?.user) {
+      throw new TRPCError({ code: 'UNAUTHORIZED' });
+    }
+
+    return ctx.db.conversations.create({
       name: null,
-      messages: []
-    })
-  )
+      messages: [],
+      deleted: false,
+      updatedAt: new Date(),
+      userId: new ObjectId(ctx.auth.user.id)
+    });
+  })
 });

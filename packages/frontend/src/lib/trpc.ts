@@ -1,4 +1,4 @@
-import { createTRPCClient, httpBatchStreamLink } from '@trpc/client';
+import { createTRPCClient, httpBatchStreamLink, TRPCClientError } from '@trpc/client';
 import type { AppRouter } from 'common';
 import SuperJSON from 'superjson';
 
@@ -10,3 +10,7 @@ export const trpc = createTRPCClient<AppRouter>({
     })
   ]
 });
+
+export function isTRPCClientError(cause: unknown): cause is TRPCClientError<AppRouter> {
+  return cause instanceof TRPCClientError;
+}

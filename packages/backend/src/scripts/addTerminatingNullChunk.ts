@@ -13,7 +13,7 @@ export default async function addTerminatingNullChunk() {
   }));
 
   await Promise.all(
-    updated.map(c => ConversationService.update({ id: c.id }, pick(c, ['messages'])))
+    updated.map(c => ConversationService.update({ _id: c._id }, pick(c, ['messages'])))
   );
 
   await closeDB();
