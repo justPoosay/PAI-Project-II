@@ -6,3 +6,4 @@
 - better error displaying
 - fix the docker image not building
 - deserialize ObjectId
+- "Anonymous" chats / paywall
