@@ -8,6 +8,7 @@ import {
   type WithId
 } from 'mongodb';
 import logger from './logger';
+import type { Merge } from './types';
 import { env } from './utils';
 
 const mongoClient = new MongoClient(env.DATABASE_URL);
@@ -35,7 +36,7 @@ function createService<S extends Type<{}, {}>>(collectionName: string, schema: S
       const entities = await collection.find(where).toArray();
       return entities.filter(schema.allows) as WithId<Extract<T, Pick<U, keyof T>>>[];
     },
-    async create<U extends T>(data: U): Promise<WithId<Extract<T, Pick<U, keyof T>>>> {
+    async create<U extends T>(data: U): Promise<WithId<U>> {
       const { insertedId } = await collection.insertOne(
         data as unknown as OptionalUnlessRequiredId<T>
       );
@@ -43,18 +44,20 @@ function createService<S extends Type<{}, {}>>(collectionName: string, schema: S
       return {
         ...data,
         _id: insertedId
-      } as unknown as WithId<Extract<T, Pick<U, keyof T>>>;
+      } as WithId<U>;
     },
     async update<U extends O extends true ? T : Partial<T>, F extends Filter<T>, O extends boolean>(
       where: F,
       data: U,
       overwrite: O = false as O
-    ): Promise<WithId<Extract<T, Pick<U & F, keyof T>>> | null> {
+    ): Promise<WithId<Extract<T, Pick<Merge<F, U>, keyof T>>> | null> {
       const value = overwrite
         ? await collection.findOneAndReplace(where, data, { returnDocument: 'after' })
         : await collection.findOneAndUpdate(where, { $set: data }, { returnDocument: 'after' });
 
-      return schema.allows(value) ? (value as WithId<Extract<T, Pick<U & F, keyof T>>>) : null;
+      return schema.allows(value)
+        ? (value as WithId<Extract<T, Pick<Merge<F, U>, keyof T>>>)
+        : null;
     },
     async delete(where: Filter<T>): Promise<void> {
       await collection.deleteOne(where);
