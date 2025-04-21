@@ -7,7 +7,7 @@ export const useModelStore = defineStore('models', () => {
   const models = ref<(typeof Model.infer)[]>([]);
 
   async function $fetch() {
-    models.value = await trpc.models.query();
+    models.value = await trpc.model.available.query();
   }
 
   return {

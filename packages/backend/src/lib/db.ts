@@ -20,43 +20,43 @@ export async function closeDB() {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-function createService<S extends Type<{}, {}>>(collectionName: string, schema: S) {
-  type T = S['inferOut'];
+function createService<A extends Type<{}, {}>>(collectionName: string, schema: A) {
+  type T = A['inferOut'];
 
   const collection = db.collection<T>(collectionName);
 
   return Object.freeze({
-    async findOne<U extends Filter<T>>(
-      where: U
-    ): Promise<WithId<Extract<T, Pick<U, keyof T>>> | null> {
+    async findOne<S extends Filter<T>>(
+      where: S
+    ): Promise<WithId<Extract<T, Pick<S, keyof T>>> | null> {
       const entity = await collection.findOne(where);
-      return schema.allows(entity) ? (entity as WithId<Extract<T, Pick<U, keyof T>>>) : null;
+      return schema.allows(entity) ? (entity as WithId<Extract<T, Pick<S, keyof T>>>) : null;
     },
-    async find<U extends Filter<T>>(where: U): Promise<WithId<Extract<T, Pick<U, keyof T>>>[]> {
+    async find<S extends Filter<T>>(where: S): Promise<WithId<Extract<T, Pick<S, keyof T>>>[]> {
       const entities = await collection.find(where).toArray();
-      return entities.filter(schema.allows) as WithId<Extract<T, Pick<U, keyof T>>>[];
+      return entities.filter(schema.allows) as WithId<Extract<T, Pick<S, keyof T>>>[];
     },
-    async create<U extends T>(data: U): Promise<WithId<U>> {
-      const { insertedId } = await collection.insertOne(
-        data as unknown as OptionalUnlessRequiredId<T>
-      );
+    async create<S extends OptionalUnlessRequiredId<T>>(data: S): Promise<WithId<S>> {
+      const { insertedId } = await collection.insertOne(data);
 
       return {
         ...data,
         _id: insertedId
-      } as WithId<U>;
+      } as WithId<S>;
     },
-    async update<U extends O extends true ? T : Partial<T>, F extends Filter<T>, O extends boolean>(
-      where: F,
-      data: U,
-      overwrite: O = false as O
-    ): Promise<WithId<Extract<T, Pick<Merge<F, U>, keyof T>>> | null> {
-      const value = overwrite
+    async update<S extends Filter<T>, U extends V extends true ? T : Partial<T>, V extends boolean>(
+      where: S,
+      dataOrCB: U | ((prev: WithId<Extract<T, Pick<S, keyof T>>> | null) => U),
+      replace: V = false as V
+    ): Promise<WithId<Extract<T, Pick<Merge<S, U>, keyof T>>> | null> {
+      const data = typeof dataOrCB === 'function' ? dataOrCB(await this.findOne(where)) : dataOrCB;
+
+      const value = replace
         ? await collection.findOneAndReplace(where, data, { returnDocument: 'after' })
         : await collection.findOneAndUpdate(where, { $set: data }, { returnDocument: 'after' });
 
       return schema.allows(value)
-        ? (value as WithId<Extract<T, Pick<Merge<F, U>, keyof T>>>)
+        ? (value as WithId<Extract<T, Pick<Merge<S, U>, keyof T>>>)
         : null;
     },
     async delete(where: Filter<T>): Promise<void> {

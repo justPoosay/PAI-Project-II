@@ -4,18 +4,18 @@ import { defineStore } from 'pinia';
 import { ref } from 'vue';
 
 export type Conversation =
-  Awaited<ReturnType<typeof trpc.conversations.get.query>> extends Array<infer T> ? T : never;
+  Awaited<ReturnType<typeof trpc.conversation.list.query>> extends Array<infer T> ? T : never;
 
 export const useConversationStore = defineStore('conversations', () => {
   const conversations = ref<Conversation[]>([]);
 
   async function $fetch() {
-    conversations.value = await trpc.conversations.get.query();
+    conversations.value = await trpc.conversation.list.query();
     console.log('conversations', conversations.value);
   }
 
   async function $create(data: { model?: typeof Model.infer } = {}) {
-    const c = await trpc.conversations.create.mutate(data);
+    const c = await trpc.conversation.new.mutate(data);
     conversations.value.unshift(c);
     return c;
   }

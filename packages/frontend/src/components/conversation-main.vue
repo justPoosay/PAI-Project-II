@@ -281,7 +281,7 @@ function init(id: string) {
 function fetchMessages(id: string, token: number) {
   console.log('[FETCH]', id);
 
-  trpc.conversation.getMessages
+  trpc.conversation.messages
     .query({ id })
     .then(msgs => {
       if (token !== fetchToken.value) return;
