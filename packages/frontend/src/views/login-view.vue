@@ -18,7 +18,7 @@
             "
             class="flex w-full items-center justify-center space-x-2 rounded-lg border border-gray-300 bg-white px-4 py-3 font-medium text-black transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-[#352A35] dark:text-white dark:hover:bg-[#2A1F2A] dark:focus:ring-purple-500"
           >
-            <img :src="GitHub" alt="GitHub" class="h-6 w-6" />
+            <SiGithub class="h-6 w-6" />
             <span>Sign in with GitHub</span>
           </button>
         </div>
@@ -28,9 +28,9 @@
 </template>
 
 <script setup lang="ts">
-import GitHub from '@/assets/github.svg';
 import { signIn } from '@/lib/auth-client';
 import { selfOrFirst } from '@/lib/utils';
+import { SiGithub } from 'vue-icons-plus/si';
 </script>
 
 <style lang="sass">

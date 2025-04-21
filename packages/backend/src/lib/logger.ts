@@ -1,7 +1,7 @@
 import { color, type ColorInput } from 'bun';
 import dayjs from 'dayjs';
+import { env } from './env';
 import { LogLevel } from './schemas';
-import { env } from './utils';
 
 function colorize(input: ColorInput, text: string) {
   return color(input, 'ansi') + text + color('white', 'ansi');

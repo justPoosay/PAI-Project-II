@@ -1,5 +1,6 @@
 import { type, type Type } from 'arktype';
 import { Conversation, Message } from 'common';
+import type { Merge } from 'common/utils';
 import {
   MongoClient,
   ObjectId,
@@ -7,9 +8,8 @@ import {
   type OptionalUnlessRequiredId,
   type WithId
 } from 'mongodb';
+import { env } from './env';
 import logger from './logger';
-import type { Merge } from './types';
-import { env } from './utils';
 
 const mongoClient = new MongoClient(env.DATABASE_URL);
 export const db = mongoClient.db('assistant');

@@ -26,7 +26,7 @@
                   />
                   <div v-else class="m-1 ml-0" v-bind:key="partIndex">
                     <button
-                      class="dark:bg-vue-black-mute inline-flex cursor-pointer items-center space-x-1 rounded-lg bg-white/15 p-1 text-sm"
+                      class="inline-flex cursor-pointer items-center space-x-1 rounded-lg bg-white/15 p-1 text-sm dark:bg-[#282828]"
                       @click="
                         unfoldedTools.includes(part.id)
                           ? (unfoldedTools = unfoldedTools.filter(v => v !== part.id))
@@ -112,7 +112,6 @@
       </div>
     </div>
 
-    <ErrorPopup :show="showError" :error="error" />
     <!-- Input Area -->
     <div class="pointer-events-none absolute bottom-0 left-0 right-0 z-10 sm:left-4 sm:right-4">
       <div
@@ -168,7 +167,6 @@ import 'floating-vue/dist/style.css';
 import 'highlight.js/styles/github-dark.min.css';
 
 import EffortSelector from '@/components/effort-selector.vue';
-import ErrorPopup from '@/components/error-popup.vue';
 import Loader from '@/components/loader.vue';
 import ModelSelector from '@/components/model-selector.vue';
 import ToolResult from '@/components/tool-result.vue';
@@ -626,7 +624,7 @@ watch(input, () => {
 // Tooltip styles
 .v-popper--theme-tooltip
   .v-popper__inner
-    @apply bg-white/15 backdrop-blur-md dark:bg-vue-black-tooltip dark:border-[1px] dark:border-[#847A6C] text-xs rounded-md shadow-lg
+    @apply bg-white/15 backdrop-blur-md dark:bg-[#0E0A09] dark:border-[1px] dark:border-[#847A6C] text-xs rounded-md shadow-lg
 
   .v-popper__arrow-outer
     @apply hidden

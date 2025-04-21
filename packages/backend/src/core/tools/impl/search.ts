@@ -3,8 +3,8 @@ import { getAccount, getJson } from 'serpapi';
 import { z } from 'zod';
 import type { Tool } from '../../../core/tools';
 import { search } from '../../../core/tools/utils/search';
+import { env } from '../../../lib/env';
 import logger from '../../../lib/logger';
-import { env } from '../../../lib/utils';
 
 let thirdPartySearchAPIAvailable = false;
 

@@ -3,8 +3,8 @@ import { Octokit } from 'octokit';
 import { z } from 'zod';
 import type { Tool } from '../../../core/tools';
 import { getFileContent, getRepositoryTree } from '../../../core/tools/utils/github';
+import { env } from '../../../lib/env';
 import logger from '../../../lib/logger';
-import { env } from '../../../lib/utils';
 
 export const repo_tree = {
   dependency() {

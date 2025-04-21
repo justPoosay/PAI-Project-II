@@ -1,6 +1,6 @@
 import { MessageChunk, models } from 'common';
 import { entries } from 'common/utils';
-import { env } from '../lib/utils';
+import { env } from '../lib/env';
 
 export function getAvailableModels() {
   return entries(models)
