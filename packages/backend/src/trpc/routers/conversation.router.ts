@@ -11,7 +11,7 @@ export const conversationRouter = router({
     }
 
     const userId = new ObjectId(ctx.auth.user.id);
-    await ctx.db.conversations.update(
+    await ctx.db.conversations.updateOne(
       { _id: new ObjectId(input.id), userId },
       { deleted: true, userId },
       true
@@ -31,7 +31,7 @@ export const conversationRouter = router({
         throw new TRPCError({ code: 'UNAUTHORIZED' });
       }
 
-      return ctx.db.conversations.update(
+      return ctx.db.conversations.updateOne(
         { _id: new ObjectId(input.id), deleted: false, userId: new ObjectId(ctx.auth.user.id) },
         input
       );
@@ -63,7 +63,7 @@ export const conversationRouter = router({
       throw new TRPCError({ code: 'UNAUTHORIZED' });
     }
 
-    return ctx.db.conversations.create({
+    return ctx.db.conversations.insertOne({
       name: null,
       messages: [],
       deleted: false,

@@ -36,7 +36,7 @@ function createService<A extends Type<{}, {}>>(collectionName: string, schema: A
       const entities = await collection.find(where).toArray();
       return entities.filter(schema.allows) as WithId<Extract<T, Pick<S, keyof T>>>[];
     },
-    async create<S extends OptionalUnlessRequiredId<T>>(data: S): Promise<WithId<S>> {
+    async insertOne<S extends OptionalUnlessRequiredId<T>>(data: S): Promise<WithId<S>> {
       const { insertedId } = await collection.insertOne(data);
 
       return {
@@ -44,7 +44,19 @@ function createService<A extends Type<{}, {}>>(collectionName: string, schema: A
         _id: insertedId
       } as WithId<S>;
     },
-    async update<S extends Filter<T>, U extends V extends true ? T : Partial<T>, V extends boolean>(
+    async insertMany<S extends OptionalUnlessRequiredId<T>>(data: S[]): Promise<WithId<S>[]> {
+      const { insertedIds } = await collection.insertMany(data);
+
+      return data.map((d, i) => ({
+        ...d,
+        _id: insertedIds[i]
+      })) as WithId<S>[];
+    },
+    async updateOne<
+      S extends Filter<T>,
+      U extends V extends true ? T : Partial<T>,
+      V extends boolean
+    >(
       where: S,
       dataOrCB: U | ((prev: WithId<Extract<T, Pick<S, keyof T>>> | null) => U),
       replace: V = false as V
@@ -59,8 +71,11 @@ function createService<A extends Type<{}, {}>>(collectionName: string, schema: A
         ? (value as WithId<Extract<T, Pick<Merge<S, U>, keyof T>>>)
         : null;
     },
-    async delete(where: Filter<T>): Promise<void> {
+    async deleteOne(where: Filter<T>): Promise<void> {
       await collection.deleteOne(where);
+    },
+    async deleteMany(where: Filter<T>): Promise<void> {
+      await collection.deleteMany(where);
     },
     _schema: schema
   } as const);

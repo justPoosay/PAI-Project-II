@@ -32,7 +32,7 @@ export const completionRouter = publicProcedure
     c.messages.push({ role: 'user', content: input.message });
     c.messages.push({ role: 'assistant', chunks: [], author: model });
 
-    await ctx.db.conversations.update({ _id }, { messages: c.messages });
+    await ctx.db.conversations.updateOne({ _id }, { messages: c.messages });
 
     const options: Parameters<typeof streamText>[0] = {
       model: models[model].model,
@@ -101,6 +101,6 @@ export const completionRouter = publicProcedure
       }
       yield errorChunk;
     } finally {
-      await ctx.db.conversations.update({ _id }, { messages: c.messages });
+      await ctx.db.conversations.updateOne({ _id }, { messages: c.messages });
     }
   });
