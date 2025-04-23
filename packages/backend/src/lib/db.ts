@@ -19,6 +19,8 @@ export async function closeDB() {
   logger.info('MongoDB connection closed');
 }
 
+type Fallback<T, U> = T extends never ? U : T;
+
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 function createService<A extends Type<{}, {}>>(collectionName: string, schema: A) {
   type T = A['inferOut'];
@@ -28,13 +30,17 @@ function createService<A extends Type<{}, {}>>(collectionName: string, schema: A
   return Object.freeze({
     async findOne<S extends Filter<T>>(
       where: S
-    ): Promise<WithId<Extract<T, Pick<S, keyof T>>> | null> {
+    ): Promise<WithId<Fallback<Extract<T, Pick<S, keyof T>>, T>> | null> {
       const entity = await collection.findOne(where);
-      return schema.allows(entity) ? (entity as WithId<Extract<T, Pick<S, keyof T>>>) : null;
+      return schema.allows(entity)
+        ? (entity as WithId<Fallback<Extract<T, Pick<S, keyof T>>, T>>)
+        : null;
     },
-    async find<S extends Filter<T>>(where: S): Promise<WithId<Extract<T, Pick<S, keyof T>>>[]> {
+    async find<S extends Filter<T>>(
+      where: S
+    ): Promise<WithId<Fallback<Extract<T, Pick<S, keyof T>>, T>>[]> {
       const entities = await collection.find(where).toArray();
-      return entities.filter(schema.allows) as WithId<Extract<T, Pick<S, keyof T>>>[];
+      return entities.filter(schema.allows) as WithId<Fallback<Extract<T, Pick<S, keyof T>>, T>>[];
     },
     async insertOne<S extends OptionalUnlessRequiredId<T>>(data: S): Promise<WithId<S>> {
       const { insertedId } = await collection.insertOne(data);
@@ -58,9 +64,9 @@ function createService<A extends Type<{}, {}>>(collectionName: string, schema: A
       V extends boolean
     >(
       where: S,
-      dataOrCB: U | ((prev: WithId<Extract<T, Pick<S, keyof T>>> | null) => U),
+      dataOrCB: U | ((prev: WithId<Fallback<Extract<T, Pick<S, keyof T>>, T>> | null) => U),
       replace: V = false as V
-    ): Promise<WithId<Extract<T, Pick<Merge<S, U>, keyof T>>> | null> {
+    ): Promise<WithId<Fallback<Extract<T, Pick<Merge<S, U>, keyof T>>, T>> | null> {
       const data = typeof dataOrCB === 'function' ? dataOrCB(await this.findOne(where)) : dataOrCB;
 
       const value = replace
@@ -68,7 +74,7 @@ function createService<A extends Type<{}, {}>>(collectionName: string, schema: A
         : await collection.findOneAndUpdate(where, { $set: data }, { returnDocument: 'after' });
 
       return schema.allows(value)
-        ? (value as WithId<Extract<T, Pick<Merge<S, U>, keyof T>>>)
+        ? (value as WithId<Fallback<Extract<T, Pick<Merge<S, U>, keyof T>>, T>>)
         : null;
     },
     async deleteOne(where: Filter<T>): Promise<void> {
