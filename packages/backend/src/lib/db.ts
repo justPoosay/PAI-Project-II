@@ -21,8 +21,7 @@ export async function closeDB() {
 
 type Fallback<T, U> = T extends never ? U : T;
 
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-function createService<A extends Type<{}, {}>>(collectionName: string, schema: A) {
+function createService<A extends Type<object, object>>(collectionName: string, schema: A) {
   type T = A['inferOut'];
 
   const collection = db.collection<T>(collectionName);
