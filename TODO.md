@@ -7,3 +7,5 @@
 - fix the docker image not building
 - deserialize ObjectId
 - "Anonymous" chats / paywall
+- Rate limits
+- Stripe integration

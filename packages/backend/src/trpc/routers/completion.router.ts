@@ -4,6 +4,7 @@ import { type } from 'arktype';
 import { models, type MessageChunk } from 'common';
 import { ObjectId } from 'mongodb';
 import { getTextContent } from '../../core/utils';
+import { ConversationService } from '../../lib/db';
 import { publicProcedure } from '../trpc';
 
 export const completionRouter = publicProcedure
@@ -19,7 +20,7 @@ export const completionRouter = publicProcedure
     }
 
     const _id = new ObjectId(input.for);
-    const c = await ctx.db.conversations.findOne({
+    const c = await ConversationService.findOne({
       _id,
       deleted: false,
       userId: new ObjectId(ctx.auth.user.id)
@@ -32,7 +33,7 @@ export const completionRouter = publicProcedure
     c.messages.push({ role: 'user', content: input.message });
     c.messages.push({ role: 'assistant', chunks: [], author: model });
 
-    await ctx.db.conversations.updateOne({ _id }, { messages: c.messages });
+    await ConversationService.updateOne({ _id }, { messages: c.messages });
 
     const options: Parameters<typeof streamText>[0] = {
       model: models[model].model,
@@ -101,6 +102,6 @@ export const completionRouter = publicProcedure
       }
       yield errorChunk;
     } finally {
-      await ctx.db.conversations.updateOne({ _id }, { messages: c.messages });
+      await ConversationService.updateOne({ _id }, { messages: c.messages });
     }
   });

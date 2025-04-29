@@ -2,6 +2,7 @@ import { TRPCError } from '@trpc/server';
 import { type } from 'arktype';
 import { Effort, Model } from 'common';
 import { ObjectId } from 'mongodb';
+import { ConversationService } from '../../lib/db';
 import { publicProcedure, router } from '../trpc';
 
 export const conversationRouter = router({
@@ -11,7 +12,7 @@ export const conversationRouter = router({
     }
 
     const userId = new ObjectId(ctx.auth.user.id);
-    await ctx.db.conversations.updateOne(
+    await ConversationService.updateOne(
       { _id: new ObjectId(input.id), userId },
       { deleted: true, userId },
       true
@@ -31,7 +32,7 @@ export const conversationRouter = router({
         throw new TRPCError({ code: 'UNAUTHORIZED' });
       }
 
-      return ctx.db.conversations.updateOne(
+      return ConversationService.updateOne(
         { _id: new ObjectId(input.id), deleted: false, userId: new ObjectId(ctx.auth.user.id) },
         input
       );
@@ -41,20 +42,18 @@ export const conversationRouter = router({
       throw new TRPCError({ code: 'UNAUTHORIZED' });
     }
 
-    return ctx.db.conversations
-      .findOne({
-        _id: new ObjectId(input.id),
-        deleted: false,
-        userId: new ObjectId(ctx.auth.user.id)
-      })
-      .then(v => v?.messages ?? []);
+    return ConversationService.findOne({
+      _id: new ObjectId(input.id),
+      deleted: false,
+      userId: new ObjectId(ctx.auth.user.id)
+    }).then(v => v?.messages ?? []);
   }),
   list: publicProcedure.query(opts => {
     if (!opts.ctx.auth?.user) {
       throw new TRPCError({ code: 'UNAUTHORIZED' });
     }
 
-    return opts.ctx.db.conversations.find({
+    return ConversationService.find({
       userId: new ObjectId(opts.ctx.auth.user.id)
     });
   }),
@@ -63,7 +62,7 @@ export const conversationRouter = router({
       throw new TRPCError({ code: 'UNAUTHORIZED' });
     }
 
-    return ctx.db.conversations.insertOne({
+    return ConversationService.insertOne({
       name: null,
       messages: [],
       deleted: false,

@@ -115,7 +115,9 @@
 <script setup lang="ts">
 import Loader from '@/components/loader.vue';
 import { useSession } from '@/lib/auth-client';
+import { isTRPCClientError } from '@/lib/trpc';
 import { capitalize } from '@/lib/utils';
+import router from '@/router';
 import { useConversationStore } from '@/stores/conversations.ts';
 import { keys } from 'common/utils';
 import { LogInIcon, PlusIcon, SearchIcon, SidebarIcon } from 'lucide-vue-next';
@@ -147,6 +149,9 @@ function loadConversations() {
     .catch(e => {
       state.value = 'error';
       console.error(e);
+      if (isTRPCClientError(e) && e.message === 'UNAUTHORIZED') {
+        router.push({ name: 'login' });
+      }
     });
 }
 

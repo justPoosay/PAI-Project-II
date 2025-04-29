@@ -4,6 +4,7 @@ import type { Merge } from 'common/utils';
 import {
   MongoClient,
   ObjectId,
+  type DeleteResult,
   type Filter,
   type OptionalUnlessRequiredId,
   type WithId
@@ -76,11 +77,11 @@ function createService<A extends Type<object, object>>(collectionName: string, s
         ? (value as WithId<Fallback<Extract<T, Pick<Merge<S, U>, keyof T>>, T>>)
         : null;
     },
-    async deleteOne(where: Filter<T>): Promise<void> {
-      await collection.deleteOne(where);
+    deleteOne(where: Filter<T>): Promise<DeleteResult> {
+      return collection.deleteOne(where);
     },
-    async deleteMany(where: Filter<T>): Promise<void> {
-      await collection.deleteMany(where);
+    deleteMany(where: Filter<T>): Promise<DeleteResult> {
+      return collection.deleteMany(where);
     },
     _schema: schema
   } as const);
