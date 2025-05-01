@@ -5,7 +5,7 @@
     <Sidebar v-model="isSidebarExpanded" />
     <div
       :data-s="isSidebarExpanded"
-      class="flex flex-1 animate-[rotate-gradient_5s_linear_infinite] overflow-hidden rounded-tl-xl border-transparent bg-clip-padding shadow-md transition-[margin] [--bg:#E7F0F8] [background:linear-gradient(var(--bg),var(--bg))_padding-box,linear-gradient(var(--angle,225deg),#FF000E,#FF7300,#FAD220,#138F3E,#3558A0,#880082)_border-box] lg:data-[s=true]:mt-3 lg:data-[s=true]:border-l-2 lg:data-[s=true]:border-t-2 dark:[--bg:#352A35] dark:lg:data-[s=true]:border-l dark:lg:data-[s=true]:border-t"
+      class="flex flex-1 animate-[rotate-gradient_5s_linear_infinite] overflow-hidden rounded-tl-xl border-transparent bg-clip-padding shadow-md transition-[margin] [--bg:#E7F0F8] [background:linear-gradient(var(--bg),var(--bg))_padding-box,linear-gradient(var(--angle,225deg),#FF000E,#FF7300,#FAD220,#138F3E,#3558A0,#880082)_border-box] lg:data-[s=true]:mt-3 lg:data-[s=true]:border-t-2 lg:data-[s=true]:border-l-2 dark:[--bg:#352A35] dark:lg:data-[s=true]:border-t dark:lg:data-[s=true]:border-l"
     >
       <Conversation v-if="state === 'idle'" />
       <div v-else class="flex h-full w-full items-center justify-center">

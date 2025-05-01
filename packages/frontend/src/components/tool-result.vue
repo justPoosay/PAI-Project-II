@@ -48,7 +48,7 @@
     </div>
     <!-- Repo Tree tool -->
     <div v-if="tool.name === 'repo_tree' && typeof tool.result === 'string'">
-      <pre class="whitespace-pre-wrap break-all">{{ tool.result }}</pre>
+      <pre class="break-all whitespace-pre-wrap">{{ tool.result }}</pre>
     </div>
   </template>
   <pre v-else><code class="hljs">{{ objectToString(tool.result).trim() }}</code></pre>

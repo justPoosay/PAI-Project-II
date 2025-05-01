@@ -1,27 +1,30 @@
 <template>
   <div
     :data-expanded="isExpanded"
-    class="z-[99999999999] flex h-screen w-0 animate-[rotate-gradient_5s_linear_infinite] flex-col border-transparent bg-clip-padding transition-all duration-100 ease-out [--bg:#DDE6F0] data-[expanded=false]:pointer-events-none data-[expanded=true]:w-64 max-lg:fixed max-lg:[background:linear-gradient(var(--bg),var(--bg))_padding-box,linear-gradient(var(--angle,225deg),#FF000E,#FF7300,#FAD220,#138F3E,#3558A0,#880082)_border-box] max-lg:data-[expanded=true]:border-r-2 max-lg:data-[expanded=true]:shadow-md dark:[--bg:#2A1F2A] dark:max-lg:data-[expanded=true]:border-r"
+    class="z-99999999999 flex h-screen w-0 animate-[rotate-gradient_5s_linear_infinite] flex-col border-transparent bg-clip-padding transition-all duration-100 ease-out [--bg:#DDE6F0] data-[expanded=false]:pointer-events-none data-[expanded=true]:w-64 max-lg:fixed max-lg:[background:linear-gradient(var(--bg),var(--bg))_padding-box,linear-gradient(var(--angle,225deg),#FF000E,#FF7300,#FAD220,#138F3E,#3558A0,#880082)_border-box] max-lg:data-[expanded=true]:border-r-2 max-lg:data-[expanded=true]:shadow-md dark:[--bg:#2A1F2A] dark:max-lg:data-[expanded=true]:border-r"
   >
     <div class="flex h-full w-64 flex-col p-1">
-      <div class="relative flex w-fit flex-shrink-0 flex-row p-1">
+      <div class="relative flex w-fit shrink-0 flex-row p-1">
         <button
           @click="toggleSidebar"
-          class="pointer-events-auto z-20 rounded-md p-2 hover:bg-black/5 dark:hover:bg-gray-200/5"
+          class="pointer-events-auto z-20 cursor-pointer rounded-md p-2 transition hover:bg-black/5 dark:hover:bg-gray-200/5"
         >
           <SidebarIcon class="h-4 w-4" />
         </button>
         <div
           :data-expanded="isExpanded"
-          class="pointer-events-auto flex flex-row transition-all data-[expanded=true]:pointer-events-none data-[expanded=true]:-translate-x-full data-[expanded=true]:opacity-0 data-[expanded=false]:delay-100"
+          class="pointer-events-auto flex flex-row transition-all data-[expanded=false]:delay-100 data-[expanded=true]:pointer-events-none data-[expanded=true]:-translate-x-full data-[expanded=true]:opacity-0"
         >
           <button
             @click="'TODO'"
-            class="z-20 rounded-md p-2 hover:bg-black/5 dark:hover:bg-gray-200/5"
+            class="z-20 cursor-pointer rounded-md p-2 transition hover:bg-black/5 dark:hover:bg-gray-200/5"
           >
             <SearchIcon class="h-4 w-4" />
           </button>
-          <RouterLink class="rounded-md p-2 hover:bg-black/5 dark:hover:bg-gray-200/5" to="/c/new">
+          <RouterLink
+            class="rounded-md p-2 transition hover:bg-black/5 dark:hover:bg-gray-200/5"
+            to="/c/new"
+          >
             <PlusIcon class="h-4 w-4" />
           </RouterLink>
         </div>
@@ -29,16 +32,16 @@
 
       <div
         :data-expanded="isExpanded"
-        class="flex flex-grow flex-col space-y-1 overflow-hidden p-1 transition-transform duration-100 ease-out data-[expanded=false]:-translate-x-full"
+        class="flex grow flex-col space-y-1 overflow-hidden p-1 transition-transform duration-100 ease-out data-[expanded=false]:-translate-x-full"
       >
         <RouterLink
-          class="block flex-shrink-0 rounded-md border border-[#3EB0E2] bg-gradient-to-r from-[#55CDFC] to-[#3EB0E2] py-1.5 text-center text-sm font-semibold hover:from-[#2A9FD8] hover:to-[#1E8BC4] dark:border-[#C3778C] dark:from-[#F7A8B8] dark:to-[#D08A9E] dark:hover:from-[#C3778C] dark:hover:to-[#A86479]"
+          class="block shrink-0 rounded-md border border-[#3EB0E2] bg-linear-to-r from-[#55CDFC] to-[#3EB0E2] py-1.5 text-center text-sm font-semibold transition hover:from-[#2A9FD8] hover:to-[#1E8BC4] dark:border-[#C3778C] dark:from-[#F7A8B8] dark:to-[#D08A9E] dark:hover:from-[#C3778C] dark:hover:to-[#A86479]"
           to="/c/new"
           :tabindex="isExpanded ? 0 : -1"
         >
           New Chat
         </RouterLink>
-        <div class="min-h-0 flex-grow overflow-y-auto">
+        <div class="min-h-0 grow overflow-y-auto">
           <div v-if="state === 'idle'">
             <div v-for="group in keys(groups)" v-bind:key="group">
               <p
@@ -51,7 +54,7 @@
                 v-for="c in groups[group]"
                 v-bind:key="String(c._id)"
                 :to="{ name: 'c', params: { id: String(c._id) } }"
-                class="flex flex-row items-center rounded-xl p-2 text-sm hover:bg-black/5 dark:hover:bg-gray-200/5"
+                class="flex flex-row items-center rounded-xl p-2 text-sm transition hover:bg-black/5 dark:hover:bg-gray-200/5"
               >
                 <span class="block truncate" :title="c.name ?? undefined">{{
                   c.name ?? 'Untitled'
@@ -72,7 +75,7 @@
             </div>
           </div>
         </div>
-        <div class="flex flex-shrink-0 pt-1">
+        <div class="flex shrink-0 pt-1">
           <RouterLink
             v-if="!session.data"
             to="/login"
@@ -85,7 +88,7 @@
             v-else
             class="flex w-full items-center space-x-2 rounded-xl p-2 hover:bg-black/5 dark:hover:bg-gray-200/5"
           >
-            <AvatarRoot class="h-9 w-9 select-none rounded-full bg-gray-300 dark:bg-gray-700">
+            <AvatarRoot class="h-9 w-9 rounded-full bg-gray-300 select-none dark:bg-gray-700">
               <AvatarImage
                 class="h-full w-full rounded-[inherit] object-cover"
                 :src="session.data.user.image ?? ''"

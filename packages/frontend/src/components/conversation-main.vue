@@ -4,7 +4,7 @@
     <!-- Chat Messages -->
     <div
       v-if="!messages.loading && !messages.error && messages.array.length"
-      class="flex-1 overflow-y-auto overflow-x-hidden p-4 pb-28"
+      class="flex-1 overflow-x-hidden overflow-y-auto p-4 pb-28"
     >
       <div class="mx-auto max-w-5xl space-y-8">
         <div v-for="(message, i) in messages.array" :key="i" class="relative">
@@ -14,7 +14,7 @@
           >
             <div
               :data-self="message.role === 'user'"
-              class="group relative max-w-[90%] rounded-lg border-[#a2d0e5] p-2 data-[self=true]:border data-[self=true]:bg-[#B3D6E6] data-[self=false]:pb-3 data-[self=true]:shadow-sm max-md:max-w-full dark:border-[#422f42] dark:data-[self=true]:bg-[#3E2A3E]"
+              class="group relative max-w-[90%] rounded-lg border-[#a2d0e5] p-2 data-[self=false]:pb-3 data-[self=true]:border data-[self=true]:bg-[#B3D6E6] data-[self=true]:shadow-xs max-md:max-w-full dark:border-[#422f42] dark:data-[self=true]:bg-[#3E2A3E]"
             >
               <template v-if="getParts(message).length">
                 <template v-for="(part, partIndex) of getParts(message)">
@@ -34,7 +34,7 @@
                       "
                     >
                       <component :is="toolIcons[part.name] ?? toolIcons.default" class="h-4 w-4" />
-                      <div class="inline-flex select-none items-center space-x-3">
+                      <div class="inline-flex items-center space-x-3 select-none">
                         <p>{{ capitalize(part.name) }}</p>
                         <LoaderCircleIcon class="h-4 w-4 animate-spin" v-if="!('result' in part)" />
                         <ChevronUpIcon
@@ -47,7 +47,7 @@
                     </button>
                     <div
                       v-if="unfoldedTools.includes(part.id) && 'result' in part"
-                      class="mt-1 break-words border-l-2 border-white/30 pl-2 text-sm"
+                      class="mt-1 border-l-2 border-white/30 pl-2 text-sm break-words"
                     >
                       <p class="mb-1">{{ JSON.stringify(part.args) }}</p>
                       <ToolResult v-if="part.result" :tool="part" />
@@ -70,7 +70,7 @@
                     message.role === 'assistant' &&
                     (finished(message) || (!finished(message) && !abortController))
                   "
-                  class="flex space-x-1.5 rounded-md p-0.5 pl-0 backdrop-blur-sm"
+                  class="flex space-x-1.5 rounded-md p-0.5 pl-0 backdrop-blur-xs"
                 >
                   <button
                     v-if="finished(message)"
@@ -113,12 +113,12 @@
     </div>
 
     <!-- Input Area -->
-    <div class="pointer-events-none absolute bottom-0 left-0 right-0 z-10 sm:left-4 sm:right-4">
+    <div class="pointer-events-none absolute right-0 bottom-0 left-0 z-10 sm:right-4 sm:left-4">
       <div
-        class="pointer-events-auto mx-auto max-w-3xl rounded-3xl rounded-b-none border border-b-0 border-[#55CDFC]/20 bg-[#55CDFC]/25 p-2 pb-0 shadow-lg backdrop-blur-sm dark:border-[#f7a8b8]/5 dark:bg-[#f7a8b8]/5 dark:backdrop-blur-md"
+        class="pointer-events-auto mx-auto max-w-3xl rounded-3xl rounded-b-none border border-b-0 border-[#55CDFC]/20 bg-[#55CDFC]/25 p-2 pb-0 shadow-lg backdrop-blur-xs dark:border-[#f7a8b8]/5 dark:bg-[#f7a8b8]/5 dark:backdrop-blur-md"
       >
         <div
-          class="flex flex-col items-start rounded-2xl rounded-b-none border border-b-0 border-[#55CDFC]/10 bg-[#55CDFC]/15 p-1 dark:border-[#f7a8b8]/5 dark:bg-[#f7a8b8] dark:bg-opacity-[4%]"
+          class="dark:bg-opacity-[4%] flex flex-col items-start rounded-2xl rounded-b-none border border-b-0 border-[#55CDFC]/10 bg-[#55CDFC]/15 p-1 dark:border-[#f7a8b8]/5 dark:bg-[#f7a8b8]/5"
         >
           <div class="flex w-full flex-row items-start space-x-1.5 p-1.5 pb-0">
             <textarea
@@ -130,7 +130,7 @@
             <!-- buttons -->
             <label
               :aria-disabled="!includes(models[model].capabilities, 'imageInput')"
-              class="rounded-xl p-2 transition hover:bg-black/10 aria-[disabled=false]:cursor-pointer aria-[disabled=true]:text-[#333333]/40 dark:hover:bg-white/5 dark:aria-[disabled=true]:text-white/40"
+              class="rounded-xl p-2 transition hover:bg-black/10 aria-disabled:text-[#333333]/40 aria-[disabled=false]:cursor-pointer dark:hover:bg-white/5 dark:aria-disabled:text-white/40"
               :title="
                 includes(models[model].capabilities, 'imageInput')
                   ? 'Upload File'
@@ -143,7 +143,7 @@
             <button
               @click="handleSend"
               :data-action="abortController ? 'abort' : 'send'"
-              class="group rounded-xl bg-gradient-to-br from-[#5BCEFA] to-[#F5A9B8] p-2 transition-colors duration-300 ease-in-out hover:from-[#4AB0D1] hover:to-[#E994A3] hover:shadow-lg"
+              class="group cursor-pointer rounded-xl bg-linear-to-br from-[#5BCEFA] to-[#F5A9B8] p-2 transition ease-in-out hover:from-[#4AB0D1] hover:to-[#E994A3] hover:shadow-lg"
             >
               <SendIcon class="h-5 w-5 group-data-[action=abort]:hidden" />
               <CircleStopIcon class="h-5 w-5 group-data-[action=send]:hidden" />
@@ -500,7 +500,7 @@ watch(input, () => {
     @apply text-sky-600 hover:underline dark:text-pink-400
 
   pre:has(code.hljs)
-    @apply backdrop-blur-sm text-sm overflow-x-auto max-w-full rounded-md border-t-0 rounded-t-none border border-black/10 dark:border-white/10
+    @apply backdrop-blur-xs text-sm overflow-x-auto max-w-full rounded-md border-t-0 rounded-t-none border border-black/10 dark:border-white/10
     code
       @apply block p-2 whitespace-pre-wrap break-all font-sf_mono
 
@@ -512,7 +512,7 @@ watch(input, () => {
 
   // Inline code `code`
   code:not(.hljs)
-    @apply bg-sky-100 dark:bg-pink-950/50 backdrop-blur-sm rounded px-1 py-0.5 text-sm font-sf_mono text-sky-800 dark:text-pink-300 border border-sky-200 dark:border-pink-800/50
+    @apply bg-sky-100 dark:bg-pink-950/50 backdrop-blur-xs rounded px-1 py-0.5 text-sm font-sf_mono text-sky-800 dark:text-pink-300 border border-sky-200 dark:border-pink-800/50
 
   strong
     @apply font-bold

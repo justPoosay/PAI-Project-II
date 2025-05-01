@@ -8,7 +8,7 @@
     </PopoverTrigger>
     <PopoverPortal>
       <PopoverContent
-        class="z-[999999] flex min-w-28 flex-col rounded-md border border-[#c0e1fd] bg-[#E2ECF5] p-1 text-[#333333] shadow-lg dark:border-[#615261] dark:bg-[#352635] dark:text-white"
+        class="z-999999 flex min-w-28 flex-col rounded-md border border-[#c0e1fd] bg-[#E2ECF5] p-1 text-[#333333] shadow-lg dark:border-[#615261] dark:bg-[#352635] dark:text-white"
         align="start"
         :side-offset="5"
       >
