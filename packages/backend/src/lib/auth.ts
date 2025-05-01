@@ -5,6 +5,7 @@ import { env } from './env';
 
 export const auth = betterAuth({
   database: mongodbAdapter(db),
+  baseURL: env.BASE_URL,
   socialProviders: {
     github: {
       enabled: true,

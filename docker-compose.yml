@@ -15,15 +15,29 @@ services:
       dockerfile: packages/backend/Dockerfile
     environment:
       - DATABASE_URL=mongodb://root:pass@db:27017
+      - VALKEY_URL=redis://kv:6379
+
+      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET:-}
+      - BASE_URL=${BASE_URL:-}
+
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY:-}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-}
+      - STRIPE_PRICE_ID=${STRIPE_PRICE_ID:-}
+
+      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID:-}
+      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET:-}
+
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
       - XAI_API_KEY=${XAI_API_KEY:-}
       - GROQ_API_KEY=${GROQ_API_KEY:-}
+
       - FIRECRAWL_API_KEY=${FIRECRAWL_API_KEY:-}
       - FIRECRAWL_API_URL=${FIRECRAWL_API_URL:-}
       - WEATHER_API_KEY=${WEATHER_API_KEY:-}
       - SERP_API_KEY=${SERP_API_KEY:-}
       - GITHUB_PAT=${GITHUB_PAT:-}
+
       - LOG_LEVEL=${LOG_LEVEL:-info}
     depends_on:
       db:
@@ -40,6 +54,15 @@ services:
     healthcheck:
       test:
         ['CMD-SHELL', 'echo ''db.runCommand("ping").ok'' | mongosh localhost:27017/test --quiet']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: on-failure
+
+  kv:
+    image: redis
+    healthcheck:
+      test: ['CMD-SHELL', 'redis-cli ping']
       interval: 5s
       timeout: 5s
       retries: 5

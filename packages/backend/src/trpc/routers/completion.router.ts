@@ -1,13 +1,12 @@
-import { TRPCError } from '@trpc/server';
 import { streamText } from 'ai';
 import { type } from 'arktype';
 import { models, type MessageChunk } from 'common';
 import { ObjectId } from 'mongodb';
 import { getTextContent } from '../../core/utils';
 import { ConversationService } from '../../lib/db';
-import { publicProcedure } from '../trpc';
+import { protectedProcedure } from '../trpc';
 
-export const completionRouter = publicProcedure
+export const completionRouter = protectedProcedure
   .input(
     type({
       message: 'string>0',
@@ -15,10 +14,6 @@ export const completionRouter = publicProcedure
     })
   )
   .query(async function* ({ input, ctx, signal }) {
-    if (!ctx.auth?.user) {
-      throw new TRPCError({ code: 'UNAUTHORIZED' });
-    }
-
     const _id = new ObjectId(input.for);
     const c = await ConversationService.findOne({
       _id,

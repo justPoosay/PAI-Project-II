@@ -3,10 +3,15 @@ import { color } from 'bun';
 import { LogLevel } from './schemas';
 
 export const Env = type({
-  DATABASE_URL: 'string',
+  DATABASE_URL: 'string.url',
+  VALKEY_URL: 'string.url',
 
   BETTER_AUTH_SECRET: 'string>8',
-  BETTER_AUTH_URL: 'string.url',
+  BASE_URL: 'string.url',
+
+  STRIPE_SECRET_KEY: 'string>0',
+  STRIPE_WEBHOOK_SECRET: 'string>0',
+  STRIPE_PRICE_ID: 'string>0',
 
   GITHUB_CLIENT_ID: 'string>0',
   GITHUB_CLIENT_SECRET: 'string>0',

@@ -87,6 +87,7 @@
           <button
             v-else
             class="flex w-full items-center space-x-2 rounded-xl p-2 hover:bg-black/5 dark:hover:bg-gray-200/5"
+            @click="handleSubscibe"
           >
             <AvatarRoot class="h-9 w-9 rounded-full bg-gray-300 select-none dark:bg-gray-700">
               <AvatarImage
@@ -118,7 +119,7 @@
 <script setup lang="ts">
 import Loader from '@/components/loader.vue';
 import { useSession } from '@/lib/auth-client';
-import { isTRPCClientError } from '@/lib/trpc';
+import { isTRPCClientError, trpc } from '@/lib/trpc';
 import { capitalize } from '@/lib/utils';
 import router from '@/router';
 import { useConversationStore } from '@/stores/conversations.ts';
@@ -221,6 +222,11 @@ function resizeHandler() {
     }
     circumstances.value.narrow = false;
   }
+}
+
+async function handleSubscibe() {
+  const { url } = await trpc.stripe.createCheckoutSession.query();
+  window.location.href = url;
 }
 
 onMounted(function () {
