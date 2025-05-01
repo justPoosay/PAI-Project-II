@@ -1,16 +1,4 @@
-import type { Nullish } from '@/lib/types';
 import { models, type Model, type ModelInfo } from 'common';
-import SuperJSON from 'superjson';
-
-// eslint-disable-next-line
-export function safeParse<T = any, F = null>(str: Nullish<string>, fallback = null as F): T | F {
-  if (!str) return fallback;
-  try {
-    return SuperJSON.parse(str);
-  } catch (e) {
-    return fallback;
-  }
-}
 
 export function capitalize(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1);
