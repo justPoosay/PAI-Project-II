@@ -13,7 +13,7 @@
             @click="
               signIn.social({
                 provider: 'github',
-                callbackURL: selfOrFirst($route.query.callbackURL) ?? '/'
+                callbackURL: selfOrFirst($route.query['callbackURL']) ?? '/'
               })
             "
             class="flex w-full items-center justify-center space-x-2 rounded-lg border border-gray-300 bg-white px-4 py-3 font-medium text-black transition-colors hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-[#352A35] dark:text-white dark:hover:bg-[#2A1F2A] dark:focus:ring-purple-500"

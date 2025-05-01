@@ -39,8 +39,8 @@ jobs:
       - name: Check code style
         run: bun prettier
 
-  es-lint:
-    name: Check ESLint
+  linters:
+    name: Check Linters
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -55,4 +55,7 @@ jobs:
         run: bun install
 
       - name: Check ESLint
-        run: bun lint
+        run: bun lint:eslint
+
+      - name: Check OxLint
+        run: bun lint:oxlint

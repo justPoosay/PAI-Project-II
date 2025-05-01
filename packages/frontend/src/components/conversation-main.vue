@@ -33,7 +33,10 @@
                           : unfoldedTools.push(part.id)
                       "
                     >
-                      <component :is="toolIcons[part.name] ?? toolIcons.default" class="h-4 w-4" />
+                      <component
+                        :is="toolIcons[part.name] ?? toolIcons['default']"
+                        class="h-4 w-4"
+                      />
                       <div class="inline-flex items-center space-x-3 select-none">
                         <p>{{ capitalize(part.name) }}</p>
                         <LoaderCircleIcon class="h-4 w-4 animate-spin" v-if="!('result' in part)" />
@@ -215,7 +218,7 @@ const conversation = computed(
   () =>
     refs.conversations.value.find(
       (c): c is Extract<Conversation, { deleted: false }> =>
-        !c.deleted && String(c._id) === route.params.id
+        !c.deleted && String(c._id) === route.params['id']
     ) ?? null
 );
 const input = ref('');
@@ -300,19 +303,19 @@ function fetchMessages(id: string, token: number) {
 let skipNextInit = false;
 
 onBeforeRouteUpdate((to, from, next) => {
-  console.log('Route update', to.params.id, from.params.id);
-  if (to.params.id !== from.params.id) {
+  console.log('Route update', to.params['id'], from.params['id']);
+  if (to.params['id'] !== from.params['id']) {
     if (skipNextInit) {
       skipNextInit = false;
       return next();
     }
-    init(to.params.id as string);
+    init(to.params['id'] as string);
   }
   return next();
 });
 
 onMounted(() => {
-  init(route.params.id as string);
+  init(route.params['id'] as string);
 });
 
 function getContent(msg: typeof Message.infer) {
@@ -388,9 +391,9 @@ async function handleSend() {
 
   const content = input.value.trim();
   if (content) {
-    let id: string = route.params.id as string;
+    let id: string = route.params['id'] as string;
 
-    if (route.params.id === 'new') {
+    if (route.params['id'] === 'new') {
       const c = await conversationStore.$create({ model: model.value });
       id = String(c._id);
       skipNextInit = true;
@@ -435,7 +438,7 @@ interface CompletionOptions {
 }
 
 async function requestCompletion({
-  conversationId = route.params.id as string,
+  conversationId = route.params['id'] as string,
   message
 }: CompletionOptions) {
   abortController.value = new AbortController();

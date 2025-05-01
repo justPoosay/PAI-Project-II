@@ -9,8 +9,10 @@
     "dev:frontend": "bun run --filter 'frontend' dev",
     "prettier": "prettier --check .",
     "prettier:fix": "prettier --write .",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:eslint": "eslint .",
+    "lint:eslint:fix": "eslint . --fix",
+    "lint:oxlint": "oxlint . -D correctness --ignore-path .gitignore",
+    "lint:oxlint:fix": "oxlint . --fix -D correctness --ignore-path .gitignore"
   },
   "workspaces": [
     "packages/*"
