@@ -37,7 +37,11 @@ export default {
           throw new Error("Header isn't a string???");
         }
 
-        const event = await stripe.webhooks.constructEventAsync(body, signature, env.STRIPE_WEBHOOK_SECRET);
+        const event = await stripe.webhooks.constructEventAsync(
+          body,
+          signature,
+          env.STRIPE_WEBHOOK_SECRET
+        );
 
         await processEvent(event);
       } catch (e) {
