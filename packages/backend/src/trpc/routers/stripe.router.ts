@@ -29,7 +29,8 @@ export const stripeRouter = router({
           price: env.STRIPE_PRICE_ID,
           quantity: 1
         }
-      ]
+      ],
+      ui_mode: 'hosted'
     });
 
     return { url: session.url! };
