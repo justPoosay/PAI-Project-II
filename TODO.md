@@ -1,11 +1,7 @@
 - indexed db and sync layer
-- fix sse
 - editing messages
-- update the design
 - support for reasoning
 - better error displaying
 - fix the docker image not building
 - deserialize ObjectId
-- "Anonymous" chats / paywall
-- Rate limits
-- Stripe integration
+- "Anonymous" chats
