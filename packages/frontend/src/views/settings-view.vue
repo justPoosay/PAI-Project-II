@@ -124,8 +124,9 @@
 
 <script setup lang="ts">
 import { signOut, useSession } from '@/lib/auth-client';
+import { fromLS } from '@/lib/local';
 import { trpc } from '@/lib/trpc';
-import type { UnRef } from '@/lib/types';
+import type { ART, UnRef } from '@/lib/types';
 import { capitalize } from '@/lib/utils';
 import router from '@/router';
 import dayjs from 'dayjs';
@@ -136,35 +137,16 @@ import { RouterLink } from 'vue-router';
 
 const session = useSession();
 
-const limits = ref<Awaited<ReturnType<typeof trpc.stripe.getLimits.query>>>({
-  messagesUsed: 0,
-  tier: 'free',
-  refresh: dayjs().add(1, 'month').toDate()
-});
-const price = ref<Awaited<ReturnType<typeof trpc.stripe.getPrice.query>>>({
-  id: '',
-  currency: 'USD',
-  unitAmount: 800,
-  interval: 'month'
-});
+const limits = ref<ART<typeof trpc.stripe.getLimits.query>>(fromLS('limits'));
+const price = ref<ART<typeof trpc.stripe.getPrice.query>>(fromLS('price'));
 
-trpc.stripe.getLimits
-  .query()
-  .then(data => {
-    limits.value = data;
-  })
-  .catch(error => {
-    console.error(error);
-  });
+trpc.stripe.getLimits.query().then(data => {
+  limits.value = data;
+}, console.error);
 
-trpc.stripe.getPrice
-  .query()
-  .then(data => {
-    price.value = data;
-  })
-  .catch(error => {
-    console.error(error);
-  });
+trpc.stripe.getPrice.query().then(data => {
+  price.value = data;
+}, console.error);
 
 async function handleSubButton() {
   const { url } =

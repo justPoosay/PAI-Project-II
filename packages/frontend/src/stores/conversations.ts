@@ -1,5 +1,5 @@
 import { trpc } from '@/lib/trpc';
-import { Model } from 'common';
+import { type Model } from 'common';
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 
@@ -11,10 +11,9 @@ export const useConversationStore = defineStore('conversations', () => {
 
   async function $fetch() {
     conversations.value = await trpc.conversation.list.query();
-    console.log('conversations', conversations.value);
   }
 
-  async function $create(data: { model?: typeof Model.infer } = {}) {
+  async function $create(data: { model?: Model } = {}) {
     const c = await trpc.conversation.new.mutate(data);
     conversations.value.unshift(c);
     return c;

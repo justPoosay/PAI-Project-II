@@ -27,7 +27,7 @@
 
 <script setup lang="ts">
 import { capitalize } from '@/lib/utils';
-import { Effort } from 'common';
+import type { Effort } from 'common';
 import { keys } from 'common/utils';
 import { PopoverContent, PopoverPortal, PopoverRoot, PopoverTrigger } from 'radix-vue';
 import { ref } from 'vue';
@@ -36,13 +36,13 @@ const efforts = Object.freeze({
   high: null,
   medium: null,
   low: null
-} satisfies { [K in typeof Effort.infer]: unknown });
+} satisfies { [K in Effort]: unknown });
 
 const isOpen = ref(false);
 
-const effort = defineModel<typeof Effort.infer>({ required: true });
+const effort = defineModel<Effort>({ required: true });
 
-function selectEffort(e: typeof Effort.infer) {
+function selectEffort(e: Effort) {
   effort.value = e;
   isOpen.value = false;
 }

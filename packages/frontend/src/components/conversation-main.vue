@@ -173,14 +173,21 @@ import EffortSelector from '@/components/effort-selector.vue';
 import Loader from '@/components/loader.vue';
 import ModelSelector from '@/components/model-selector.vue';
 import ToolResult from '@/components/tool-result.vue';
+import { fromLS, toLS } from '@/lib/local';
 import { parseMarkdown } from '@/lib/markdown.ts';
 import { trpc } from '@/lib/trpc';
 import type { Nullish } from '@/lib/types.ts';
 import { capitalize } from '@/lib/utils.ts';
 import router from '@/router';
 import { useConversationStore, type Conversation } from '@/stores/conversations.ts';
-import { useModelStore } from '@/stores/models.ts';
-import { AssistantMessage, Effort, Message, MessageChunk, models, SSE, type Model } from 'common';
+import {
+  models,
+  type AssistantMessage,
+  type Effort,
+  type Message,
+  type MessageChunk,
+  type Model
+} from 'common';
 import { includes } from 'common/utils';
 import {
   CheckIcon,
@@ -206,9 +213,8 @@ import { onBeforeRouteUpdate, useRoute } from 'vue-router';
 const route = useRoute();
 const conversationStore = useConversationStore();
 const refs = storeToRefs(conversationStore);
-const modelStore = useModelStore();
 
-const messages = ref<{ loading: boolean; error: string | null; array: (typeof Message.infer)[] }>({
+const messages = ref<{ loading: boolean; error: string | null; array: Message[] }>({
   loading: true,
   error: null,
   array: []
@@ -222,8 +228,6 @@ const conversation = computed(
     ) ?? null
 );
 const input = ref('');
-const error = ref<Omit<Extract<typeof SSE.infer, { kind: 'error' }>, 'kind' | 'for'> | null>(null);
-const showError = ref(false);
 const abortController = ref<AbortController | null>(null);
 const unfoldedTools = ref<FullToolCall['id'][]>([]);
 const lastMessage = computed(() => messages.value.array?.at(-1) ?? null);
@@ -242,16 +246,18 @@ function copyToClipboard(text: string) {
   navigator.clipboard.writeText(text);
 }
 
-const model = ref<typeof Model.infer>(modelStore.models[0] ?? 'o3-mini');
-const reasoningEffort = ref<typeof Effort.infer>('high');
+const model = ref<Model>(fromLS('defaultModel'));
+const reasoningEffort = ref<Effort>(fromLS('defaultReasoningEffort'));
 
 watch(model, function (newValue, oldValue) {
+  toLS('defaultModel', newValue);
   if (newValue !== oldValue && conversation.value && conversation.value.model !== newValue) {
     conversationStore.$modify({ id: String(conversation.value._id), model: newValue });
   }
 });
 
 watch(reasoningEffort, function (newValue, oldValue) {
+  toLS('defaultReasoningEffort', newValue);
   if (
     newValue !== oldValue &&
     conversation.value &&
@@ -269,10 +275,8 @@ function init(id: string) {
   const isNew = id === 'new';
 
   messages.value = { loading: false, error: null, array: [] };
-  model.value = conversation.value?.model ?? modelStore.models[0] ?? 'o3-mini';
+  model.value = conversation.value?.model ?? fromLS('defaultModel');
   reasoningEffort.value = conversation.value?.reasoningEffort ?? 'high';
-  error.value = null;
-  showError.value = false;
 
   if (isNew) {
     return;
@@ -318,14 +322,11 @@ onMounted(() => {
   init(route.params['id'] as string);
 });
 
-function getContent(msg: typeof Message.infer) {
+function getContent(msg: Message) {
   return 'content' in msg
     ? msg.content
     : msg.chunks
-        .filter(
-          (v): v is Extract<typeof MessageChunk.infer, { type: 'text-delta' }> =>
-            v?.type === 'text-delta'
-        )
+        .filter((v): v is Extract<MessageChunk, { type: 'text-delta' }> => v?.type === 'text-delta')
         .map(v => v.textDelta)
         .join('');
 }
@@ -338,7 +339,7 @@ interface InitialToolCall {
 
 type FullToolCall = InitialToolCall & { result: unknown };
 
-function getParts(msg: typeof Message.infer) {
+function getParts(msg: Message) {
   const parts: (InitialToolCall | FullToolCall | string)[] = [];
 
   if (msg.role === 'user') {
@@ -380,7 +381,7 @@ function getParts(msg: typeof Message.infer) {
 async function handleSend() {
   if (abortController.value) {
     abortController.value.abort();
-    (messages.value.array.at(-1) as typeof AssistantMessage.infer).chunks.push(null);
+    (messages.value.array.at(-1) as AssistantMessage).chunks.push(null);
     abortController.value = null;
     return;
   }
@@ -425,7 +426,7 @@ async function handleSend() {
 }
 
 /** Checks if the message ends with a null chunk */
-function finished(msg: Nullish<typeof Message.infer>) {
+function finished(msg: Nullish<Message>) {
   const u = undefined;
   return (msg ? ('chunks' in msg ? msg.chunks : u) : u)?.at(-1) === null;
 }
@@ -451,7 +452,7 @@ async function requestCompletion({
         chunks: [],
         author: model.value
       }) - 1;
-    msg = messages.value.array[index] as typeof AssistantMessage.infer;
+    msg = messages.value.array[index] as AssistantMessage;
   }
 
   const stream = await trpc.completion.query({ message: message!, for: conversationId });

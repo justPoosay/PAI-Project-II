@@ -12,7 +12,7 @@ export async function calculateHash(buffer: ArrayBuffer) {
   return { hex, base64 };
 }
 
-export const modelFullName = (model: typeof Model.infer) =>
+export const modelFullName = (model: Model) =>
   models[model].name +
   ((models[model] as ModelInfo).text ? ` (${(models[model] as ModelInfo).text})` : '');
 

@@ -62,19 +62,11 @@ export const Conversation = type({
   updatedAt: 'Date'
 });
 
-export const SSE = type.or(
-  {
-    kind: "'rename'",
-    for: 'string',
-    newName: 'string'
-  },
-  {
-    kind: "'error'",
-    for: 'string',
-    title: 'string',
-    message: 'string'
-  },
-  {
-    kind: "'keep-alive'"
-  }
-);
+export type Model = typeof Model.infer;
+export type Effort = typeof Effort.infer;
+export type Attachment = typeof Attachment.infer;
+export type MessageChunk = typeof MessageChunk.infer;
+export type UserMessage = typeof UserMessage.infer;
+export type AssistantMessage = typeof AssistantMessage.infer;
+export type Message = typeof Message.infer;
+export type Conversation = typeof Conversation.infer;

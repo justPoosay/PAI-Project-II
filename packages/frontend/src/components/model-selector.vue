@@ -13,7 +13,7 @@
         :side-offset="5"
       >
         <button
-          v-for="model in availableModels"
+          v-for="model in fromLS('availableModels')"
           :key="model"
           class="flex w-full items-center justify-between gap-10 rounded-md px-4 py-3 text-left text-sm font-bold transition hover:bg-black/5 dark:hover:bg-gray-200/5"
           @click="selectModel(model)"
@@ -47,12 +47,11 @@
 import ImageInput from '@/components/model-capabilities/image-input.vue';
 import Reasoning from '@/components/model-capabilities/reasoning.vue';
 import { icons } from '@/lib/icons';
+import { fromLS } from '@/lib/local';
 import { modelFullName } from '@/lib/utils';
-import { useModelStore } from '@/stores/models';
 import { models, type Model, type ModelInfo } from 'common';
 import { includes, keys } from 'common/utils';
 import { ChevronUp } from 'lucide-vue-next';
-import { storeToRefs } from 'pinia';
 import { PopoverContent, PopoverPortal, PopoverRoot, PopoverTrigger } from 'radix-vue';
 import type { DefineComponent } from 'vue';
 import { ref } from 'vue';
@@ -71,14 +70,11 @@ const capabilities = Object.freeze({
   ];
 }>);
 
-const selected = defineModel<typeof Model.infer>({ required: true });
-
-const modelStore = useModelStore();
-const { models: availableModels } = storeToRefs(modelStore);
+const selected = defineModel<Model>({ required: true });
 
 const isOpen = ref(false);
 
-function selectModel(modelName: typeof Model.infer) {
+function selectModel(modelName: Model) {
   selected.value = modelName;
   isOpen.value = false;
 }
