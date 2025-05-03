@@ -53,16 +53,30 @@ export const models = Object.freeze({
     model: anthropic('claude-3-7-sonnet-20250219'),
     env: 'ANTHROPIC_API_KEY'
   },
+  'gpt-4.1': {
+    capabilities: ['imageInput'],
+    name: 'GPT 4.1',
+    icon: 'openai',
+    model: openai('gpt-4.1'),
+    env: 'OPENAI_API_KEY'
+  },
+  'gpt-4.1-mini': {
+    capabilities: ['imageInput'],
+    name: 'GPT 4.1 Mini',
+    icon: 'openai',
+    model: openai('gpt-4.1-mini'),
+    env: 'OPENAI_API_KEY'
+  },
   'gpt-4o': {
     capabilities: ['toolUsage', 'imageInput'],
-    name: 'ChatGPT 4o',
+    name: 'GPT 4o',
     icon: 'openai',
     model: openai('gpt-4o'),
     env: 'OPENAI_API_KEY'
   },
   'gpt-4o-mini': {
     capabilities: ['toolUsage', 'imageInput'],
-    name: 'ChatGPT 4o Mini',
+    name: 'GPT 4o Mini',
     icon: 'openai',
     model: openai('gpt-4o-mini'),
     env: 'OPENAI_API_KEY'
