@@ -2,7 +2,7 @@
   <main
     class="flex h-full w-full items-center justify-center bg-[#E7F0F8] text-[#333333] dark:bg-[#352A35] dark:text-white"
   >
-    <div class="flex h-full flex-col space-y-7 p-7 text-sm">
+    <div class="flex h-full flex-col space-y-7 p-3 text-sm transition-[padding] md:p-7">
       <div class="flex items-center justify-between">
         <RouterLink
           :to="{ name: 'chat', params: { id: 'new' } }"
@@ -26,7 +26,7 @@
           Sign Out
         </button>
       </div>
-      <div class="flex flex-row space-x-8">
+      <div class="flex flex-col gap-8 lg:flex-row">
         <div class="flex flex-col items-center space-y-4">
           <AvatarRoot class="h-40 w-40 rounded-full bg-gray-300 select-none dark:bg-gray-700">
             <AvatarImage
