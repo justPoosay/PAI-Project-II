@@ -36,7 +36,6 @@
     "dayjs": "^1.11.13",
     "dexie": "^4.0.11",
     "dompurify": "^3.2.5",
-    "floating-vue": "^5.2.2",
     "highlight.js": "^11.11.1",
     "lucide-vue-next": "^0.469.0",
     "marked": "^15.0.11",

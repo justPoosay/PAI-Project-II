@@ -14,7 +14,7 @@
           >
             <div
               :data-self="message.role === 'user'"
-              class="group relative max-w-[90%] rounded-lg border-[#a2d0e5] p-2 data-[self=false]:pb-3 data-[self=true]:border data-[self=true]:bg-[#B3D6E6] data-[self=true]:shadow-xs max-md:max-w-full dark:border-[#422f42] dark:data-[self=true]:bg-[#3E2A3E]"
+              class="group relative max-w-[90%] rounded-lg border-[#a2d0e5] p-2 data-[self=true]:border data-[self=true]:bg-[#B3D6E6] data-[self=true]:px-4 data-[self=true]:shadow-xs max-md:max-w-full dark:border-[#422f42] dark:data-[self=true]:bg-[#3E2A3E]"
             >
               <template v-if="getParts(message).length">
                 <template v-for="(part, partIndex) of getParts(message)">
@@ -77,7 +77,7 @@
                 >
                   <button
                     v-if="finished(message)"
-                    v-tooltip="'Copy'"
+                    title="Copy"
                     @click="copyToClipboard(getContent(message))"
                     class="rounded-md p-1 transition hover:bg-white/5"
                   >
@@ -85,7 +85,7 @@
                   </button>
                   <button
                     v-if="lastMessage === message"
-                    v-tooltip="'Regenerate'"
+                    title="Regenerate"
                     @click="regenerateLastMessage"
                     class="rounded-md p-1 transition hover:bg-white/5"
                   >
@@ -166,7 +166,6 @@
 </template>
 
 <script setup lang="ts">
-import 'floating-vue/dist/style.css';
 import 'highlight.js/styles/github-dark.min.css';
 
 import EffortSelector from '@/components/effort-selector.vue';

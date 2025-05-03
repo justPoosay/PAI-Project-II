@@ -29,6 +29,7 @@ export function toLS<K extends keyof typeof keyToSchema>(
 }
 
 const keyToSchema = {
+  theme: type("'dark' | 'light' | 'system'"),
   availableModels: Model.array(),
   defaultModel: Model,
   defaultReasoningEffort: Effort,

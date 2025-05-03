@@ -17,3 +17,11 @@ export const modelFullName = (model: Model) =>
   ((models[model] as ModelInfo).text ? ` (${(models[model] as ModelInfo).text})` : '');
 
 export const selfOrFirst = <T>(it: T | T[]) => (Array.isArray(it) ? it[0] : it);
+
+export const setTheme = (theme: 'light' | 'dark' | 'system') => {
+  document.documentElement.classList.toggle(
+    'dark',
+    theme === 'dark' ||
+      (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+  );
+};

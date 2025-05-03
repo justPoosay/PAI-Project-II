@@ -5,8 +5,15 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { RouterView } from 'vue-router';
-import { fromLSSafe, toLS } from './lib/local';
+import { fromLS, fromLSSafe, toLS } from './lib/local';
 import { trpc } from './lib/trpc';
+import { setTheme } from './lib/utils';
+
+if (!fromLSSafe('theme')) {
+  toLS('theme', 'system');
+}
+
+setTheme(fromLS('theme'));
 
 // Preloading some data into localStorage to avoid loading screens or flickering later on
 
