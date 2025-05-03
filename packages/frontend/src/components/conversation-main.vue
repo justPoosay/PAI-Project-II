@@ -457,6 +457,10 @@ async function requestCompletion({
   const stream = await trpc.completion.query({ message: message!, for: conversationId });
 
   for await (const chunk of stream) {
+    if (chunk?.type === 'error') {
+      // TODO: handle error
+      continue;
+    }
     msg.chunks.push(chunk);
   }
 

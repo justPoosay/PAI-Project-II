@@ -22,7 +22,7 @@ export const completionRouter = protectedProcedure
       yield {
         type: 'error',
         message: 'You have reached your message limit for this month.'
-      };
+      } as const;
       return;
     } else {
       limits.messages -= 1;
