@@ -27,7 +27,7 @@ export const StripeSubCache = type.or(
 export type StripeSubCache = typeof StripeSubCache.infer;
 
 export const StripeLimitsCache = type({
-  messages: 'number',
+  messagesUsed: 'number',
   refresh: 'Date'
 });
 export type StripeLimitsCache = typeof StripeLimitsCache.infer;
@@ -86,10 +86,8 @@ export async function getLimits(user: (typeof auth.$Infer)['Session']['user']) {
   }
 
   const tier = subData.status === 'active' ? ('pro' as const) : ('free' as const);
-  const messagesPerMonth =
-    tier === 'pro' ? env.VITE_MESSAGES_PER_MONTH_PAID : env.VITE_MESSAGES_PER_MONTH_FREE;
   let limits: StripeLimitsCache = {
-    messages: messagesPerMonth,
+    messagesUsed: 0,
     refresh: (subData.status === 'active'
       ? dayjs.unix(subData.currentPeriodEnd)
       : dayjs(user.createdAt).add(1, 'month')
@@ -115,7 +113,7 @@ export async function getLimits(user: (typeof auth.$Infer)['Session']['user']) {
       date = date.add(1, 'month');
     }
     limits = {
-      messages: messagesPerMonth,
+      messagesUsed: 0,
       refresh: date.toDate()
     };
     updatedLimits = true;
@@ -126,8 +124,8 @@ export async function getLimits(user: (typeof auth.$Infer)['Session']['user']) {
   }
 
   return {
-    tier,
-    ...limits
+    ...limits,
+    tier
   };
 }
 

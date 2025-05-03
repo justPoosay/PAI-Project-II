@@ -14,7 +14,7 @@ function getUnauthedCaller() {
   });
 }
 
-function getCaller(tier: string = 'free') {
+function getCaller() {
   const id = new ObjectId();
   usedUserIDs.push(id);
 
@@ -34,7 +34,6 @@ function getCaller(tier: string = 'free') {
         id: id.toHexString(),
         email: '?',
         name: '?',
-        tier,
         emailVerified: true,
         createdAt: new Date(),
         updatedAt: new Date()

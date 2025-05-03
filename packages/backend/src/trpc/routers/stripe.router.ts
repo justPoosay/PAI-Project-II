@@ -1,3 +1,4 @@
+import { TRPCError } from '@trpc/server';
 import { redis } from 'bun';
 import { env } from '../../lib/env';
 import { getLimits, stripe } from '../../lib/stripe';
@@ -5,9 +6,9 @@ import { protectedProcedure, router } from '../trpc';
 
 export const stripeRouter = router({
   createCheckoutSession: protectedProcedure.query(async ({ ctx }) => {
-    let stripeCustomerId = await redis.get(`stripe:user:${ctx.auth.user.id}`);
+    let customerId = await redis.get(`stripe:user:${ctx.auth.user.id}`);
 
-    if (!stripeCustomerId) {
+    if (!customerId) {
       const newCustomer = await stripe.customers.create({
         email: ctx.auth.user.email,
         metadata: {
@@ -16,11 +17,11 @@ export const stripeRouter = router({
       });
 
       await redis.set(`stripe:user:${ctx.auth.user.id}`, newCustomer.id);
-      stripeCustomerId = newCustomer.id;
+      customerId = newCustomer.id;
     }
 
     const session = await stripe.checkout.sessions.create({
-      customer: stripeCustomerId,
+      customer: customerId,
       success_url: `${env.BASE_URL}/api/success`,
       cancel_url: `${env.BASE_URL}/`,
       mode: 'subscription',
@@ -34,6 +35,19 @@ export const stripeRouter = router({
     });
 
     return { url: session.url! };
+  }),
+  createPortalSession: protectedProcedure.query(async ({ ctx }) => {
+    const customerId = await redis.get(`stripe:user:${ctx.auth.user.id}`);
+    if (!customerId) {
+      throw new TRPCError({ code: 'FORBIDDEN' });
+    }
+
+    const session = await stripe.billingPortal.sessions.create({
+      customer: customerId,
+      return_url: `${env.BASE_URL}/settings`
+    });
+
+    return { url: session.url };
   }),
   getLimits: protectedProcedure.query(async ({ ctx }) => getLimits(ctx.auth.user))
 });

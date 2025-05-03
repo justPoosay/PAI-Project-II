@@ -6,6 +6,7 @@ import { ObjectId } from 'mongodb';
 import { stringify } from 'superjson';
 import { getTextContent } from '../../core/utils';
 import { ConversationService } from '../../lib/db';
+import { env } from '../../lib/env';
 import { getLimits } from '../../lib/stripe';
 import { protectedProcedure } from '../trpc';
 
@@ -18,14 +19,16 @@ export const completionRouter = protectedProcedure
   )
   .query(async function* ({ input, ctx, signal }) {
     const limits = await getLimits(ctx.auth.user);
-    if (limits.messages <= 0) {
+    const messagesPerMonth =
+      limits.tier === 'pro' ? env.VITE_MESSAGES_PER_MONTH_PAID : env.VITE_MESSAGES_PER_MONTH_FREE;
+    if (limits.messagesUsed >= messagesPerMonth) {
       yield {
         type: 'error',
         message: 'You have reached your message limit for this month.'
       } as const;
       return;
     } else {
-      limits.messages -= 1;
+      limits.messagesUsed += 1;
     }
 
     const _id = new ObjectId(input.for);

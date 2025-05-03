@@ -23,20 +23,19 @@
           </button>
           <RouterLink
             class="rounded-md p-2 transition hover:bg-black/5 dark:hover:bg-gray-200/5"
-            to="/c/new"
+            :to="{ name: 'chat', params: { id: 'new' } }"
           >
             <PlusIcon class="h-4 w-4" />
           </RouterLink>
         </div>
       </div>
-
       <div
         :data-expanded="isExpanded"
         class="flex grow flex-col space-y-1 overflow-hidden p-1 transition-transform duration-100 ease-out data-[expanded=false]:-translate-x-full"
       >
         <RouterLink
           class="block shrink-0 rounded-md border border-[#3EB0E2] bg-linear-to-r from-[#55CDFC] to-[#3EB0E2] py-1.5 text-center text-sm font-semibold transition hover:from-[#2A9FD8] hover:to-[#1E8BC4] dark:border-[#C3778C] dark:from-[#F7A8B8] dark:to-[#D08A9E] dark:hover:from-[#C3778C] dark:hover:to-[#A86479]"
-          to="/c/new"
+          :to="{ name: 'chat', params: { id: 'new' } }"
           :tabindex="isExpanded ? 0 : -1"
         >
           New Chat
@@ -53,19 +52,19 @@
               <RouterLink
                 v-for="c in groups[group]"
                 v-bind:key="String(c._id)"
-                :to="{ name: 'c', params: { id: String(c._id) } }"
+                :to="{ name: 'chat', params: { id: String(c._id) } }"
                 class="flex flex-row items-center rounded-xl p-2 text-sm transition hover:bg-black/5 dark:hover:bg-gray-200/5"
               >
-                <span class="block truncate" :title="c.name ?? undefined">{{
-                  c.name ?? 'Untitled'
-                }}</span>
+                <span class="block truncate" :title="c.name ?? undefined">
+                  {{ c.name ?? 'Untitled' }}
+                </span>
               </RouterLink>
             </div>
           </div>
           <div v-else class="flex h-full w-full items-center justify-center">
             <Loader v-if="state === 'loading'" />
             <div v-else class="text-center">
-              <button @click="loadConversations" class="group text-sm font-semibold">
+              <button @click="init" class="group text-sm font-semibold">
                 <span class="block text-[#f82447] group-hover:hidden">Error</span>
                 <span class="hidden text-[#55CDFC] group-hover:inline dark:text-[#F7A8B8]">
                   Retry
@@ -78,16 +77,16 @@
         <div class="flex shrink-0 pt-1">
           <RouterLink
             v-if="!session.data"
-            to="/login"
+            :to="{ name: 'login' }"
             class="flex w-full items-center space-x-2 rounded-xl p-2 hover:bg-black/5 dark:hover:bg-gray-200/5"
           >
             <LogInIcon class="h-4 w-4" />
             <p>Login</p>
           </RouterLink>
-          <button
+          <RouterLink
             v-else
             class="flex w-full items-center space-x-2 rounded-xl p-2 hover:bg-black/5 dark:hover:bg-gray-200/5"
-            @click="handleSubscibe"
+            :to="{ name: 'settings' }"
           >
             <AvatarRoot class="h-9 w-9 rounded-full bg-gray-300 select-none dark:bg-gray-700">
               <AvatarImage
@@ -106,10 +105,10 @@
                 {{ session.data.user.name ?? 'User' }}
               </p>
               <p class="m-0 text-xs text-gray-500 dark:text-gray-400">
-                {{ capitalize(session.data.user.tier) }}
+                {{ capitalize(tier) }}
               </p>
             </div>
-          </button>
+          </RouterLink>
         </div>
       </div>
     </div>
@@ -135,15 +134,18 @@ const session = useSession();
 const isExpanded = defineModel<boolean>({ required: true });
 const circumstances = ref<Partial<{ force: boolean; narrow: boolean }>>({});
 
+const tier = ref<'free' | 'pro'>('free');
+
 const state = ref<'idle' | 'loading' | 'error'>('loading');
 const conversationStore = useConversationStore();
 const refs = storeToRefs(conversationStore);
 const conversations = computed(() => {
   return refs.conversations.value.filter(c => !c.deleted);
 });
-loadConversations();
 
-function loadConversations() {
+init();
+
+function init() {
   state.value = 'loading';
   conversationStore
     .$fetch()
@@ -157,6 +159,10 @@ function loadConversations() {
         router.push({ name: 'login' });
       }
     });
+
+  trpc.stripe.getLimits.query().then(data => {
+    tier.value = data.tier;
+  });
 }
 
 type Conversations = typeof conversations extends Ref<infer U> ? U : never;
@@ -222,11 +228,6 @@ function resizeHandler() {
     }
     circumstances.value.narrow = false;
   }
-}
-
-async function handleSubscibe() {
-  const { url } = await trpc.stripe.createCheckoutSession.query();
-  window.location.href = url;
 }
 
 onMounted(function () {

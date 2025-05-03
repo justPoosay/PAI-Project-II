@@ -7,11 +7,11 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      redirect: '/c/new'
+      redirect: { name: 'chat', params: { id: 'new' } }
     },
     {
       path: '/c/:id',
-      name: 'c',
+      name: 'chat',
       component: () => import('@/views/conversation-view.vue')
     },
     {
@@ -22,6 +22,17 @@ const router = createRouter({
         const session = await getSession();
         if (session.data) {
           return from;
+        }
+      }
+    },
+    {
+      path: '/settings',
+      name: 'settings',
+      component: () => import('@/views/settings-view.vue'),
+      async beforeEnter() {
+        const session = await getSession();
+        if (!session.data) {
+          return '/login';
         }
       }
     }
