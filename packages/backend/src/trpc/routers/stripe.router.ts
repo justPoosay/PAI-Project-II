@@ -2,7 +2,7 @@ import { TRPCError } from '@trpc/server';
 import { redis } from 'bun';
 import { env } from '../../lib/env';
 import { getLimits, stripe } from '../../lib/stripe';
-import { protectedProcedure, router } from '../trpc';
+import { protectedProcedure, publicProcedure, router } from '../trpc';
 
 export const stripeRouter = router({
   createCheckoutSession: protectedProcedure.query(async ({ ctx }) => {
@@ -48,6 +48,19 @@ export const stripeRouter = router({
     });
 
     return { url: session.url };
+  }),
+  getPrice: publicProcedure.query(async () => {
+    const price = await stripe.prices.retrieve(env.STRIPE_PRICE_ID);
+    if (!price) {
+      throw new TRPCError({ code: 'NOT_FOUND' });
+    }
+
+    return {
+      id: price.id,
+      unitAmount: price.unit_amount!,
+      currency: price.currency,
+      interval: price.recurring?.interval
+    };
   }),
   getLimits: protectedProcedure.query(async ({ ctx }) => getLimits(ctx.auth.user))
 });

@@ -79,9 +79,16 @@
         </div>
         <div class="flex flex-col space-y-4">
           <div class="flex flex-col space-y-2">
-            <h1 class="text-3xl font-bold">
-              {{ limits.tier === 'pro' ? 'Pro Plan Benefits' : 'Upgrade to Pro' }}
-            </h1>
+            <div class="flex items-center justify-between">
+              <h1 class="text-3xl font-bold">
+                {{ limits.tier === 'pro' ? 'Pro Plan Benefits' : 'Upgrade to Pro' }}
+              </h1>
+              <p v-if="limits.tier === 'free'">
+                <span class="text-2xl font-bold">
+                  {{ formatPrice(price.unitAmount / 100, price.currency) }} </span
+                >/{{ price.interval }}
+              </p>
+            </div>
             <div class="grid grid-cols-2 gap-8">
               <div class="space-y-1">
                 <div class="flex items-center gap-1">
@@ -129,27 +136,35 @@ import { RouterLink } from 'vue-router';
 
 const session = useSession();
 
-const state = ref<'idle' | 'loading' | 'error'>('loading');
 const limits = ref<Awaited<ReturnType<typeof trpc.stripe.getLimits.query>>>({
   messagesUsed: 0,
   tier: 'free',
   refresh: dayjs().add(1, 'month').toDate()
 });
+const price = ref<Awaited<ReturnType<typeof trpc.stripe.getPrice.query>>>({
+  id: '',
+  currency: 'USD',
+  unitAmount: 800,
+  interval: 'month'
+});
 
-getLimits();
+trpc.stripe.getLimits
+  .query()
+  .then(data => {
+    limits.value = data;
+  })
+  .catch(error => {
+    console.error(error);
+  });
 
-function getLimits() {
-  trpc.stripe.getLimits
-    .query()
-    .then(data => {
-      limits.value = data;
-      state.value = 'idle';
-    })
-    .catch(error => {
-      console.error(error);
-      state.value = 'error';
-    });
-}
+trpc.stripe.getPrice
+  .query()
+  .then(data => {
+    price.value = data;
+  })
+  .catch(error => {
+    console.error(error);
+  });
 
 async function handleSubButton() {
   const { url } =
@@ -157,6 +172,14 @@ async function handleSubButton() {
       ? await trpc.stripe.createPortalSession.query()
       : await trpc.stripe.createCheckoutSession.query();
   location.href = url;
+}
+
+function formatPrice(price: number, currency: string) {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: 0
+  }).format(price);
 }
 
 const messagesPerMonth: Record<UnRef<typeof limits>['tier'], number> = {
