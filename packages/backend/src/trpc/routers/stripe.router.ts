@@ -1,6 +1,6 @@
 import { redis } from 'bun';
 import { env } from '../../lib/env';
-import { stripe } from '../../lib/stripe';
+import { getLimits, stripe } from '../../lib/stripe';
 import { protectedProcedure, router } from '../trpc';
 
 export const stripeRouter = router({
@@ -34,5 +34,6 @@ export const stripeRouter = router({
     });
 
     return { url: session.url! };
-  })
+  }),
+  getLimits: protectedProcedure.query(async ({ ctx }) => getLimits(ctx.auth.user))
 });

@@ -1,9 +1,12 @@
 import { streamText } from 'ai';
 import { type } from 'arktype';
+import { redis } from 'bun';
 import { models, type MessageChunk } from 'common';
 import { ObjectId } from 'mongodb';
+import { stringify } from 'superjson';
 import { getTextContent } from '../../core/utils';
 import { ConversationService } from '../../lib/db';
+import { getLimits } from '../../lib/stripe';
 import { protectedProcedure } from '../trpc';
 
 export const completionRouter = protectedProcedure
@@ -14,6 +17,17 @@ export const completionRouter = protectedProcedure
     })
   )
   .query(async function* ({ input, ctx, signal }) {
+    const limits = await getLimits(ctx.auth.user);
+    if (limits.messages <= 0) {
+      yield {
+        type: 'error',
+        message: 'You have reached your message limit for this month.'
+      };
+      return;
+    } else {
+      limits.messages -= 1;
+    }
+
     const _id = new ObjectId(input.for);
     const c = await ConversationService.findOne({
       _id,
@@ -60,6 +74,8 @@ export const completionRouter = protectedProcedure
         }
       };
     }
+
+    await redis.set(`user:limits:${ctx.auth.user.id}`, stringify(limits));
 
     const stream = streamText(options);
 

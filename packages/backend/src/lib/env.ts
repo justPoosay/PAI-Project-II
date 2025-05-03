@@ -25,8 +25,10 @@ export const Env = type({
   'FIRECRAWL_API_URL?': 'string',
   'WEATHER_API_KEY?': 'string',
   'SERP_API_KEY?': 'string',
-
   'GITHUB_PAT?': 'string',
+
+  VITE_MESSAGES_PER_MONTH_FREE: 'string.numeric.parse',
+  VITE_MESSAGES_PER_MONTH_PAID: 'string.numeric.parse',
 
   LOG_LEVEL: LogLevel
 });
@@ -36,6 +38,11 @@ const out = Env(Bun.env);
 if (out instanceof type.errors) {
   console.error(
     `${color('#e81747', 'ansi')}[FATAL] [.env]${out.summary.includes('\n') ? '\n' : ' '}  ${out.summary.replace(/\n/g, '\n  ')}${color('white', 'ansi')}`
+  );
+  process.exit(1);
+} else if (!out.OPENAI_API_KEY && !out.ANTHROPIC_API_KEY && !out.XAI_API_KEY && !out.GROQ_API_KEY) {
+  console.error(
+    `${color('#e81747', 'ansi')}[FATAL] [.env]\n  At least one AI provider API key (OPENAI_API_KEY, ANTHROPIC_API_KEY, XAI_API_KEY, or GROQ_API_KEY) must be set!${color('white', 'ansi')}`
   );
   process.exit(1);
 }

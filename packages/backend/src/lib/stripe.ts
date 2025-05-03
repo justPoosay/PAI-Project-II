@@ -1,7 +1,9 @@
 import { type } from 'arktype';
 import { redis } from 'bun';
+import dayjs from 'dayjs';
 import Stripe from 'stripe';
 import { parse, stringify } from 'superjson';
+import type { auth } from './auth';
 import { env } from './env';
 
 export const stripe = new Stripe(env.STRIPE_SECRET_KEY);
@@ -13,8 +15,8 @@ export const StripeSubCache = type.or(
     status:
       "'active' | 'canceled' | 'incomplete' | 'incomplete_expired' | 'past_due' | 'paused' | 'trialing' | 'unpaid'",
     priceId: 'string',
-    currentPeriodStart: 'number',
-    currentPeriodEnd: 'number',
+    currentPeriodStart: 'number.epoch',
+    currentPeriodEnd: 'number.epoch',
     cancelAtPeriodEnd: 'boolean',
     paymentMethod: type({
       brand: 'string | null',
@@ -23,6 +25,12 @@ export const StripeSubCache = type.or(
   }
 );
 export type StripeSubCache = typeof StripeSubCache.infer;
+
+export const StripeLimitsCache = type({
+  messages: 'number',
+  refresh: 'Date'
+});
+export type StripeLimitsCache = typeof StripeLimitsCache.infer;
 
 export async function syncStripeDataToKV(customerId: string) {
   const subscriptions = await stripe.subscriptions.list({
@@ -62,19 +70,65 @@ export async function syncStripeDataToKV(customerId: string) {
   return subData;
 }
 
-export async function getSubscriptionData(customerId: string) {
-  const cachedData = await redis.get(`stripe:customer:${customerId}`);
+export async function getLimits(user: (typeof auth.$Infer)['Session']['user']) {
+  const customerId = await redis.get(`stripe:user:${user.id}`);
 
-  if (!cachedData) {
-    return { status: 'none' } satisfies StripeSubCache;
+  let subData: StripeSubCache = { status: 'none' };
+
+  if (customerId) {
+    const out = type('string').pipe.try(
+      parse,
+      StripeSubCache
+    )(await redis.get(`stripe:customer:${customerId}`));
+    if (!(out instanceof type.errors)) {
+      subData = out;
+    }
   }
 
-  const out = StripeSubCache(parse(cachedData));
-  if (out instanceof type.errors) {
-    return { status: 'none' } satisfies StripeSubCache;
+  const tier = subData.status === 'active' ? ('pro' as const) : ('free' as const);
+  const messagesPerMonth =
+    tier === 'pro' ? env.VITE_MESSAGES_PER_MONTH_PAID : env.VITE_MESSAGES_PER_MONTH_FREE;
+  let limits: StripeLimitsCache = {
+    messages: messagesPerMonth,
+    refresh: (subData.status === 'active'
+      ? dayjs.unix(subData.currentPeriodEnd)
+      : dayjs(user.createdAt).add(1, 'month')
+    ).toDate()
+  };
+  let updatedLimits = false;
+
+  const out = type('string').pipe.try(
+    parse,
+    StripeLimitsCache
+  )(await redis.get(`user:limits:${user.id}`));
+
+  if (!(out instanceof type.errors)) {
+    limits = out;
+  } else {
+    updatedLimits = true;
   }
 
-  return out;
+  const now = new Date();
+  if (limits.refresh < now) {
+    let date = dayjs(limits.refresh);
+    while (date.isBefore(now)) {
+      date = date.add(1, 'month');
+    }
+    limits = {
+      messages: messagesPerMonth,
+      refresh: date.toDate()
+    };
+    updatedLimits = true;
+  }
+
+  if (updatedLimits) {
+    await redis.set(`user:limits:${user.id}`, stringify(limits));
+  }
+
+  return {
+    tier,
+    ...limits
+  };
 }
 
 const allowedEvents: Stripe.Event.Type[] = [
