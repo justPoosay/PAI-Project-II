@@ -30,9 +30,9 @@ export function toLS<K extends keyof typeof keyToSchema>(
 
 const keyToSchema = {
   theme: type("'dark' | 'light' | 'system'"),
-  availableModels: Model.array(),
-  defaultModel: Model,
-  defaultReasoningEffort: Effort,
+  'available-models': Model.array(),
+  'default-model': Model,
+  'default-reasoning-effort': Effort,
   price: type({
     id: 'string',
     unitAmount: 'number',
@@ -43,5 +43,11 @@ const keyToSchema = {
     messagesUsed: 'number',
     refresh: 'Date',
     tier: "'free' | 'pro'"
+  }),
+  'user-preferences': type({
+    name: 'string',
+    occupation: 'string',
+    selectedTraits: 'string',
+    additionalInfo: 'string'
   })
 } as const satisfies Record<string, Type<unknown, object>>;

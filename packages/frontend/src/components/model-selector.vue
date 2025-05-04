@@ -13,7 +13,7 @@
         :side-offset="5"
       >
         <button
-          v-for="model in fromLS('availableModels')"
+          v-for="model in fromLS('available-models')"
           :key="model"
           class="flex w-full items-center justify-between gap-10 rounded-md px-4 py-3 text-left text-sm font-bold transition hover:bg-black/5 dark:hover:bg-gray-200/5"
           @click="selectModel(model)"

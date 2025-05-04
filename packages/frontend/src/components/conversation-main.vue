@@ -244,18 +244,18 @@ function copyToClipboard(text: string) {
   navigator.clipboard.writeText(text);
 }
 
-const model = ref<Model>(fromLS('defaultModel'));
-const reasoningEffort = ref<Effort>(fromLS('defaultReasoningEffort'));
+const model = ref<Model>(fromLS('default-model'));
+const reasoningEffort = ref<Effort>(fromLS('default-reasoning-effort'));
 
 watch(model, function (newValue, oldValue) {
-  toLS('defaultModel', newValue);
+  toLS('default-model', newValue);
   if (newValue !== oldValue && conversation.value && conversation.value.model !== newValue) {
     conversationStore.$modify({ id: String(conversation.value._id), model: newValue });
   }
 });
 
 watch(reasoningEffort, function (newValue, oldValue) {
-  toLS('defaultReasoningEffort', newValue);
+  toLS('default-reasoning-effort', newValue);
   if (
     newValue !== oldValue &&
     conversation.value &&
@@ -273,7 +273,7 @@ function init(id: string) {
   const isNew = id === 'new';
 
   messages.value = { loading: false, error: null, array: [] };
-  model.value = conversation.value?.model ?? fromLS('defaultModel');
+  model.value = conversation.value?.model ?? fromLS('default-model');
   reasoningEffort.value = conversation.value?.reasoningEffort ?? 'high';
 
   if (isNew) {
@@ -453,7 +453,11 @@ async function requestCompletion({
     msg = messages.value.array[index] as AssistantMessage;
   }
 
-  const stream = await trpc.completion.query({ message: message!, for: conversationId });
+  const stream = await trpc.completion.query({
+    message: message!,
+    for: conversationId,
+    preferences: fromLS('user-preferences')
+  });
 
   for await (const chunk of stream) {
     if (chunk?.type === 'error') {

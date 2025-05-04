@@ -12,7 +12,7 @@
             >/{{ price.interval }}
           </p>
         </div>
-        <div class="grid grid-cols-2 gap-8">
+        <div class="flex flex-row gap-8 *:max-w-sm">
           <div class="gap-1">
             <div class="flex items-center gap-1">
               <RocketIcon class="text-pink-2 size-5" />

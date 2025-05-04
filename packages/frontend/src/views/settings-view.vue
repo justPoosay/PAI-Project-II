@@ -31,7 +31,7 @@
           </button>
         </div>
       </div>
-      <div class="flex flex-col gap-8 lg:flex-row">
+      <div class="flex flex-col gap-8 md:flex-row">
         <div class="flex flex-col items-center gap-4">
           <AvatarRoot class="size-40 rounded-full bg-gray-300 select-none dark:bg-gray-700">
             <AvatarImage
@@ -55,11 +55,11 @@
             </div>
           </div>
           <div
-            class="bg-sidebar-light dark:bg-sidebar-dark flex flex-col gap-6 rounded-lg p-3 text-sm shadow-md"
+            class="bg-sidebar-light dark:bg-sidebar-dark flex min-w-[300px] flex-col gap-6 rounded-lg p-3 text-sm shadow-md"
           >
-            <div class="flex flex-row items-center justify-between gap-8">
+            <div class="grid grid-cols-2 items-center justify-between gap-8">
               <p class="font-bold">Message Usage</p>
-              <p class="text-text-secondary-light dark:text-text-secondary-dark">
+              <p class="text-text-secondary-light dark:text-text-secondary-dark text-end">
                 Resets {{ dayjs(limits.refresh).format('MMMM D, YYYY') }}
               </p>
             </div>
@@ -130,6 +130,7 @@ trpc.stripe.getLimits.query().then(data => {
 }, console.error);
 
 const routes = {
-  'account-settings': 'Account'
+  'account-settings': 'Account',
+  'customization-settings': 'Customization'
 } satisfies Record<string, string>;
 </script>

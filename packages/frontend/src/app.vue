@@ -13,6 +13,15 @@ import { fromLS, fromLSSafe, toLS } from './lib/local';
 import { trpc } from './lib/trpc';
 import { setTheme } from './lib/utils';
 
+if (!fromLSSafe('user-preferences')) {
+  toLS('user-preferences', {
+    name: '',
+    occupation: '',
+    selectedTraits: '',
+    additionalInfo: ''
+  });
+}
+
 if (!fromLSSafe('theme')) {
   toLS('theme', 'system');
 }
@@ -23,16 +32,16 @@ setTheme(fromLS('theme'));
 
 const loaded = ref(false);
 
-if (!fromLSSafe('defaultReasoningEffort')) {
-  toLS('defaultReasoningEffort', 'low');
+if (!fromLSSafe('default-reasoning-effort')) {
+  toLS('default-reasoning-effort', 'low');
 }
 
 Promise.all([
   trpc.model.available.query().then(v => {
-    toLS('availableModels', v);
-    const defaultModel = fromLSSafe('defaultModel');
+    toLS('available-models', v);
+    const defaultModel = fromLSSafe('default-model');
     if (!defaultModel || !v.includes(defaultModel)) {
-      toLS('defaultModel', v[0]!);
+      toLS('default-model', v[0]!);
     }
   }),
   trpc.stripe.getPrice.query().then(v => toLS('price', v)),
