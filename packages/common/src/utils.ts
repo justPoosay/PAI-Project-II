@@ -1,7 +1,10 @@
 export type Merge<T, U> = Omit<T, keyof U> & U;
+export type Nullish<T> = T | null | undefined;
 
-export function entries<T extends object>(obj: T): [keyof T, T[keyof T]][] {
-  return Object.entries(obj) as [keyof T, T[keyof T]][];
+export type Entry<T extends object> = NonNullable<{ [K in keyof T]: [K, T[K]] }[keyof T]>;
+export function entries<T extends object>(obj: Nullish<T>): Entry<T>[] {
+  if (!obj) return [];
+  return Object.entries(obj) as Entry<T>[];
 }
 
 export function keys<T extends object>(obj: T): (keyof T)[] {

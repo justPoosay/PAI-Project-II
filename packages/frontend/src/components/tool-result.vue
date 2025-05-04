@@ -6,7 +6,7 @@
         v-if="!(tool.result.success ?? false)"
         class="inline-flex items-center space-x-2 text-red-500"
       >
-        <CircleAlertIcon class="h-4 w-4" />
+        <CircleAlertIcon class="size-4" />
         <p>{{ tool.result.error }}</p>
       </div>
       <div v-else v-html="parseMarkdown(tool.result.markdown)" class="markdown-content" />
@@ -17,7 +17,7 @@
         v-if="!(tool.result.success ?? true)"
         class="inline-flex items-center space-x-2 text-red-500"
       >
-        <CircleAlertIcon class="h-4 w-4" />
+        <CircleAlertIcon class="size-4" />
         <p>{{ tool.result.error }}</p>
       </div>
       <div v-else class="flex flex-col space-y-2">

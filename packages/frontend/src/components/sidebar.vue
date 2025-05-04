@@ -1,5 +1,5 @@
 <template>
-  <div
+  <nav
     :data-expanded="isExpanded"
     class="z-99999999999 flex h-screen w-0 animate-[rotate-gradient_5s_linear_infinite] flex-col border-transparent bg-clip-padding transition-all duration-100 ease-out [--bg:#DDE6F0] data-[expanded=false]:pointer-events-none data-[expanded=true]:w-64 max-lg:fixed max-lg:[background:linear-gradient(var(--bg),var(--bg))_padding-box,linear-gradient(var(--angle,225deg),#FF000E,#FF7300,#FAD220,#138F3E,#3558A0,#880082)_border-box] max-lg:data-[expanded=true]:border-r-2 max-lg:data-[expanded=true]:shadow-md dark:[--bg:#2A1F2A] dark:max-lg:data-[expanded=true]:border-r"
   >
@@ -9,7 +9,7 @@
           @click="toggleSidebar"
           class="pointer-events-auto z-20 cursor-pointer rounded-md p-2 transition hover:bg-black/5 dark:hover:bg-gray-200/5"
         >
-          <SidebarIcon class="h-4 w-4" />
+          <SidebarIcon class="size-4" />
         </button>
         <div
           :data-expanded="isExpanded"
@@ -19,13 +19,13 @@
             @click="'TODO'"
             class="z-20 cursor-pointer rounded-md p-2 transition hover:bg-black/5 dark:hover:bg-gray-200/5"
           >
-            <SearchIcon class="h-4 w-4" />
+            <SearchIcon class="size-4" />
           </button>
           <RouterLink
             class="rounded-md p-2 transition hover:bg-black/5 dark:hover:bg-gray-200/5"
             :to="{ name: 'chat', params: { id: 'new' } }"
           >
-            <PlusIcon class="h-4 w-4" />
+            <PlusIcon class="size-4" />
           </RouterLink>
         </div>
       </div>
@@ -61,7 +61,7 @@
               </RouterLink>
             </div>
           </div>
-          <div v-else class="flex h-full w-full items-center justify-center">
+          <div v-else class="flex size-full items-center justify-center">
             <Loader v-if="state === 'loading'" />
             <div v-else class="text-center">
               <button @click="init" class="group text-sm font-semibold">
@@ -80,22 +80,22 @@
             :to="{ name: 'login' }"
             class="flex w-full items-center space-x-2 rounded-xl p-2 hover:bg-black/5 dark:hover:bg-gray-200/5"
           >
-            <LogInIcon class="h-4 w-4" />
+            <LogInIcon class="size-4" />
             <p>Login</p>
           </RouterLink>
           <RouterLink
             v-else
             class="flex w-full items-center space-x-2 rounded-xl p-2 hover:bg-black/5 dark:hover:bg-gray-200/5"
-            :to="{ name: 'settings' }"
+            :to="{ name: 'account-settings' }"
           >
-            <AvatarRoot class="h-9 w-9 rounded-full bg-gray-300 select-none dark:bg-gray-700">
+            <AvatarRoot class="size-9 rounded-full bg-gray-300 select-none dark:bg-gray-700">
               <AvatarImage
-                class="h-full w-full rounded-[inherit] object-cover"
+                class="size-full rounded-[inherit] object-cover"
                 :src="session.data.user.image ?? ''"
                 :alt="session.data.user.name"
               />
               <AvatarFallback
-                class="flex h-full w-full items-center justify-center font-semibold text-emerald-500"
+                class="flex size-full items-center justify-center font-semibold text-emerald-500"
               >
                 {{ session.data.user.name.charAt(0) || 'U' }}
               </AvatarFallback>
@@ -112,7 +112,7 @@
         </div>
       </div>
     </div>
-  </div>
+  </nav>
 </template>
 
 <script setup lang="ts">

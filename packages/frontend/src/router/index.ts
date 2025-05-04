@@ -34,7 +34,18 @@ const router = createRouter({
         if (!session.data) {
           return '/login';
         }
-      }
+      },
+      children: [
+        {
+          path: '',
+          redirect: { name: 'account-settings' }
+        },
+        {
+          path: 'account',
+          name: 'account-settings',
+          component: () => import('@/views/settings/account-view.vue')
+        }
+      ]
     }
   ]
 });

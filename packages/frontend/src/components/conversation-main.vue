@@ -35,17 +35,17 @@
                     >
                       <component
                         :is="toolIcons[part.name] ?? toolIcons['default']"
-                        class="h-4 w-4"
+                        class="size-4"
                       />
                       <div class="inline-flex items-center space-x-3 select-none">
                         <p>{{ capitalize(part.name) }}</p>
-                        <LoaderCircleIcon class="h-4 w-4 animate-spin" v-if="!('result' in part)" />
+                        <LoaderCircleIcon class="size-4 animate-spin" v-if="!('result' in part)" />
                         <ChevronUpIcon
                           v-else-if="part.result"
                           :data-folded="!unfoldedTools.includes(part.id)"
-                          class="h-4 w-4 transition-all duration-100 ease-in-out data-[folded=true]:rotate-180"
+                          class="size-4 transition-all duration-100 ease-in-out data-[folded=true]:rotate-180"
                         />
-                        <CheckIcon v-else class="h-4 w-4 text-green-500" />
+                        <CheckIcon v-else class="size-4 text-green-500" />
                       </div>
                     </button>
                     <div
@@ -81,7 +81,7 @@
                     @click="copyToClipboard(getContent(message))"
                     class="rounded-md p-1 transition hover:bg-white/5"
                   >
-                    <CopyIcon class="h-5 w-5" />
+                    <CopyIcon class="size-5" />
                   </button>
                   <button
                     v-if="lastMessage === message"
@@ -89,7 +89,7 @@
                     @click="regenerateLastMessage"
                     class="rounded-md p-1 transition hover:bg-white/5"
                   >
-                    <RefreshCwIcon class="h-5 w-5 transition-all duration-500" />
+                    <RefreshCwIcon class="size-5 transition-all duration-500" />
                   </button>
                 </div>
               </Transition>
@@ -141,15 +141,15 @@
               "
               for="file"
             >
-              <PaperclipIcon class="h-5 w-5" />
+              <PaperclipIcon class="size-5" />
             </label>
             <button
               @click="handleSend"
               :data-action="abortController ? 'abort' : 'send'"
               class="group cursor-pointer rounded-xl bg-linear-to-br from-[#5BCEFA] to-[#F5A9B8] p-2 transition ease-in-out hover:from-[#4AB0D1] hover:to-[#E994A3] hover:shadow-lg"
             >
-              <SendIcon class="h-5 w-5 group-data-[action=abort]:hidden" />
-              <CircleStopIcon class="h-5 w-5 group-data-[action=send]:hidden" />
+              <SendIcon class="size-5 group-data-[action=abort]:hidden" />
+              <CircleStopIcon class="size-5 group-data-[action=send]:hidden" />
             </button>
           </div>
           <div class="flex gap-1">
@@ -175,7 +175,6 @@ import ToolResult from '@/components/tool-result.vue';
 import { fromLS, toLS } from '@/lib/local';
 import { parseMarkdown } from '@/lib/markdown.ts';
 import { trpc } from '@/lib/trpc';
-import type { Nullish } from '@/lib/types.ts';
 import { capitalize } from '@/lib/utils.ts';
 import router from '@/router';
 import { useConversationStore, type Conversation } from '@/stores/conversations.ts';
@@ -187,7 +186,7 @@ import {
   type MessageChunk,
   type Model
 } from 'common';
-import { includes } from 'common/utils';
+import { includes, type Nullish } from 'common/utils';
 import {
   CheckIcon,
   ChevronUpIcon,

@@ -1,4 +1,5 @@
 import { type Tool as CoreTool } from 'ai';
+import { entries } from 'common/utils';
 import { repo_file, repo_tree } from '../../core/tools/impl/github';
 import scrape from '../../core/tools/impl/scrape';
 import search from '../../core/tools/impl/search';
@@ -21,13 +22,11 @@ export const tools = Object.freeze({
 } satisfies Record<string, Tool>);
 
 const toolEntries = await Promise.all(
-  Object.entries(tools).map(
-    async ([name, { core, dependency }]): Promise<[string, CoreTool] | null> => {
-      const error = await dependency();
-      if (error) logger.warn(`"${name}" tool is not available! Error: ${error}`);
-      return error ? null : [name, core];
-    }
-  )
+  entries(tools).map(async ([name, { core, dependency }]): Promise<[string, CoreTool] | null> => {
+    const error = await dependency();
+    if (error) logger.warn(`"${name}" tool is not available! Error: ${error}`);
+    return error ? null : [name, core];
+  })
 );
 
 export default Object.fromEntries(

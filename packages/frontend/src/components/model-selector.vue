@@ -4,7 +4,7 @@
       class="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm font-semibold hover:bg-gray-200/5"
     >
       {{ modelFullName(selected) }}
-      <ChevronUp class="h-4 w-4" />
+      <ChevronUp class="size-4" />
     </PopoverTrigger>
     <PopoverPortal>
       <PopoverContent
@@ -21,7 +21,7 @@
           <div class="flex items-center gap-2">
             <component
               :is="icons[models[model].icon]"
-              class="h-4 w-4 text-[#55CDFC] dark:text-[#F7A8B8]"
+              class="size-4 text-[#55CDFC] dark:text-[#F7A8B8]"
             />
             {{ modelFullName(model) }}
           </div>

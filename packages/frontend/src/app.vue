@@ -1,5 +1,9 @@
 <template>
   <RouterView v-if="loaded" />
+  <main
+    v-else
+    class="flex size-full items-center justify-center bg-[#E7F0F8] dark:bg-[#352A35]"
+  ></main>
 </template>
 
 <script setup lang="ts">
@@ -30,10 +34,10 @@ Promise.all([
     if (!defaultModel || !v.includes(defaultModel)) {
       toLS('defaultModel', v[0]!);
     }
-  }, console.error),
-  trpc.stripe.getPrice.query().then(v => toLS('price', v), console.error),
+  }),
+  trpc.stripe.getPrice.query().then(v => toLS('price', v)),
   trpc.stripe.getLimits.query().then(v => toLS('limits', v), console.error)
 ]).then(() => {
   loaded.value = true;
-});
+}, console.error);
 </script>
