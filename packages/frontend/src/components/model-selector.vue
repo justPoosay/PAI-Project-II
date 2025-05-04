@@ -52,7 +52,7 @@ import { modelFullName } from '@/lib/utils';
 import { models, type Model, type ModelInfo } from 'common';
 import { includes, keys } from 'common/utils';
 import { ChevronUp } from 'lucide-vue-next';
-import { PopoverContent, PopoverPortal, PopoverRoot, PopoverTrigger } from 'radix-vue';
+import { PopoverContent, PopoverPortal, PopoverRoot, PopoverTrigger } from 'reka-ui';
 import type { DefineComponent } from 'vue';
 import { ref } from 'vue';
 

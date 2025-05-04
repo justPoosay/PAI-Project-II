@@ -125,7 +125,7 @@ import { useConversationStore } from '@/stores/conversations.ts';
 import { keys } from 'common/utils';
 import { LogInIcon, PlusIcon, SearchIcon, SidebarIcon } from 'lucide-vue-next';
 import { storeToRefs } from 'pinia';
-import { AvatarFallback, AvatarImage, AvatarRoot } from 'radix-vue';
+import { AvatarFallback, AvatarImage, AvatarRoot } from 'reka-ui';
 import { computed, onMounted, onUnmounted, type Ref, ref } from 'vue';
 import { RouterLink } from 'vue-router';
 

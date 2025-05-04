@@ -29,7 +29,7 @@
 import { capitalize } from '@/lib/utils';
 import type { Effort } from 'common';
 import { keys } from 'common/utils';
-import { PopoverContent, PopoverPortal, PopoverRoot, PopoverTrigger } from 'radix-vue';
+import { PopoverContent, PopoverPortal, PopoverRoot, PopoverTrigger } from 'reka-ui';
 import { ref } from 'vue';
 
 const efforts = Object.freeze({

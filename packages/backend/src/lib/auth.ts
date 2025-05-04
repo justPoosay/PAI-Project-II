@@ -1,6 +1,8 @@
 import { betterAuth } from 'better-auth';
 import { mongodbAdapter } from 'better-auth/adapters/mongodb';
-import { db } from './db';
+import { redis } from 'bun';
+import { ObjectId } from 'mongodb';
+import { ConversationService, db } from './db';
 import { env } from './env';
 
 export const auth = betterAuth({
@@ -11,6 +13,20 @@ export const auth = betterAuth({
       enabled: true,
       clientId: env.GITHUB_CLIENT_ID,
       clientSecret: env.GITHUB_CLIENT_SECRET
+    }
+  },
+  user: {
+    deleteUser: {
+      enabled: true,
+      async afterDelete(user) {
+        await ConversationService.deleteMany({ userId: new ObjectId(user.id) });
+        await redis.del(`user:limits:${user.id}`);
+        const customerId = await redis.get(`stripe:user:${user.id}`);
+        if (customerId) {
+          await redis.del(`stripe:user:${user.id}`);
+          await redis.del(`stripe:customer:${customerId}`);
+        }
+      }
     }
   }
 });

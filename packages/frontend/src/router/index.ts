@@ -27,7 +27,6 @@ const router = createRouter({
     },
     {
       path: '/settings',
-      name: 'settings',
       component: () => import('@/views/settings-view.vue'),
       async beforeEnter() {
         const session = await getSession();
@@ -38,6 +37,7 @@ const router = createRouter({
       children: [
         {
           path: '',
+          name: 'settings',
           redirect: { name: 'account-settings' }
         },
         {
