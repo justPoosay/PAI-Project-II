@@ -1,6 +1,6 @@
 <template>
   <main
-    class="flex size-full items-center justify-center bg-[#E7F0F8] text-[#333333] dark:bg-[#352A35] dark:text-white"
+    class="bg-bg-light text-text-primary-light dark:bg-bg-dark dark:text-text-primary-dark flex size-full items-center justify-center"
   >
     <div class="flex h-full flex-col gap-7 p-3 text-sm transition-[padding] md:p-7">
       <div class="flex items-center justify-between">
@@ -40,43 +40,45 @@
               :alt="session.data?.user.name"
             />
             <AvatarFallback
-              class="flex size-full items-center justify-center text-6xl font-semibold text-[#3558A0]"
+              class="text-purple flex size-full items-center justify-center text-6xl font-semibold"
             >
               {{ session.data?.user.name.charAt(0) || 'U' }}
             </AvatarFallback>
           </AvatarRoot>
           <div class="flex flex-col items-center">
-            <h1 class="text-2xl font-bold">{{ session.data?.user.name }}</h1>
-            <p class="text-[#333333]/75 dark:text-white/75">{{ session.data?.user.email }}</p>
-            <div class="rounded-full bg-[#3558A0] px-3 py-[1px] text-sm font-semibold text-white">
+            <h1 class="-mb-1 text-2xl font-bold">{{ session.data?.user.name }}</h1>
+            <p class="text-text-secondary-light dark:text-text-secondary-dark">
+              {{ session.data?.user.email }}
+            </p>
+            <div class="bg-pink-2 rounded-full px-3 py-[1px] text-sm font-semibold text-white">
               {{ capitalize(limits.tier) }}
             </div>
           </div>
           <div
-            class="flex flex-col gap-6 rounded-lg bg-[#DDE6F0] p-3 text-sm shadow-md dark:bg-[#2A1F2A]"
+            class="bg-sidebar-light dark:bg-sidebar-dark flex flex-col gap-6 rounded-lg p-3 text-sm shadow-md"
           >
             <div class="flex flex-row items-center justify-between gap-8">
               <p class="font-bold">Message Usage</p>
-              <p class="text-[#333333]/75 dark:text-white/75">
+              <p class="text-text-secondary-light dark:text-text-secondary-dark">
                 Resets {{ dayjs(limits.refresh).format('MMMM D, YYYY') }}
               </p>
             </div>
             <div class="flex flex-col gap-1">
               <div class="flex flex-row items-center justify-between gap-8">
                 <p class="font-semibold">Standard</p>
-                <p class="text-[#333333]/75 dark:text-white/75">
+                <p class="text-text-secondary-light dark:text-text-secondary-dark">
                   {{ limits.messagesUsed }}/{{ messagesPerMonth[limits.tier] }}
                 </p>
               </div>
-              <div class="h-2 w-full rounded-full bg-[#E7F0F8] dark:bg-[#352A35]">
-                <div
-                  class="h-full rounded-full bg-[#3558A0]"
+              <div class="bg-bg-light dark:bg-bg-dark h-2 w-full rounded-full">
+                <span
+                  class="bg-pink-2 block h-full rounded-full"
                   :style="{
                     width: `${Math.min((limits.messagesUsed / messagesPerMonth[limits.tier]) * 100, 100)}%`
                   }"
                 />
               </div>
-              <p class="text-[#333333]/75 dark:text-white/75">
+              <p class="text-text-secondary-light dark:text-text-secondary-dark">
                 {{ messagesPerMonth[limits.tier] - limits.messagesUsed }} messages remaining
               </p>
             </div>
@@ -84,13 +86,13 @@
         </div>
         <div class="flex flex-col gap-4">
           <nav
-            class="flex flex-row items-center gap-1 self-start rounded-lg bg-[#DDE6F0] p-1 dark:bg-[#473e47]"
+            class="flex flex-row items-center gap-1 self-start rounded-lg bg-gray-200 p-1 dark:bg-gray-700"
           >
             <RouterLink
               v-for="[route, name] in entries(routes)"
               :key="route"
               :to="{ name: route }"
-              class="rounded-md px-3 py-1 font-bold transition hover:bg-gray-300/50 aria-[current=page]:bg-[#E7F0F8] dark:hover:bg-[#352A35]/40 dark:aria-[current=page]:bg-[#352A35]"
+              class="aria-[current=page]:bg-bg-light dark:aria-[current=page]:bg-bg-dark rounded-md px-3 py-1 font-bold transition hover:bg-gray-300 dark:hover:bg-gray-600"
             >
               {{ name }}
             </RouterLink>

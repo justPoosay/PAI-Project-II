@@ -2,7 +2,7 @@
   <RouterView v-if="loaded" />
   <main
     v-else
-    class="flex size-full items-center justify-center bg-[#E7F0F8] dark:bg-[#352A35]"
+    class="bg-bg-light dark:bg-bg-dark flex size-full items-center justify-center"
   ></main>
 </template>
 

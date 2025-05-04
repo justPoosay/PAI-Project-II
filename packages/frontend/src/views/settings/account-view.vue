@@ -15,26 +15,26 @@
         <div class="grid grid-cols-2 gap-8">
           <div class="gap-1">
             <div class="flex items-center gap-1">
-              <RocketIcon class="size-5 text-[#3558A0]" />
+              <RocketIcon class="text-pink-2 size-5" />
               <h1 class="text-base font-bold">All AI Models</h1>
             </div>
-            <p class="text-sm text-[#333333]/75 dark:text-white/75">
+            <p class="text-text-secondary-light dark:text-text-secondary-dark text-sm">
               Get access to our full suite of models including Claude, o4-mini-high, and more!
             </p>
           </div>
           <div class="gap-1">
             <div class="flex items-center gap-1">
-              <SparklesIcon class="size-5 text-[#3558A0]" />
-              <h1 class="text-base font-bold">All AI Models</h1>
+              <SparklesIcon class="text-pink-2 size-5" />
+              <h1 class="text-base font-bold">Generous Message Limits</h1>
             </div>
-            <p class="text-sm text-[#333333]/75 dark:text-white/75">
+            <p class="text-text-secondary-light dark:text-text-secondary-dark text-sm">
               Receive {{ messagesPerMonth.pro }} message credits per month
             </p>
           </div>
         </div>
       </div>
       <button
-        class="cursor-pointer self-start rounded-lg bg-[#3558A0] px-16 py-2 font-semibold text-white transition hover:bg-[#6e9eff]"
+        class="from-btn-pri-start to-btn-pri-end hover:from-btn-pri-hover-start hover:to-btn-pri-hover-end active:from-btn-pri-act-start active:to-btn-pri-act-end cursor-pointer self-start rounded-lg bg-gradient-to-r px-16 py-2 font-semibold text-white transition"
         @click="handleSubButton"
       >
         {{ limits.tier === 'pro' ? 'Manage Subscription' : 'Upgrade Now' }}
@@ -42,31 +42,33 @@
     </div>
     <div class="flex flex-col gap-4">
       <h1 class="text-3xl font-bold">Danger Zone</h1>
-      <p class="text-sm text-[#333333]/75 dark:text-white/75">
+      <p class="text-text-secondary-light dark:text-text-secondary-dark text-sm">
         Permanently delete your account and all associated data.
       </p>
       <DialogRoot>
         <DialogTrigger
-          class="cursor-pointer self-start rounded-lg border border-red-500/25 bg-red-500/25 px-4 py-2 font-semibold text-white transition hover:bg-red-500"
+          class="cursor-pointer self-start rounded-lg border border-red-600/50 bg-red-500/10 px-4 py-2 font-semibold text-red-600 transition hover:bg-red-600 hover:text-white dark:border-red-500/25 dark:bg-red-500/25 dark:text-white dark:hover:bg-red-500"
         >
           Delete Account
         </DialogTrigger>
         <DialogPortal>
           <DialogOverlay class="fixed inset-0 z-30 bg-black/50 backdrop-blur-sm" />
           <DialogContent
-            class="fixed top-[50%] left-[50%] z-99 flex translate-x-[-50%] translate-y-[-50%] flex-col gap-4 rounded-md bg-[#E7F0F8] p-2 text-[#333333] dark:bg-[#352A35] dark:text-white"
+            class="bg-dialog-bg-light text-text-primary-light dark:bg-dialog-bg-dark dark:text-text-primary-dark fixed top-[50%] left-[50%] z-99 flex translate-x-[-50%] translate-y-[-50%] flex-col gap-4 rounded-md p-2"
           >
             <div>
               <DialogTitle class="text-xl font-semibold">
                 Are you sure you want to delete your account?
               </DialogTitle>
-              <DialogDescription class="text-sm text-[#333333]/75 dark:text-white/75">
+              <DialogDescription
+                class="text-text-secondary-light dark:text-text-secondary-dark text-sm"
+              >
                 This action cannot be undone. All your data will be permanently deleted.
               </DialogDescription>
             </div>
             <div class="flex flex-row gap-2">
               <button
-                class="cursor-pointer rounded-lg border border-red-500/25 bg-red-500/25 px-3 py-1 font-semibold text-white transition hover:bg-red-500"
+                class="cursor-pointer rounded-lg border border-red-600/50 bg-red-500/10 px-3 py-1 font-semibold text-red-600 transition hover:bg-red-600 hover:text-white dark:border-red-500/25 dark:bg-red-500/25 dark:text-white dark:hover:bg-red-500"
                 @click="
                   deleteUser({
                     fetchOptions: {
@@ -82,7 +84,7 @@
                 Delete Account
               </button>
               <DialogClose
-                class="cursor-pointer rounded-lg border border-[#3558A0]/25 bg-[#3558A0]/25 px-3 py-1 font-semibold text-white transition hover:bg-[#3558A0]"
+                class="cursor-pointer rounded-lg border border-[#3558A0]/25 bg-[#3558A0]/25 px-3 py-1 font-semibold transition hover:bg-[#3558A0]"
               >
                 Cancel
               </DialogClose>

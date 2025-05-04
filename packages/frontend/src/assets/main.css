@@ -1,8 +1,46 @@
 @import 'tailwindcss';
 
-@config '../../tailwind.config.ts';
-
 @custom-variant dark (&:where(.dark, .dark *));
+@custom-variant light (&:where(:not(.dark), :not(.dark) *));
+
+@theme {
+  --color-bg-light: #f7f6f0;
+  --color-bg-dark: #111115;
+  --color-sidebar-light: #fffdf5;
+  --color-sidebar-dark: #1e1e26;
+  --color-border-light: #e0ddd0;
+  --color-border-dark: #2a2a2a;
+
+  --color-text-primary-light: #222222;
+  --color-text-primary-dark: #e0e0e0;
+  --color-text-secondary-light: #555555;
+  --color-text-secondary-dark: #888888;
+
+  --color-blue: #73bfff;
+  --color-purple: #b283ff;
+  --color-pink: #ff82bb;
+  --color-pink-2: #ff5ca1;
+
+  --color-btn-pri-start: #73bfff;
+  --color-btn-pri-end: #b283ff;
+  --color-btn-pri-hover-start: #8cc7ff;
+  --color-btn-pri-hover-end: #c09aff;
+  --color-btn-pri-act-start: #6694e5;
+  --color-btn-pri-act-end: #995ed6;
+
+  --color-btn-sec-start: #ff82bb;
+  --color-btn-sec-end: #ff5ca1;
+  --color-btn-sec-hover-start: #ff9ccc;
+  --color-btn-sec-hover-end: #ff7ba5;
+  --color-btn-sec-act-start: #e6608e;
+  --color-btn-sec-act-end: #d55282;
+
+  --color-dialog-bg-light: #fffdf5;
+  --color-dialog-bg-dark: #1e1e26;
+
+  --font-sf_pro_rounded: 'SF Pro Rounded', sans-serif;
+  --font-sf_mono: 'SF Mono', monospace;
+}
 
 @layer base {
   @font-face {

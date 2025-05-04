@@ -34,7 +34,7 @@
         class="flex grow flex-col space-y-1 overflow-hidden p-1 transition-transform duration-100 ease-out data-[expanded=false]:-translate-x-full"
       >
         <RouterLink
-          class="block shrink-0 rounded-md border border-[#3EB0E2] bg-linear-to-r from-[#55CDFC] to-[#3EB0E2] py-1.5 text-center text-sm font-semibold transition hover:from-[#2A9FD8] hover:to-[#1E8BC4] dark:border-[#C3778C] dark:from-[#F7A8B8] dark:to-[#D08A9E] dark:hover:from-[#C3778C] dark:hover:to-[#A86479]"
+          class="from-btn-sec-start to-btn-sec-end hover:from-btn-sec-hover-start hover:to-btn-sec-hover-end active:from-btn-sec-act-start active:to-btn-sec-act-end block shrink-0 rounded-md bg-linear-to-r py-1.5 text-center text-sm font-semibold transition"
           :to="{ name: 'chat', params: { id: 'new' } }"
           :tabindex="isExpanded ? 0 : -1"
         >

@@ -118,17 +118,17 @@
     <!-- Input Area -->
     <div class="pointer-events-none absolute right-0 bottom-0 left-0 z-10 sm:right-4 sm:left-4">
       <div
-        class="pointer-events-auto mx-auto max-w-3xl rounded-3xl rounded-b-none border border-b-0 border-[#55CDFC]/20 bg-[#55CDFC]/25 p-2 pb-0 shadow-lg backdrop-blur-xs dark:border-[#f7a8b8]/5 dark:bg-[#f7a8b8]/5 dark:backdrop-blur-md"
+        class="dark:from-blue/10 dark:via-purple/10 dark:to-pink/10 from-blue/30 via-purple/30 to-pink/30 pointer-events-auto mx-auto max-w-3xl rounded-3xl rounded-b-none border-b-0 bg-gradient-to-r p-2 pb-0 shadow-lg backdrop-blur-xs dark:backdrop-blur-md"
       >
         <div
-          class="dark:bg-opacity-[4%] flex flex-col items-start rounded-2xl rounded-b-none border border-b-0 border-[#55CDFC]/10 bg-[#55CDFC]/15 p-1 dark:border-[#f7a8b8]/5 dark:bg-[#f7a8b8]/5"
+          class="dark:from-blue/5 dark:via-purple/5 dark:to-pink/5 from-blue/30 via-purple/30 to-pink/30 flex flex-col items-start rounded-2xl rounded-b-none border-b-0 border-transparent bg-gradient-to-r p-1"
         >
           <div class="flex w-full flex-row items-start space-x-1.5 p-1.5 pb-0">
             <textarea
               v-model="input"
               @keydown="handleKeyDown"
               placeholder="Type a message..."
-              class="light:placeholder:text-black/70 max-h-[10rem] min-h-[3rem] w-full resize-none overflow-y-auto bg-transparent focus:outline-none"
+              class="placeholder:text-text-secondary-light dark:placeholder:text-text-secondary-dark max-h-[10rem] min-h-[3rem] w-full resize-none overflow-y-auto bg-transparent focus:outline-none"
             />
             <!-- buttons -->
             <label
@@ -146,7 +146,7 @@
             <button
               @click="handleSend"
               :data-action="abortController ? 'abort' : 'send'"
-              class="group cursor-pointer rounded-xl bg-linear-to-br from-[#5BCEFA] to-[#F5A9B8] p-2 transition ease-in-out hover:from-[#4AB0D1] hover:to-[#E994A3] hover:shadow-lg"
+              class="group from-btn-pri-start to-btn-pri-end hover:from-btn-pri-hover-start hover:to-btn-pri-hover-end active:from-btn-pri-act-start active:to-btn-pri-act-end cursor-pointer rounded-xl bg-linear-to-br p-2 transition ease-in-out hover:shadow-lg"
             >
               <SendIcon class="size-5 group-data-[action=abort]:hidden" />
               <CircleStopIcon class="size-5 group-data-[action=send]:hidden" />

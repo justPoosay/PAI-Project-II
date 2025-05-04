@@ -1,20 +1,12 @@
 <template>
   <button
-    class="relative inline-flex size-8 cursor-pointer items-center justify-center rounded-lg hover:bg-black/5 dark:hover:bg-gray-200/5"
+    :data-theme="theme"
+    class="group relative inline-flex size-8 cursor-pointer items-center justify-center rounded-lg hover:bg-black/5 dark:hover:bg-gray-200/5 [&_svg]:absolute [&_svg]:size-4 [&_svg]:scale-0 [&_svg]:-rotate-90 [&_svg]:transition-all [&_svg]:duration-200"
     @click="theme = theme === 'dark' ? 'light' : theme === 'light' ? 'system' : 'dark'"
   >
-    <SunIcon
-      class="absolute size-4 scale-0 -rotate-90 transition-all duration-200 data-[current=true]:scale-100 data-[current=true]:rotate-0"
-      :data-current="theme === 'light'"
-    />
-    <MoonIcon
-      class="absolute size-4 scale-0 -rotate-90 transition-all duration-200 data-[current=true]:scale-100 data-[current=true]:rotate-0"
-      :data-current="theme === 'dark'"
-    />
-    <SunMoonIcon
-      class="absolute size-4 scale-0 -rotate-90 transition-all duration-200 data-[current=true]:scale-100 data-[current=true]:rotate-0"
-      :data-current="theme === 'system'"
-    />
+    <SunIcon class="group-data-[theme=light]:scale-100 group-data-[theme=light]:rotate-0" />
+    <MoonIcon class="group-data-[theme=dark]:scale-100 group-data-[theme=dark]:rotate-0" />
+    <SunMoonIcon class="group-data-[theme=system]:scale-100 group-data-[theme=system]:rotate-0" />
   </button>
 </template>
 
