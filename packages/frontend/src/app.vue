@@ -1,9 +1,5 @@
 <template>
   <RouterView v-if="loaded" />
-  <main
-    v-else
-    class="bg-bg-light dark:bg-bg-dark flex size-full items-center justify-center"
-  ></main>
 </template>
 
 <script setup lang="ts">

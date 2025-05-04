@@ -1,7 +1,5 @@
 <template>
-  <div
-    class="bg-bg-light text-text-primary-light dark:bg-bg-dark dark:text-text-primary-dark flex h-full overflow-hidden"
-  >
+  <div class="flex h-full overflow-hidden">
     <div class="absolute top-4 right-4 z-10">
       <ThemeToggle />
     </div>

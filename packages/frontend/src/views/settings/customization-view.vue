@@ -1,8 +1,8 @@
 <template>
   <div class="flex flex-col gap-4">
-    <h1 class="text-3xl font-bold">Customize your experience</h1>
+    <h1 class="text-2xl font-bold">Customize your experience</h1>
     <fieldset class="flex flex-col gap-1">
-      <label class="text-lg font-bold">What should __ Chat call you?</label>
+      <label class="text-md font-bold">What should __ Chat call you?</label>
       <input
         v-model="name"
         class="border-border-light dark:border-border-dark focus:border-pink-2 rounded-md border px-3 py-2 transition focus:outline-none"
@@ -10,7 +10,7 @@
       />
     </fieldset>
     <fieldset class="flex flex-col gap-1">
-      <label class="text-lg font-bold">What do you do?</label>
+      <label class="text-md font-bold">What do you do?</label>
       <input
         v-model="occupation"
         class="border-border-light dark:border-border-dark focus:border-pink-2 rounded-md border px-3 py-2 transition focus:outline-none"
@@ -18,7 +18,7 @@
       />
     </fieldset>
     <fieldset class="flex flex-col gap-1">
-      <label class="text-lg font-bold">What traits should __ Chat have?</label>
+      <label class="text-md font-bold">What traits should __ Chat have?</label>
       <textarea
         v-model="selectedTraits"
         class="border-border-light dark:border-border-dark focus:border-pink-2 min-h-24 rounded-md border px-3 py-2 transition focus:outline-none"
@@ -26,7 +26,7 @@
       />
     </fieldset>
     <fieldset class="flex flex-col gap-1">
-      <label class="text-lg font-bold">Anything else __ Chat should know about you?</label>
+      <label class="text-md font-bold">Anything else __ Chat should know about you?</label>
       <textarea
         v-model="additionalInfo"
         class="border-border-light dark:border-border-dark focus:border-pink-2 min-h-24 rounded-md border px-3 py-2 transition focus:outline-none"
@@ -34,7 +34,7 @@
       />
     </fieldset>
     <button
-      class="bg-pink-2 hover:bg-pink disabled:hover:bg-pink-2 cursor-pointer self-end rounded-lg px-4 py-2 font-bold transition disabled:cursor-not-allowed disabled:opacity-50"
+      class="bg-pink-2 hover:bg-pink disabled:hover:bg-pink-2 cursor-pointer self-end rounded-lg px-4 py-2 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-50"
       :disabled="
         name === prevState.name &&
         occupation === prevState.occupation &&
