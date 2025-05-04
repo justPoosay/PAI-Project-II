@@ -18,7 +18,7 @@
               <RocketIcon class="text-pink-2 size-5" />
               <h1 class="text-base font-bold">All AI Models</h1>
             </div>
-            <p class="text-text-secondary-light dark:text-text-secondary-dark text-sm">
+            <p class="text-text-secondary text-sm">
               Get access to our full suite of models including Claude, o4-mini-high, and more!
             </p>
           </div>
@@ -27,7 +27,7 @@
               <SparklesIcon class="text-pink-2 size-5" />
               <h1 class="text-base font-bold">Generous Message Limits</h1>
             </div>
-            <p class="text-text-secondary-light dark:text-text-secondary-dark text-sm">
+            <p class="text-text-secondary text-sm">
               Receive {{ messagesPerMonth.pro }} message credits per month
             </p>
           </div>
@@ -42,7 +42,7 @@
     </div>
     <div class="flex flex-col gap-4">
       <h1 class="text-3xl font-bold">Danger Zone</h1>
-      <p class="text-text-secondary-light dark:text-text-secondary-dark text-sm">
+      <p class="text-text-secondary text-sm">
         Permanently delete your account and all associated data.
       </p>
       <DialogRoot>
@@ -54,15 +54,13 @@
         <DialogPortal>
           <DialogOverlay class="fixed inset-0 z-30 bg-black/50 backdrop-blur-sm" />
           <DialogContent
-            class="bg-dialog-bg-light text-text-primary-light dark:bg-dialog-bg-dark dark:text-text-primary-dark fixed top-[50%] left-[50%] z-99 flex translate-x-[-50%] translate-y-[-50%] flex-col gap-4 rounded-md p-2"
+            class="bg-dialog-bg text-text-primary fixed top-[50%] left-[50%] z-99 flex translate-x-[-50%] translate-y-[-50%] flex-col gap-4 rounded-md p-2"
           >
             <div>
               <DialogTitle class="text-xl font-semibold">
                 Are you sure you want to delete your account?
               </DialogTitle>
-              <DialogDescription
-                class="text-text-secondary-light dark:text-text-secondary-dark text-sm"
-              >
+              <DialogDescription class="text-text-secondary text-sm">
                 This action cannot be undone. All your data will be permanently deleted.
               </DialogDescription>
             </div>

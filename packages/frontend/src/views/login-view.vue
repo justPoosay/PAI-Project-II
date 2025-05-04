@@ -5,7 +5,7 @@
     </div>
     <div class="flex w-full items-center justify-center p-4">
       <div
-        class="w-full max-w-md animate-[rotate-gradient_5s_linear_infinite] rounded-xl border-2 border-transparent bg-clip-padding p-8 shadow-md [--bg:var(--color-sidebar-light)] [background:linear-gradient(var(--bg),var(--bg))_padding-box,linear-gradient(var(--angle,225deg),#FF000E,#FF7300,#FAD220,#138F3E,#3558A0,#880082)_border-box] dark:border dark:[--bg:var(--color-sidebar-dark)]"
+        class="w-full max-w-md animate-[rotate-gradient_5s_linear_infinite] rounded-xl border-2 border-transparent bg-clip-padding p-8 shadow-md [background:linear-gradient(var(--color-sidebar),var(--color-sidebar))_padding-box,linear-gradient(var(--angle,225deg),#FF000E,#FF7300,#FAD220,#138F3E,#3558A0,#880082)_border-box] dark:border"
       >
         <h1 class="mb-8 text-center text-3xl font-bold">Welcome Back</h1>
 

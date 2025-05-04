@@ -47,7 +47,7 @@
               </AvatarFallback>
             </AvatarRoot>
             <h1 class="mt-4 text-2xl font-bold">{{ session.data?.user.name }}</h1>
-            <p class="text-text-secondary-light dark:text-text-secondary-dark break-all">
+            <p class="text-text-secondary break-all">
               {{ session.data?.user.email }}
             </p>
             <span
@@ -56,21 +56,21 @@
               {{ capitalize(limits.tier) }} Plan
             </span>
           </div>
-          <div class="bg-sidebar-light dark:bg-sidebar-dark space-y-6 rounded-lg p-4">
+          <div class="bg-sidebar space-y-6 rounded-lg p-4">
             <div class="flex items-center justify-between">
               <p class="text-sm font-semibold">Message Usage</p>
-              <p class="text-text-secondary-light dark:text-text-secondary-dark text-end text-xs">
+              <p class="text-text-secondary text-end text-xs">
                 Resets {{ dayjs(limits.refresh).format('MMMM D, YYYY') }}
               </p>
             </div>
             <div class="space-y-2">
               <div class="flex items-center justify-between">
                 <h3 class="text-sm font-medium">Standard</h3>
-                <p class="text-text-secondary-light dark:text-text-secondary-dark text-sm">
+                <p class="text-text-secondary text-sm">
                   {{ limits.messagesUsed }}/{{ messagesPerMonth[limits.tier] }}
                 </p>
               </div>
-              <div class="bg-bg-light dark:bg-bg-dark h-2 w-full overflow-hidden rounded-full">
+              <div class="bg-background h-2 w-full overflow-hidden rounded-full">
                 <div
                   class="bg-pink-2 h-full rounded-full"
                   :style="{
@@ -78,7 +78,7 @@
                   }"
                 />
               </div>
-              <p class="text-text-secondary-light dark:text-text-secondary-dark text-sm">
+              <p class="text-text-secondary text-sm">
                 {{ messagesPerMonth[limits.tier] - limits.messagesUsed }} messages remaining
               </p>
             </div>
@@ -92,7 +92,7 @@
               v-for="[route, name] in entries(routes)"
               :key="route"
               :to="{ name: route }"
-              class="aria-[current=page]:bg-bg-light dark:aria-[current=page]:bg-bg-dark rounded-md px-2 py-1 text-sm font-semibold transition hover:bg-gray-300 dark:hover:bg-gray-600"
+              class="aria-[current=page]:bg-background rounded-md px-2 py-1 text-sm font-semibold transition hover:bg-gray-300 dark:hover:bg-gray-600"
             >
               {{ name }}
             </RouterLink>

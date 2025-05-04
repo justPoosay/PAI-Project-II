@@ -1,7 +1,7 @@
 <template>
   <nav
     :data-expanded="isExpanded"
-    class="z-99999999999 flex h-screen w-0 animate-[rotate-gradient_5s_linear_infinite] flex-col border-transparent bg-clip-padding transition-all duration-100 ease-out [--bg:#DDE6F0] data-[expanded=false]:pointer-events-none data-[expanded=true]:w-64 max-lg:fixed max-lg:[background:linear-gradient(var(--bg),var(--bg))_padding-box,linear-gradient(var(--angle,225deg),#FF000E,#FF7300,#FAD220,#138F3E,#3558A0,#880082)_border-box] max-lg:data-[expanded=true]:border-r-2 max-lg:data-[expanded=true]:shadow-md dark:[--bg:#2A1F2A] dark:max-lg:data-[expanded=true]:border-r"
+    class="z-99999999999 flex h-screen w-0 animate-[rotate-gradient_5s_linear_infinite] flex-col border-transparent bg-clip-padding transition-all duration-100 ease-out data-[expanded=false]:pointer-events-none data-[expanded=true]:w-64 max-lg:fixed max-lg:[background:linear-gradient(var(--color-sidebar),var(--color-sidebar))_padding-box,linear-gradient(var(--angle,225deg),#FF000E,#FF7300,#FAD220,#138F3E,#3558A0,#880082)_border-box] max-lg:data-[expanded=true]:border-r-2 max-lg:data-[expanded=true]:shadow-md dark:max-lg:data-[expanded=true]:border-r"
   >
     <div class="flex h-full w-64 flex-col p-1">
       <div class="relative flex w-fit shrink-0 flex-row p-1">
