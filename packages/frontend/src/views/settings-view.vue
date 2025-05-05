@@ -5,7 +5,7 @@
     >
       <header class="flex items-center justify-between pb-8">
         <RouterLink
-          :to="{ name: 'chat', params: { id: 'new' } }"
+          :to="{ name: 'chat', params: { id: ($route.query['ci'] ?? 'new') as string } }"
           class="flex items-center justify-center gap-2 rounded-lg px-4 py-2 font-semibold transition hover:bg-black/5 dark:hover:bg-gray-200/5"
         >
           <ArrowLeft class="size-4" />
@@ -91,7 +91,7 @@
             <RouterLink
               v-for="[route, name] in entries(routes)"
               :key="route"
-              :to="{ name: route }"
+              :to="{ name: route, query: $route.query }"
               class="aria-[current=page]:bg-background hover:aria-[current=page]:bg-background light:aria-[current=page]:shadow-sm rounded-md px-2 py-1 text-sm font-semibold transition hover:bg-white/25 dark:hover:bg-gray-600"
             >
               {{ name }}

@@ -131,7 +131,7 @@
           <RouterLink
             v-else
             class="flex w-full items-center space-x-2 rounded-xl p-2 hover:bg-black/5 dark:hover:bg-gray-200/5"
-            :to="{ name: 'account-settings' }"
+            :to="{ name: 'account-settings', query: { ci: $route.params['id'] } }"
           >
             <AvatarRoot class="size-9 rounded-full bg-gray-300 select-none dark:bg-gray-700">
               <AvatarImage
