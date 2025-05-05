@@ -18,11 +18,11 @@
           class="flex w-full items-center justify-between gap-10 rounded-md px-4 py-3 text-left text-sm font-bold transition hover:bg-black/5 dark:hover:bg-gray-200/5"
           @click="selectModel(model)"
         >
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-3">
             <component :is="icons[models[model].icon]" class="text-accent size-4" />
             {{ modelFullName(model) }}
           </div>
-          <div class="flex items-center space-x-1.5 *:cursor-default">
+          <div class="flex items-center gap-1.5 *:cursor-default">
             <component
               v-for="capability in (models[model] as ModelInfo).capabilities
                 .filter((capability): capability is keyof typeof capabilities => {

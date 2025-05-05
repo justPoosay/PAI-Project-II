@@ -1,7 +1,7 @@
 <template>
   <nav
     :data-expanded="isExpanded"
-    class="z-99999999999 flex h-screen w-0 animate-[rotate-gradient_5s_linear_infinite] flex-col border-transparent bg-clip-padding transition-all duration-100 ease-out data-[expanded=false]:pointer-events-none data-[expanded=true]:w-64 max-lg:fixed max-lg:[background:linear-gradient(var(--color-sidebar),var(--color-sidebar))_padding-box,linear-gradient(var(--angle,225deg),#FF000E,#FF7300,#FAD220,#138F3E,#3558A0,#880082)_border-box] max-lg:data-[expanded=true]:border-r-2 max-lg:data-[expanded=true]:shadow-md dark:max-lg:data-[expanded=true]:border-r"
+    class="z-50 flex h-screen w-0 animate-[rotate-gradient_5s_linear_infinite] flex-col border-transparent bg-clip-padding transition-all duration-100 ease-out data-[expanded=false]:pointer-events-none data-[expanded=true]:w-64 max-lg:fixed max-lg:[background:linear-gradient(var(--color-sidebar),var(--color-sidebar))_padding-box,linear-gradient(var(--angle,225deg),#FF000E,#FF7300,#FAD220,#138F3E,#3558A0,#880082)_border-box] max-lg:data-[expanded=true]:border-r-2 max-lg:data-[expanded=true]:shadow-md dark:max-lg:data-[expanded=true]:border-r"
   >
     <div class="flex h-full w-64 flex-col p-1">
       <div class="relative flex w-fit shrink-0 flex-row p-1">
@@ -42,36 +42,66 @@
         </RouterLink>
         <div class="min-h-0 grow overflow-y-auto">
           <div v-if="state === 'idle'">
-            <div v-for="group in keys(groups)" v-bind:key="group">
-              <p class="text-accent text-xs font-semibold" v-if="groups[group].length">
+            <div v-for="group in keys(groups)" v-bind:key="group" class="space-y-0.5">
+              <p class="text-accent text-xs font-bold" v-if="groups[group]?.length">
                 {{ group }}
               </p>
               <div
                 v-for="c in groups[group]"
                 :key="String(c._id)"
-                class="group relative flex items-center overflow-hidden rounded-xl p-2 text-sm font-medium transition hover:bg-black/5 dark:hover:bg-gray-200/5"
+                :data-active="String(c._id) === $route.params['id']"
+                class="group hover:bg-accent/10 data-[active=true]:bg-accent/10 relative flex items-center overflow-hidden rounded-lg text-sm font-medium transition"
               >
                 <RouterLink
                   :to="{ name: 'chat', params: { id: String(c._id) } }"
-                  class="block w-full truncate"
+                  class="block w-full truncate p-2"
                   :title="c.name ?? undefined"
                 >
                   {{ c.name ?? 'Untitled' }}
                 </RouterLink>
                 <div
-                  class="absolute right-0 flex h-full translate-x-full flex-row items-center gap-0.5 px-2 transition-all group-hover:translate-x-0"
+                  class="pointer-events-none absolute top-1/2 right-2 flex -translate-y-1/2 items-center gap-1 opacity-0 transition-opacity group-hover:pointer-events-auto group-hover:opacity-100"
                 >
                   <button
                     :data-pinned="!!c.pinned"
-                    class="group cursor-pointer rounded-lg p-1.5 transition hover:bg-black/5 dark:hover:bg-gray-200/5"
+                    @click="pinThread(String(c._id))"
+                    class="group hover:bg-accent/15 cursor-pointer rounded-lg p-1.5 transition"
                   >
                     <PinIcon class="size-4 group-data-[pinned=true]:hidden" />
                     <PinOffIcon class="size-4 group-data-[pinned=false]:hidden" />
                   </button>
-
-                  <button class="hover:bg-danger/50 cursor-pointer rounded-lg p-1.5 transition">
-                    <XIcon class="size-4" />
-                  </button>
+                  <DialogRoot>
+                    <DialogTrigger
+                      class="hover:bg-danger/50 cursor-pointer rounded-lg p-1.5 transition"
+                    >
+                      <XIcon class="size-4" />
+                    </DialogTrigger>
+                    <DialogPortal>
+                      <DialogOverlay class="fixed inset-0 z-99 bg-black/50 backdrop-blur-sm" />
+                      <DialogContent
+                        class="bg-dialog border-border fixed top-[50%] left-[50%] z-100 flex translate-x-[-50%] translate-y-[-50%] flex-col gap-2 rounded-lg border p-6"
+                      >
+                        <DialogTitle class="font-bold">Delete Thread</DialogTitle>
+                        <DialogDescription class="text-sm">
+                          Are you sure you want to delete "{{ c.name ?? 'Untitled' }}"? This action
+                          cannot be undone.
+                        </DialogDescription>
+                        <div class="flex flex-row justify-end gap-2">
+                          <DialogClose
+                            class="hover:bg-accent/10 cursor-pointer rounded-md px-4 py-2 text-sm font-semibold transition"
+                          >
+                            Cancel
+                          </DialogClose>
+                          <DialogClose
+                            @click="chatStore.$delete(String(c._id))"
+                            class="bg-danger hover:bg-danger/75 cursor-pointer rounded-md px-4 py-2 text-sm font-semibold transition"
+                          >
+                            Delete
+                          </DialogClose>
+                        </div>
+                      </DialogContent>
+                    </DialogPortal>
+                  </DialogRoot>
                 </div>
               </div>
             </div>
@@ -148,7 +178,19 @@ import {
   XIcon
 } from 'lucide-vue-next';
 import { storeToRefs } from 'pinia';
-import { AvatarFallback, AvatarImage, AvatarRoot } from 'reka-ui';
+import {
+  AvatarFallback,
+  AvatarImage,
+  AvatarRoot,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogOverlay,
+  DialogPortal,
+  DialogRoot,
+  DialogTitle,
+  DialogTrigger
+} from 'reka-ui';
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { RouterLink } from 'vue-router';
 
@@ -220,15 +262,16 @@ const groups = computed(function () {
   } satisfies Record<string, (date: Date) => boolean>);
 
   return chats.value.reduce(
-    (acc, v) => {
-      if (!v.deleted) {
-        const group =
-          Object.keys(groups).find(g => groups[g as keyof typeof groups](v.updatedAt)) ?? 'Older';
-        acc[group as keyof typeof acc].push(v);
+    (acc, c) => {
+      if (!c.deleted) {
+        const group = c.pinned
+          ? 'Pinned'
+          : (keys(groups).find(g => groups[g](c.updatedAt)) ?? 'Older');
+        (acc[group] ??= []).push(c);
       }
       return acc;
     },
-    {} as Record<keyof typeof groups, typeof chats.value>
+    Object.fromEntries(['Pinned', ...keys(groups)].map(g => [g, [] as typeof chats.value]))
   );
 });
 
@@ -248,6 +291,13 @@ function resizeHandler() {
     }
     circumstances.value.narrow = false;
   }
+}
+
+async function pinThread(id: string) {
+  const chat = chats.value.find(c => String(c._id) === id);
+  if (!chat) return;
+
+  await chatStore.$modify({ pinned: !chat.pinned, id });
 }
 
 onMounted(function () {

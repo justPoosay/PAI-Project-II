@@ -386,36 +386,36 @@ async function handleSend() {
   }
 
   const content = input.value.trim();
-  if (content) {
-    let id: string = route.params['id'] as string;
+  if (!content) return;
 
-    if (route.params['id'] === 'new') {
-      const c = await chatStore.$create({ model: model.value });
-      id = String(c._id);
-      skipNextInit = true;
-      await router.push({ name: 'c', params: { id } });
-    }
+  let id: string = route.params['id'] as string;
 
-    messages.value.array.push(
-      {
-        role: 'user',
-        content
-      },
-      {
-        role: 'assistant',
-        chunks: [],
-        author: model.value
-      }
-    );
-
-    input.value = '';
-
-    await requestCompletion({
-      id,
-      message: content,
-      model: model.value
-    });
+  if (route.params['id'] === 'new') {
+    const c = await chatStore.$create({ model: model.value });
+    id = String(c._id);
+    skipNextInit = true;
+    await router.push({ name: 'chat', params: { id } });
   }
+
+  messages.value.array.push(
+    {
+      role: 'user',
+      content
+    },
+    {
+      role: 'assistant',
+      chunks: [],
+      author: model.value
+    }
+  );
+
+  input.value = '';
+
+  await requestCompletion({
+    id,
+    message: content,
+    model: model.value
+  });
 }
 
 /** Checks if the message ends with a null chunk */

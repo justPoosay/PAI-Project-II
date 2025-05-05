@@ -21,7 +21,8 @@ export const chatRouter = router({
         id: 'string.hex==24',
         'name?': 'string | null',
         'model?': Model,
-        'reasoningEffort?': Effort
+        'reasoningEffort?': Effort,
+        'pinned?': 'boolean'
       })
     )
     .mutation(({ ctx, input }) =>

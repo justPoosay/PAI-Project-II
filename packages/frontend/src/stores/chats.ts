@@ -1,5 +1,4 @@
 import { trpc } from '@/lib/trpc';
-import { type Model } from 'common';
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 
@@ -12,7 +11,7 @@ export const useChatStore = defineStore('chats', () => {
     chats.value = await trpc.chat.list.query();
   }
 
-  async function $create(data: { model?: Model } = {}) {
+  async function $create(data: Parameters<typeof trpc.chat.new.mutate>[0] = {}) {
     const c = await trpc.chat.new.mutate(data);
     chats.value.unshift(c);
     return c;
@@ -44,10 +43,20 @@ export const useChatStore = defineStore('chats', () => {
     };
   }
 
+  async function $delete(id: string) {
+    await trpc.chat.delete.mutate({ id });
+    const index = chats.value.findIndex(c => String(c._id) === id);
+    if (index !== -1) {
+      const { userId, _id } = chats.value[index]!;
+      chats.value[index] = { deleted: true, userId, _id };
+    }
+  }
+
   return {
     chats,
     $fetch,
     $create,
-    $modify
+    $modify,
+    $delete
   };
 });
