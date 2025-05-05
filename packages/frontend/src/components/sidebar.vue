@@ -48,12 +48,12 @@
               </p>
               <div
                 v-for="c in groups[group]"
-                :key="String(c._id)"
-                :data-active="String(c._id) === $route.params['id']"
+                :key="c._id.toHexString()"
+                :data-active="c._id.toHexString() === $route.params['id']"
                 class="group hover:bg-accent/10 data-[active=true]:bg-accent/10 relative flex items-center overflow-hidden rounded-lg text-sm font-medium transition"
               >
                 <RouterLink
-                  :to="{ name: 'chat', params: { id: String(c._id) } }"
+                  :to="{ name: 'chat', params: { id: c._id.toHexString() } }"
                   class="block w-full truncate p-2"
                   :title="c.name ?? undefined"
                 >
@@ -64,7 +64,7 @@
                 >
                   <button
                     :data-pinned="!!c.pinned"
-                    @click="pinThread(String(c._id))"
+                    @click="pinThread(c._id.toHexString())"
                     class="group hover:bg-accent/15 cursor-pointer rounded-lg p-1.5 transition"
                   >
                     <PinIcon class="size-4 group-data-[pinned=true]:hidden" />
@@ -93,7 +93,7 @@
                             Cancel
                           </DialogClose>
                           <DialogClose
-                            @click="deleteThread(String(c._id))"
+                            @click="deleteThread(c._id.toHexString())"
                             class="bg-danger hover:bg-danger/75 cursor-pointer rounded-md px-4 py-2 text-sm font-semibold transition"
                           >
                             Delete
@@ -292,7 +292,7 @@ function resizeHandler() {
 }
 
 async function pinThread(id: string) {
-  const chat = chats.value.find(c => String(c._id) === id);
+  const chat = chats.value.find(c => c._id.toHexString() === id);
   if (!chat) return;
 
   await chatStore.$modify({ pinned: !chat.pinned, id });

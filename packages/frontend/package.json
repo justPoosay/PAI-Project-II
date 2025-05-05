@@ -34,6 +34,7 @@
     "@trpc/client": "^11.1.2",
     "arktype": "^2.1.20",
     "better-auth": "^1.2.7",
+    "bson-objectid": "^2.0.4",
     "common": "workspace:*",
     "dayjs": "^1.11.13",
     "dexie": "^4.0.11",

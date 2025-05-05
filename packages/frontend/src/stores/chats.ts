@@ -22,7 +22,7 @@ export const useChatStore = defineStore('chats', () => {
   } & Parameters<typeof trpc.chat.modify.mutate>[0];
 
   async function $modify({ requestChange = true, ...data }: ModifyData) {
-    const index = chats.value.findIndex(c => String(c._id) === data.id);
+    const index = chats.value.findIndex(c => c._id.toHexString() === data.id);
 
     if (index === -1 || !chats.value[index] || chats.value[index].deleted) {
       return;
@@ -45,7 +45,7 @@ export const useChatStore = defineStore('chats', () => {
 
   async function $delete(id: string) {
     await trpc.chat.delete.mutate({ id });
-    const index = chats.value.findIndex(c => String(c._id) === id);
+    const index = chats.value.findIndex(c => c._id.toHexString() === id);
     if (index !== -1) {
       const { userId, _id } = chats.value[index]!;
       chats.value[index] = { deleted: true, userId, _id };

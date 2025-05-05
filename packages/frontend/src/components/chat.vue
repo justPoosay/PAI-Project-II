@@ -175,7 +175,7 @@ const chat = computed(
   () =>
     chats.value.find(
       (c): c is Extract<Chat, { deleted: false }> =>
-        !c.deleted && String(c._id) === route.params['id']
+        !c.deleted && c._id.toHexString() === route.params['id']
     ) ?? null
 );
 const input = ref('');
@@ -202,14 +202,14 @@ const reasoningEffort = ref<Effort>(fromLS('default-reasoning-effort'));
 watch(model, function (newValue, oldValue) {
   toLS('default-model', newValue);
   if (newValue !== oldValue && chat.value && chat.value.model !== newValue) {
-    chatStore.$modify({ id: String(chat.value._id), model: newValue });
+    chatStore.$modify({ id: chat.value._id.toHexString(), model: newValue });
   }
 });
 
 watch(reasoningEffort, function (newValue, oldValue) {
   toLS('default-reasoning-effort', newValue);
   if (newValue !== oldValue && chat.value && chat.value.reasoningEffort !== newValue) {
-    chatStore.$modify({ id: String(chat.value._id), reasoningEffort: newValue });
+    chatStore.$modify({ id: chat.value._id.toHexString(), reasoningEffort: newValue });
   }
 });
 
@@ -353,7 +353,7 @@ async function handleSend() {
 
   if (route.params['id'] === 'new') {
     const c = await chatStore.$create({ model: model.value });
-    id = String(c._id);
+    id = c._id.toHexString();
     skipNextInit = true;
     await router.push({ name: 'chat', params: { id } });
   }
