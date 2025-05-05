@@ -111,6 +111,18 @@ export const completionRouter = protectedProcedure
       };
     }
 
+    if (model === 'gemini-2.5-flash-thinking' && reasoningEffort) {
+      let max_tokens = 1024;
+      if (reasoningEffort === 'medium') max_tokens = 2048;
+      if (reasoningEffort === 'high') max_tokens = 4096;
+
+      options.providerOptions = {
+        openrouter: {
+          max_tokens
+        }
+      };
+    }
+
     await redis.set(`user:limits:${ctx.auth.user.id}`, stringify(limits));
 
     const stream = streamText(options);

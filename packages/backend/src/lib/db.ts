@@ -93,7 +93,8 @@ export const ConversationService = createService(
     .or(
       Conversation.omit('id').and({
         messages: Message.array(),
-        deleted: 'false'
+        deleted: 'false',
+        'pinned?': 'boolean'
       }),
       {
         deleted: 'true'

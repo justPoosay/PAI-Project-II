@@ -46,26 +46,34 @@
               <p class="text-accent text-xs font-semibold" v-if="groups[group].length">
                 {{ group }}
               </p>
-              <RouterLink
+              <div
                 v-for="c in groups[group]"
-                v-bind:key="String(c._id)"
-                :to="{ name: 'chat', params: { id: String(c._id) } }"
-                class="group relative flex flex-row items-center overflow-hidden rounded-xl p-2 text-sm font-medium transition hover:bg-black/5 dark:hover:bg-gray-200/5"
+                :key="String(c._id)"
+                class="group relative flex items-center overflow-hidden rounded-xl p-2 text-sm font-medium transition hover:bg-black/5 dark:hover:bg-gray-200/5"
               >
-                <span class="block truncate" :title="c.name ?? undefined">
-                  {{ c.name ?? 'Untitled' }}
-                </span>
-                <div
-                  class="absolute right-0 flex h-full translate-x-full flex-row items-center gap-1 px-2 transition-all group-hover:translate-x-0"
+                <RouterLink
+                  :to="{ name: 'chat', params: { id: String(c._id) } }"
+                  class="block w-full truncate"
+                  :title="c.name ?? undefined"
                 >
-                  <button class="cursor-pointer">
-                    <PinIcon class="size-5" />
+                  {{ c.name ?? 'Untitled' }}
+                </RouterLink>
+                <div
+                  class="absolute right-0 flex h-full translate-x-full flex-row items-center gap-0.5 px-2 transition-all group-hover:translate-x-0"
+                >
+                  <button
+                    :data-pinned="!!c.pinned"
+                    class="group cursor-pointer rounded-lg p-1.5 transition hover:bg-black/5 dark:hover:bg-gray-200/5"
+                  >
+                    <PinIcon class="size-4 group-data-[pinned=true]:hidden" />
+                    <PinOffIcon class="size-4 group-data-[pinned=false]:hidden" />
                   </button>
-                  <button class="cursor-pointer">
-                    <XIcon class="size-5" />
+
+                  <button class="hover:bg-danger/50 cursor-pointer rounded-lg p-1.5 transition">
+                    <XIcon class="size-4" />
                   </button>
                 </div>
-              </RouterLink>
+              </div>
             </div>
           </div>
           <div v-else class="flex size-full items-center justify-center">
@@ -130,12 +138,19 @@ import { capitalize } from '@/lib/utils';
 import router from '@/router';
 import { useConversationStore } from '@/stores/conversations.ts';
 import { keys } from 'common/utils';
-import { LogInIcon, PinIcon, PlusIcon, SearchIcon, SidebarIcon, XIcon } from 'lucide-vue-next';
+import {
+  LogInIcon,
+  PinIcon,
+  PinOffIcon,
+  PlusIcon,
+  SearchIcon,
+  SidebarIcon,
+  XIcon
+} from 'lucide-vue-next';
 import { storeToRefs } from 'pinia';
 import { AvatarFallback, AvatarImage, AvatarRoot } from 'reka-ui';
 import { computed, onMounted, onUnmounted, type Ref, ref } from 'vue';
 import { RouterLink } from 'vue-router';
-
 const session = useSession();
 
 const isExpanded = defineModel<boolean>({ required: true });
