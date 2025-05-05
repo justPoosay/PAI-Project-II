@@ -21,7 +21,7 @@
     "sass-embedded": "^1.87.0",
     "tailwindcss": "^4.1.5",
     "tailwindcss-safe-area": "^0.6.0",
-    "vite": "^6.3.4",
+    "vite": "^6.3.5",
     "vite-plugin-vue-devtools": "^7.7.6",
     "vue-tsc": "^2.2.10"
   },
@@ -43,7 +43,7 @@
     "marked-highlight": "^2.2.1",
     "marked-katex-extension": "^5.1.4",
     "pinia": "^2.3.1",
-    "reka-ui": "^2.2.0",
+    "reka-ui": "^2.2.1",
     "superjson": "^2.2.2",
     "vue": "^3.5.13",
     "vue-icons-plus": "^0.1.8",
