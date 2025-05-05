@@ -432,7 +432,7 @@ function finished(msg: Nullish<Message>) {
 interface CompletionOptions {
   conversationId?: string;
   message: string | null;
-  model?: typeof Model.infer;
+  model?: Model;
   attachmentIds?: string[];
 }
 

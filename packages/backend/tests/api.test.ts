@@ -96,7 +96,7 @@ describe('authenticated user conversation lifecycle', () => {
     expect(messages).toBeDefined();
     expect(messages.length).toBeGreaterThanOrEqual(2);
     expect(messages[0]!.role).toBe('user');
-    expect((messages[0] as typeof UserMessage.infer).content).toBe('haii :3');
+    expect((messages[0] as UserMessage).content).toBe('haii :3');
   });
 
   test('can modify a conversation', async () => {

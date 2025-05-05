@@ -142,7 +142,7 @@ export const completionRouter = protectedProcedure
     } catch (err) {
       const message =
         err instanceof Error && err.name === 'AbortError' ? 'Aborted by user' : `${err}`;
-      const errorChunk: typeof MessageChunk.infer = { type: 'error', message };
+      const errorChunk: MessageChunk = { type: 'error', message };
       const last = c.messages.at(-1)!;
       if (last.role === 'assistant') {
         last.chunks.push(errorChunk);
