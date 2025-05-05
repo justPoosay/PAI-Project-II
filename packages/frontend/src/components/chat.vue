@@ -177,7 +177,7 @@ import { parseMarkdown } from '@/lib/markdown.ts';
 import { trpc } from '@/lib/trpc';
 import { capitalize } from '@/lib/utils.ts';
 import router from '@/router';
-import { useConversationStore, type Conversation } from '@/stores/conversations.ts';
+import { useChatStore, type Chat } from '@/stores/chats';
 import {
   models,
   type AssistantMessage,
@@ -209,8 +209,9 @@ import { computed, nextTick, onMounted, ref, watch, type FunctionalComponent } f
 import { onBeforeRouteUpdate, useRoute } from 'vue-router';
 
 const route = useRoute();
-const conversationStore = useConversationStore();
-const refs = storeToRefs(conversationStore);
+
+const chatStore = useChatStore();
+const { chats } = storeToRefs(chatStore);
 
 const messages = ref<{ loading: boolean; error: string | null; array: Message[] }>({
   loading: true,
@@ -218,10 +219,10 @@ const messages = ref<{ loading: boolean; error: string | null; array: Message[] 
   array: []
 });
 const fetchToken = ref(0);
-const conversation = computed(
+const chat = computed(
   () =>
-    refs.conversations.value.find(
-      (c): c is Extract<Conversation, { deleted: false }> =>
+    chats.value.find(
+      (c): c is Extract<Chat, { deleted: false }> =>
         !c.deleted && String(c._id) === route.params['id']
     ) ?? null
 );
@@ -249,19 +250,15 @@ const reasoningEffort = ref<Effort>(fromLS('default-reasoning-effort'));
 
 watch(model, function (newValue, oldValue) {
   toLS('default-model', newValue);
-  if (newValue !== oldValue && conversation.value && conversation.value.model !== newValue) {
-    conversationStore.$modify({ id: String(conversation.value._id), model: newValue });
+  if (newValue !== oldValue && chat.value && chat.value.model !== newValue) {
+    chatStore.$modify({ id: String(chat.value._id), model: newValue });
   }
 });
 
 watch(reasoningEffort, function (newValue, oldValue) {
   toLS('default-reasoning-effort', newValue);
-  if (
-    newValue !== oldValue &&
-    conversation.value &&
-    conversation.value.reasoningEffort !== newValue
-  ) {
-    conversationStore.$modify({ id: String(conversation.value._id), reasoningEffort: newValue });
+  if (newValue !== oldValue && chat.value && chat.value.reasoningEffort !== newValue) {
+    chatStore.$modify({ id: String(chat.value._id), reasoningEffort: newValue });
   }
 });
 
@@ -273,8 +270,8 @@ function init(id: string) {
   const isNew = id === 'new';
 
   messages.value = { loading: false, error: null, array: [] };
-  model.value = conversation.value?.model ?? fromLS('default-model');
-  reasoningEffort.value = conversation.value?.reasoningEffort ?? 'high';
+  model.value = chat.value?.model ?? fromLS('default-model');
+  reasoningEffort.value = chat.value?.reasoningEffort ?? 'high';
 
   if (isNew) {
     return;
@@ -286,7 +283,7 @@ function init(id: string) {
 function fetchMessages(id: string, token: number) {
   console.log('[FETCH]', id);
 
-  trpc.conversation.messages
+  trpc.chat.messages
     .query({ id })
     .then(msgs => {
       if (token !== fetchToken.value) return;
@@ -393,7 +390,7 @@ async function handleSend() {
     let id: string = route.params['id'] as string;
 
     if (route.params['id'] === 'new') {
-      const c = await conversationStore.$create({ model: model.value });
+      const c = await chatStore.$create({ model: model.value });
       id = String(c._id);
       skipNextInit = true;
       await router.push({ name: 'c', params: { id } });
@@ -411,12 +408,10 @@ async function handleSend() {
       }
     );
 
-    localStorage.setItem(id, JSON.stringify(messages.value.array));
-
     input.value = '';
 
     await requestCompletion({
-      conversationId: id,
+      id,
       message: content,
       model: model.value
     });
@@ -430,14 +425,14 @@ function finished(msg: Nullish<Message>) {
 }
 
 interface CompletionOptions {
-  conversationId?: string;
+  id?: string;
   message: string | null;
   model?: Model;
   attachmentIds?: string[];
 }
 
 async function requestCompletion({
-  conversationId = route.params['id'] as string,
+  id = route.params['id'] as string,
   message
 }: CompletionOptions) {
   abortController.value = new AbortController();
@@ -455,7 +450,7 @@ async function requestCompletion({
 
   const stream = await trpc.completion.query({
     message: message!,
-    for: conversationId,
+    for: id,
     preferences: fromLS('user-preferences')
   });
 
@@ -468,7 +463,6 @@ async function requestCompletion({
   }
 
   abortController.value = null;
-  localStorage.setItem(conversationId, JSON.stringify(messages.value.array));
 }
 
 async function regenerateLastMessage() {

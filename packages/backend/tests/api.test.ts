@@ -1,7 +1,7 @@
 import type { UserMessage } from 'common';
 import { ObjectId } from 'mongodb';
 import { getAvailableModels } from '../src/core/utils';
-import { ConversationService } from '../src/lib/db';
+import { ChatService } from '../src/lib/db';
 import { appRouter } from '../src/trpc';
 
 const usedUserIDs: ObjectId[] = [];
@@ -54,7 +54,7 @@ describe('authenticated user conversation lifecycle', () => {
   let id: string;
 
   test('can create a new conversation', async () => {
-    const c = await trpc.conversation.new({
+    const c = await trpc.chat.new({
       model: getAvailableModels()[0]
     });
 
@@ -65,7 +65,7 @@ describe('authenticated user conversation lifecycle', () => {
   });
 
   test('can list conversations', async () => {
-    const conversations = await trpc.conversation.list();
+    const conversations = await trpc.chat.list();
     expect(conversations).toBeDefined();
     expect(conversations.length).toBeGreaterThan(0);
 
@@ -91,7 +91,7 @@ describe('authenticated user conversation lifecycle', () => {
   });
 
   test('can retrieve messages for a conversation', async () => {
-    const messages = await trpc.conversation.messages({ id });
+    const messages = await trpc.chat.messages({ id });
 
     expect(messages).toBeDefined();
     expect(messages.length).toBeGreaterThanOrEqual(2);
@@ -100,7 +100,7 @@ describe('authenticated user conversation lifecycle', () => {
   });
 
   test('can modify a conversation', async () => {
-    const conversation = await trpc.conversation.modify({
+    const conversation = await trpc.chat.modify({
       id,
       name: 'test',
       model: 'gpt-4o-mini',
@@ -114,9 +114,9 @@ describe('authenticated user conversation lifecycle', () => {
   });
 
   test('can delete a conversation', async () => {
-    await trpc.conversation.delete({ id });
+    await trpc.chat.delete({ id });
 
-    const conversations = await trpc.conversation.list();
+    const conversations = await trpc.chat.list();
     expect(conversations).toBeDefined();
     expect(conversations.length).toBe(1);
     expect(conversations[0]!.deleted).toBe(true);
@@ -125,5 +125,5 @@ describe('authenticated user conversation lifecycle', () => {
 
 afterAll(async () => {
   // Clean up conversations created by tests
-  await ConversationService.deleteMany({ userId: { $in: usedUserIDs } });
+  await ChatService.deleteMany({ userId: { $in: usedUserIDs } });
 });

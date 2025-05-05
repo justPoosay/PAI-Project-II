@@ -5,7 +5,7 @@ import { models, type MessageChunk } from 'common';
 import { ObjectId } from 'mongodb';
 import { stringify } from 'superjson';
 import { getTextContent } from '../../core/utils';
-import { ConversationService } from '../../lib/db';
+import { ChatService } from '../../lib/db';
 import { env } from '../../lib/env';
 import { getLimits } from '../../lib/stripe';
 import { protectedProcedure } from '../trpc';
@@ -38,7 +38,7 @@ export const completionRouter = protectedProcedure
     }
 
     const _id = new ObjectId(input.for);
-    const c = await ConversationService.findOne({
+    const c = await ChatService.findOne({
       _id,
       deleted: false,
       userId: new ObjectId(ctx.auth.user.id)
@@ -51,7 +51,7 @@ export const completionRouter = protectedProcedure
     c.messages.push({ role: 'user', content: input.message });
     c.messages.push({ role: 'assistant', chunks: [], author: model });
 
-    await ConversationService.updateOne({ _id }, { messages: c.messages });
+    await ChatService.updateOne({ _id }, { messages: c.messages });
 
     let prompt = `You are an AI assistant powered by the ${models[model].name} model. You are here to help and engage in conversation. Feel free to mention that you're using the ${models[model].name} model if asked.`;
 
@@ -161,6 +161,6 @@ export const completionRouter = protectedProcedure
       }
       yield errorChunk;
     } finally {
-      await ConversationService.updateOne({ _id }, { messages: c.messages });
+      await ChatService.updateOne({ _id }, { messages: c.messages });
     }
   });

@@ -2,7 +2,7 @@ import { betterAuth } from 'better-auth';
 import { mongodbAdapter } from 'better-auth/adapters/mongodb';
 import { redis } from 'bun';
 import { ObjectId } from 'mongodb';
-import { ConversationService, db } from './db';
+import { ChatService, db } from './db';
 import { env } from './env';
 
 export const auth = betterAuth({
@@ -19,7 +19,7 @@ export const auth = betterAuth({
     deleteUser: {
       enabled: true,
       async afterDelete(user) {
-        await ConversationService.deleteMany({ userId: new ObjectId(user.id) });
+        await ChatService.deleteMany({ userId: new ObjectId(user.id) });
         await redis.del(`user:limits:${user.id}`);
         const customerId = await redis.get(`stripe:user:${user.id}`);
         if (customerId) {

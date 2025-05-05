@@ -54,7 +54,7 @@ export const AssistantMessage = type({
 
 export const Message = type.or(UserMessage, AssistantMessage);
 
-export const Conversation = type({
+export const Chat = type({
   id: 'string',
   'name?': 'string | null',
   'model?': Model,
@@ -69,4 +69,4 @@ export type MessageChunk = typeof MessageChunk.infer;
 export type UserMessage = typeof UserMessage.infer;
 export type AssistantMessage = typeof AssistantMessage.infer;
 export type Message = typeof Message.infer;
-export type Conversation = typeof Conversation.infer;
+export type Chat = typeof Chat.infer;

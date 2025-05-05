@@ -136,7 +136,7 @@ import { useSession } from '@/lib/auth-client';
 import { isTRPCClientError, trpc } from '@/lib/trpc';
 import { capitalize } from '@/lib/utils';
 import router from '@/router';
-import { useConversationStore } from '@/stores/conversations.ts';
+import { useChatStore } from '@/stores/chats';
 import { keys } from 'common/utils';
 import {
   LogInIcon,
@@ -149,9 +149,13 @@ import {
 } from 'lucide-vue-next';
 import { storeToRefs } from 'pinia';
 import { AvatarFallback, AvatarImage, AvatarRoot } from 'reka-ui';
-import { computed, onMounted, onUnmounted, type Ref, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { RouterLink } from 'vue-router';
+
 const session = useSession();
+
+const chatStore = useChatStore();
+const { chats: allChats } = storeToRefs(chatStore);
 
 const isExpanded = defineModel<boolean>({ required: true });
 const circumstances = ref<Partial<{ force: boolean; narrow: boolean }>>({});
@@ -159,17 +163,16 @@ const circumstances = ref<Partial<{ force: boolean; narrow: boolean }>>({});
 const tier = ref<'free' | 'pro'>('free');
 
 const state = ref<'idle' | 'loading' | 'error'>('loading');
-const conversationStore = useConversationStore();
-const refs = storeToRefs(conversationStore);
-const conversations = computed(() => {
-  return refs.conversations.value.filter(c => !c.deleted);
+
+const chats = computed(() => {
+  return allChats.value.filter(c => !c.deleted);
 });
 
 init();
 
 function init() {
   state.value = 'loading';
-  conversationStore
+  chatStore
     .$fetch()
     .then(() => {
       state.value = 'idle';
@@ -186,8 +189,6 @@ function init() {
     tier.value = data.tier;
   });
 }
-
-type Conversations = typeof conversations extends Ref<infer U> ? U : never;
 
 const groups = computed(function () {
   const groups = Object.freeze({
@@ -218,7 +219,7 @@ const groups = computed(function () {
     }
   } satisfies Record<string, (date: Date) => boolean>);
 
-  return conversations.value.reduce(
+  return chats.value.reduce(
     (acc, v) => {
       if (!v.deleted) {
         const group =
@@ -227,10 +228,7 @@ const groups = computed(function () {
       }
       return acc;
     },
-    Object.fromEntries(Object.keys(groups).map(v => [v, [] as Conversations])) as Record<
-      keyof typeof groups,
-      Conversations
-    >
+    {} as Record<keyof typeof groups, typeof chats.value>
   );
 });
 

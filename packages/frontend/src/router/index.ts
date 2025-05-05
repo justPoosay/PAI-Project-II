@@ -12,7 +12,7 @@ const router = createRouter({
     {
       path: '/c/:id',
       name: 'chat',
-      component: () => import('@/views/conversation-view.vue')
+      component: () => import('@/views/chat-view.vue')
     },
     {
       path: '/login',

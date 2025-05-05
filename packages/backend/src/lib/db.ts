@@ -1,5 +1,5 @@
 import { type, type Type } from 'arktype';
-import { Conversation, Message } from 'common';
+import { Chat, Message } from 'common';
 import type { Merge } from 'common/utils';
 import {
   MongoClient,
@@ -87,11 +87,11 @@ function createService<A extends Type<object, object>>(collectionName: string, s
   } as const);
 }
 
-export const ConversationService = createService(
-  'conversations',
+export const ChatService = createService(
+  'chat',
   type
     .or(
-      Conversation.omit('id').and({
+      Chat.omit('id').and({
         messages: Message.array(),
         deleted: 'false',
         'pinned?': 'boolean'
