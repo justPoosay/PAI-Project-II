@@ -4,7 +4,7 @@ import { env } from '../lib/env';
 
 export function getAvailableModels() {
   return entries(models)
-    .filter(v => !!env[v[1].env])
+    .filter(v => !!env[v[1].provider.env])
     .map(v => v[0]);
 }
 

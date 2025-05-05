@@ -20,6 +20,7 @@ export const Env = type({
   'ANTHROPIC_API_KEY?': 'string',
   'XAI_API_KEY?': 'string',
   'GROQ_API_KEY?': 'string',
+  'OPENROUTER_API_KEY?': 'string',
 
   'FIRECRAWL_API_KEY?': 'string',
   'FIRECRAWL_API_URL?': 'string',
@@ -40,9 +41,15 @@ if (out instanceof type.errors) {
     `${color('#e81747', 'ansi')}[FATAL] [.env]${out.summary.includes('\n') ? '\n' : ' '}  ${out.summary.replace(/\n/g, '\n  ')}${color('white', 'ansi')}`
   );
   process.exit(1);
-} else if (!out.OPENAI_API_KEY && !out.ANTHROPIC_API_KEY && !out.XAI_API_KEY && !out.GROQ_API_KEY) {
+} else if (
+  !out.OPENAI_API_KEY &&
+  !out.ANTHROPIC_API_KEY &&
+  !out.XAI_API_KEY &&
+  !out.GROQ_API_KEY &&
+  !out.OPENROUTER_API_KEY
+) {
   console.error(
-    `${color('#e81747', 'ansi')}[FATAL] [.env]\n  At least one AI provider API key (OPENAI_API_KEY, ANTHROPIC_API_KEY, XAI_API_KEY, or GROQ_API_KEY) must be set!${color('white', 'ansi')}`
+    `${color('#e81747', 'ansi')}[FATAL] [.env]\n  At least one AI provider API key (OPENAI_API_KEY, ANTHROPIC_API_KEY, XAI_API_KEY, GROQ_API_KEY, or OPENROUTER_API_KEY) must be set!${color('white', 'ansi')}`
   );
   process.exit(1);
 }

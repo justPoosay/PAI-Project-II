@@ -80,7 +80,7 @@ export const completionRouter = protectedProcedure
     prompt += ` Always strive to be helpful, respectful and engaging in your interactions.`;
 
     const options: Parameters<typeof streamText>[0] = {
-      model: models[model].model,
+      model: models[model].provider.it,
       messages: c.messages.map(m =>
         m.role === 'user' ? m : { role: 'assistant', content: getTextContent(m.chunks) }
       ),

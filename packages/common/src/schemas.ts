@@ -1,8 +1,8 @@
 import { type } from 'arktype';
+import { models } from './models';
+import { keys } from './utils';
 
-export const Model = type(
-  "'gpt-4o' | 'gpt-4o-mini' | 'claude-3-5-sonnet' | 'grok-3' | 'llama-3.3-70b-versatile' | 'o3-mini' | 'deepseek-r1-distill-llama-70b' | 'deepseek-r1-distill-qwen-32b' | 'claude-3-7-sonnet' | 'o4-mini' | 'claude-3-7-sonnet-thinking' | 'gpt-4.1' | 'gpt-4.1-mini'"
-);
+export const Model = type.or(...keys(models).map(key => `'${key}'` as const));
 
 export const Effort = type("'low' | 'medium' | 'high'");
 

@@ -50,11 +50,21 @@
                 v-for="c in groups[group]"
                 v-bind:key="String(c._id)"
                 :to="{ name: 'chat', params: { id: String(c._id) } }"
-                class="flex flex-row items-center rounded-xl p-2 text-sm font-medium transition hover:bg-black/5 dark:hover:bg-gray-200/5"
+                class="group relative flex flex-row items-center overflow-hidden rounded-xl p-2 text-sm font-medium transition hover:bg-black/5 dark:hover:bg-gray-200/5"
               >
                 <span class="block truncate" :title="c.name ?? undefined">
                   {{ c.name ?? 'Untitled' }}
                 </span>
+                <div
+                  class="absolute right-0 flex h-full translate-x-full flex-row items-center gap-1 px-2 transition-all group-hover:translate-x-0"
+                >
+                  <button class="cursor-pointer">
+                    <PinIcon class="size-5" />
+                  </button>
+                  <button class="cursor-pointer">
+                    <XIcon class="size-5" />
+                  </button>
+                </div>
               </RouterLink>
             </div>
           </div>
@@ -120,7 +130,7 @@ import { capitalize } from '@/lib/utils';
 import router from '@/router';
 import { useConversationStore } from '@/stores/conversations.ts';
 import { keys } from 'common/utils';
-import { LogInIcon, PlusIcon, SearchIcon, SidebarIcon } from 'lucide-vue-next';
+import { LogInIcon, PinIcon, PlusIcon, SearchIcon, SidebarIcon, XIcon } from 'lucide-vue-next';
 import { storeToRefs } from 'pinia';
 import { AvatarFallback, AvatarImage, AvatarRoot } from 'reka-ui';
 import { computed, onMounted, onUnmounted, type Ref, ref } from 'vue';
