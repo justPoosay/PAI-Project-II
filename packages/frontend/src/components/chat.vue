@@ -2,66 +2,51 @@
   <!-- Chat Area -->
   <div class="relative flex flex-1 flex-col">
     <!-- Chat Messages -->
-    <div
-      v-if="!messages.loading && !messages.error && messages.array.length"
-      class="flex-1 overflow-x-hidden overflow-y-auto p-4 pb-28"
-    >
+    <div v-if="messages.length" class="flex-1 overflow-x-hidden overflow-y-auto p-4 pb-28">
       <div class="mx-auto max-w-5xl space-y-8">
-        <div v-for="(message, i) in messages.array" :key="i" class="relative">
+        <div
+          v-for="(messageMetadata, i) in messages.map(getMessageMetadata)"
+          :key="i"
+          class="relative"
+        >
           <div
-            :data-self="message.role === 'user'"
+            :data-self="messageMetadata.author === 'user'"
             class="flex items-start justify-start space-x-2 data-[self=true]:justify-end"
           >
             <div
-              :data-self="message.role === 'user'"
+              :data-self="messageMetadata.author === 'user'"
               class="group relative max-w-[90%] rounded-lg border-[#a2d0e5] p-2 data-[self=true]:border data-[self=true]:bg-[#B3D6E6] data-[self=true]:px-4 data-[self=true]:shadow-xs max-md:max-w-full dark:border-[#422f42] dark:data-[self=true]:bg-[#3E2A3E]"
             >
-              <template v-if="getParts(message).length">
-                <template v-for="(part, partIndex) of getParts(message)">
-                  <div
-                    v-if="typeof part === 'string'"
-                    v-html="parseMarkdown(part, false)"
-                    class="markdown-content"
-                    v-bind:key="`str@${partIndex}`"
-                  />
-                  <div v-else class="m-1 ml-0" v-bind:key="partIndex">
-                    <button
-                      class="inline-flex cursor-pointer items-center space-x-1 rounded-lg bg-white/15 p-1 text-sm dark:bg-[#282828]"
-                      @click="
-                        unfoldedTools.includes(part.id)
-                          ? (unfoldedTools = unfoldedTools.filter(v => v !== part.id))
-                          : unfoldedTools.push(part.id)
-                      "
-                    >
-                      <component
-                        :is="toolIcons[part.name] ?? toolIcons['default']"
-                        class="size-4"
+              <template v-for="(part, partIndex) in messageMetadata.message">
+                <div
+                  v-if="typeof part === 'string'"
+                  v-html="parseMarkdown(part, false)"
+                  class="markdown-content"
+                  v-bind:key="`str@${partIndex}`"
+                />
+                <div v-else class="m-1 ml-0" v-bind:key="partIndex">
+                  <button
+                    class="inline-flex cursor-pointer items-center space-x-1 rounded-lg bg-white/15 p-1 text-sm dark:bg-[#282828]"
+                    @click="
+                      unfoldedTools.includes(part.id)
+                        ? (unfoldedTools = unfoldedTools.filter(v => v !== part.id))
+                        : unfoldedTools.push(part.id)
+                    "
+                  >
+                    <component :is="toolIcons[part.name] ?? toolIcons['default']" class="size-4" />
+                    <div class="inline-flex items-center space-x-3 select-none">
+                      <p>{{ capitalize(part.name) }}</p>
+                      <LoaderCircleIcon class="size-4 animate-spin" v-if="!('result' in part)" />
+                      <ChevronUpIcon
+                        v-else-if="part.result"
+                        :data-folded="!unfoldedTools.includes(part.id)"
+                        class="size-4 transition-all duration-100 ease-in-out data-[folded=true]:rotate-180"
                       />
-                      <div class="inline-flex items-center space-x-3 select-none">
-                        <p>{{ capitalize(part.name) }}</p>
-                        <LoaderCircleIcon class="size-4 animate-spin" v-if="!('result' in part)" />
-                        <ChevronUpIcon
-                          v-else-if="part.result"
-                          :data-folded="!unfoldedTools.includes(part.id)"
-                          class="size-4 transition-all duration-100 ease-in-out data-[folded=true]:rotate-180"
-                        />
-                        <CheckIcon v-else class="size-4 text-green-500" />
-                      </div>
-                    </button>
-                    <div
-                      v-if="unfoldedTools.includes(part.id) && 'result' in part"
-                      class="mt-1 border-l-2 border-white/30 pl-2 text-sm break-words"
-                    >
-                      <p class="mb-1">{{ JSON.stringify(part.args) }}</p>
-                      <ToolResult v-if="part.result" :tool="part" />
-                      <div v-else>Tool didn't return any data</div>
+                      <CheckIcon v-else class="size-4 text-green-500" />
                     </div>
-                  </div>
-                </template>
+                  </button>
+                </div>
               </template>
-              <div v-else-if="!finished(message)" class="flex items-center justify-center p-2">
-                <Loader />
-              </div>
               <Transition
                 enter-active-class="transition-all duration-300 ease-in-out"
                 enter-from-class="-translate-x-4 opacity-0"
@@ -70,21 +55,24 @@
                 <div
                   v-if="
                     /* show only if message is by assistant and is finished, or is by assistant and isn't finished, but the abort controller isn't present */
-                    message.role === 'assistant' &&
-                    (finished(message) || (!finished(message) && !abortController))
+                    messageMetadata.author !== 'user' &&
+                    (messageMetadata.finished || (!messageMetadata.finished && !abortController))
                   "
                   class="flex space-x-1.5 rounded-md p-0.5 pl-0 backdrop-blur-xs"
                 >
                   <button
-                    v-if="finished(message)"
+                    v-if="messageMetadata.finished"
                     title="Copy"
-                    @click="copyToClipboard(getContent(message))"
+                    @click="
+                      copyToClipboard(
+                        messageMetadata.message.filter(v => typeof v === 'string').join('')
+                      )
+                    "
                     class="rounded-md p-1 transition hover:bg-white/5"
                   >
                     <CopyIcon class="size-5" />
                   </button>
                   <button
-                    v-if="lastMessage === message"
                     title="Regenerate"
                     @click="regenerateLastMessage"
                     class="rounded-md p-1 transition hover:bg-white/5"
@@ -99,22 +87,11 @@
       </div>
     </div>
     <div v-else class="flex flex-1 items-center justify-center">
-      <div
-        class="text-center"
-        v-if="!messages.loading && !messages.error && !messages.array.length"
-      >
+      <div class="text-center">
         <h1 class="text-2xl font-bold">No messages yet</h1>
         <h2>Start typing to begin a conversation</h2>
       </div>
-      <div class="text-center" v-else-if="messages.loading">
-        <Loader />
-      </div>
-      <div class="text-center" v-else>
-        <h1 class="text-2xl font-bold">An error occurred</h1>
-        <h2>{{ messages.error }}</h2>
-      </div>
     </div>
-
     <!-- Input Area -->
     <div class="pointer-events-none absolute right-0 bottom-0 left-0 z-10 sm:right-4 sm:left-4">
       <div
@@ -169,23 +146,14 @@
 import 'highlight.js/styles/github-dark.min.css';
 
 import EffortSelector from '@/components/effort-selector.vue';
-import Loader from '@/components/loader.vue';
 import ModelSelector from '@/components/model-selector.vue';
-import ToolResult from '@/components/tool-result.vue';
 import { fromLS, toLS } from '@/lib/local';
 import { parseMarkdown } from '@/lib/markdown.ts';
 import { trpc } from '@/lib/trpc';
 import { capitalize } from '@/lib/utils.ts';
 import router from '@/router';
 import { useChatStore, type Chat } from '@/stores/chats';
-import {
-  models,
-  type AssistantMessage,
-  type Effort,
-  type Message,
-  type MessageChunk,
-  type Model
-} from 'common';
+import { models, type AssistantMessage, type Effort, type Message, type Model } from 'common';
 import { includes, type Nullish } from 'common/utils';
 import {
   CheckIcon,
@@ -213,11 +181,7 @@ const route = useRoute();
 const chatStore = useChatStore();
 const { chats } = storeToRefs(chatStore);
 
-const messages = ref<{ loading: boolean; error: string | null; array: Message[] }>({
-  loading: true,
-  error: null,
-  array: []
-});
+const messages = ref<Message[]>([]);
 const fetchToken = ref(0);
 const chat = computed(
   () =>
@@ -228,8 +192,7 @@ const chat = computed(
 );
 const input = ref('');
 const abortController = ref<AbortController | null>(null);
-const unfoldedTools = ref<FullToolCall['id'][]>([]);
-const lastMessage = computed(() => messages.value.array?.at(-1) ?? null);
+const unfoldedTools = ref<string[]>([]);
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const toolIcons: Record<string, FunctionalComponent<LucideProps, any, any, any>> = {
@@ -269,7 +232,7 @@ function init(id: string) {
   const token = fetchToken.value;
   const isNew = id === 'new';
 
-  messages.value = { loading: false, error: null, array: [] };
+  messages.value = [];
   model.value = chat.value?.model ?? fromLS('default-model');
   reasoningEffort.value = chat.value?.reasoningEffort ?? 'high';
 
@@ -283,20 +246,10 @@ function init(id: string) {
 function fetchMessages(id: string, token: number) {
   console.log('[FETCH]', id);
 
-  trpc.chat.messages
-    .query({ id })
-    .then(msgs => {
-      if (token !== fetchToken.value) return;
-      messages.value.loading = false;
-      messages.value.array = msgs;
-    })
-    .catch(e => {
-      if (token !== fetchToken.value) return;
-      messages.value.loading = false;
-      messages.value.error = `${e}`;
-    });
-
-  messages.value.loading = true;
+  trpc.chat.messages.query({ id }).then(msgs => {
+    if (token !== fetchToken.value) return;
+    messages.value = msgs;
+  });
 }
 
 let skipNextInit = false;
@@ -317,51 +270,63 @@ onMounted(() => {
   init(route.params['id'] as string);
 });
 
-function getContent(msg: Message) {
-  return 'content' in msg
-    ? msg.content
-    : msg.chunks
-        .filter((v): v is Extract<MessageChunk, { type: 'text-delta' }> => v?.type === 'text-delta')
-        .map(v => v.textDelta)
-        .join('');
+interface MessageMetadata {
+  author: 'user' | Model;
+  reasoning: string | null;
+  message: (
+    | {
+        id: string;
+        name: string;
+        args: Record<string, unknown>;
+        result?: unknown;
+      }
+    | string
+  )[];
+  error: string | null;
+  finished: boolean;
 }
 
-interface InitialToolCall {
-  id: string;
-  name: string;
-  args: Record<string, unknown>;
-}
-
-type FullToolCall = InitialToolCall & { result: unknown };
-
-function getParts(msg: Message) {
-  const parts: (InitialToolCall | FullToolCall | string)[] = [];
+function getMessageMetadata(msg: Message): MessageMetadata {
+  const messageMetadata: MessageMetadata = {
+    reasoning: null,
+    message: [],
+    error: null,
+    finished: false,
+    author: msg.role === 'user' ? 'user' : msg.author
+  };
 
   if (msg.role === 'user') {
-    return [msg.content] as typeof parts;
+    messageMetadata.message = [msg.content];
+    messageMetadata.finished = true;
+    return messageMetadata;
   }
 
   for (const chunk of msg.chunks) {
     if (!chunk) continue;
-    const last = parts.at(-1);
+    const lastIndex = messageMetadata.message.length - 1;
+    const last = messageMetadata.message.at(-1);
 
     switch (chunk.type) {
       case 'text-delta':
         if (typeof last === 'string') {
-          parts[parts.length - 1] = last + chunk.textDelta;
+          messageMetadata.message[lastIndex] = last + chunk.textDelta;
         } else {
-          parts.push(chunk.textDelta);
+          messageMetadata.message.push(chunk.textDelta);
         }
         break;
       case 'tool-call':
-        parts.push({ id: chunk.toolCallId, name: chunk.toolName, args: chunk.args });
+        messageMetadata.message.push({
+          id: chunk.toolCallId,
+          name: chunk.toolName,
+          args: chunk.args
+        });
         break;
       case 'reasoning':
-        // TODO
+        messageMetadata.reasoning = (messageMetadata.reasoning ?? '') + chunk.textDelta;
         break;
       case 'tool-result':
-        if (typeof last === 'object' && 'id' in last && last.id === chunk.toolCallId) {
-          parts[parts.length - 1] = {
+        if (typeof last === 'object' && last.id === chunk.toolCallId) {
+          messageMetadata.message[lastIndex] = {
             ...last,
             result: chunk.result
           };
@@ -370,18 +335,26 @@ function getParts(msg: Message) {
     }
   }
 
-  return parts;
+  const last = msg.chunks.at(-1);
+  if (last?.type === 'error') {
+    messageMetadata.error = last.message;
+    messageMetadata.finished = true;
+  } else if (last === null) {
+    messageMetadata.finished = true;
+  }
+
+  return messageMetadata;
 }
 
 async function handleSend() {
   if (abortController.value) {
     abortController.value.abort();
-    (messages.value.array.at(-1) as AssistantMessage).chunks.push(null);
+    (messages.value.at(-1) as AssistantMessage).chunks.push(null);
     abortController.value = null;
     return;
   }
 
-  if (messages.value.array.at(-1)?.role === 'user') {
+  if (messages.value.at(-1)?.role === 'user') {
     return;
   }
 
@@ -397,7 +370,7 @@ async function handleSend() {
     await router.push({ name: 'chat', params: { id } });
   }
 
-  messages.value.array.push(
+  messages.value.push(
     {
       role: 'user',
       content
@@ -437,15 +410,15 @@ async function requestCompletion({
 }: CompletionOptions) {
   abortController.value = new AbortController();
 
-  let msg = messages.value.array.at(-1)!;
+  let msg = messages.value.at(-1)!;
   if (msg.role === 'user' || finished(msg)) {
     const index =
-      messages.value.array.push({
+      messages.value.push({
         role: 'assistant',
         chunks: [],
         author: model.value
       }) - 1;
-    msg = messages.value.array[index] as AssistantMessage;
+    msg = messages.value[index] as AssistantMessage;
   }
 
   const stream = await trpc.completion.query({
@@ -466,7 +439,7 @@ async function requestCompletion({
 }
 
 async function regenerateLastMessage() {
-  const last = messages.value.array.at(-1);
+  const last = messages.value.at(-1);
   if (last?.role !== 'assistant') return;
   last.chunks = [];
   last.author = model.value;
