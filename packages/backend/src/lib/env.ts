@@ -22,10 +22,8 @@ export const Env = type({
   'GROQ_API_KEY?': 'string',
   'OPENROUTER_API_KEY?': 'string',
 
-  'FIRECRAWL_API_KEY?': 'string',
-  'FIRECRAWL_API_URL?': 'string',
+  'EXA_API_KEY?': 'string',
   'WEATHER_API_KEY?': 'string',
-  'SERP_API_KEY?': 'string',
   'GITHUB_PAT?': 'string',
 
   VITE_MESSAGES_PER_MONTH_FREE: 'string.numeric.parse',

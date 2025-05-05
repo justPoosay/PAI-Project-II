@@ -29,9 +29,9 @@ export const completionRouter = protectedProcedure
       limits.tier === 'pro' ? env.VITE_MESSAGES_PER_MONTH_PAID : env.VITE_MESSAGES_PER_MONTH_FREE;
     if (limits.messagesUsed >= messagesPerMonth) {
       yield {
-        type: 'error',
+        type: 'error' as const,
         message: 'You have reached your message limit for this month.'
-      } as const;
+      } satisfies MessageChunk;
       return;
     } else {
       limits.messagesUsed += 1;
@@ -126,6 +126,7 @@ export const completionRouter = protectedProcedure
     await redis.set(`user:limits:${ctx.auth.user.id}`, stringify(limits));
 
     const stream = streamText(options);
+    const chunks: MessageChunk[] = [];
 
     try {
       for await (const chunk of stream.fullStream) {
@@ -137,30 +138,25 @@ export const completionRouter = protectedProcedure
           continue;
         }
 
-        const last = c.messages.at(-1)!;
-        if (last.role === 'assistant') {
-          last.chunks.push(chunk);
-        }
+        chunks.push(chunk);
 
         yield chunk;
       }
 
-      const last = c.messages.at(-1)!;
-      if (last.role === 'assistant') {
-        last.chunks.push(null);
-      }
-
+      chunks.push(null);
       yield null;
     } catch (err) {
-      const message =
-        err instanceof Error && err.name === 'AbortError' ? 'Aborted by user' : `${err}`;
-      const errorChunk: MessageChunk = { type: 'error', message };
-      const last = c.messages.at(-1)!;
-      if (last.role === 'assistant') {
-        last.chunks.push(errorChunk);
-      }
+      const errorChunk: MessageChunk = {
+        type: 'error',
+        message: err instanceof Error && err.name === 'AbortError' ? 'Aborted by user' : `${err}`
+      };
+      chunks.push(errorChunk);
       yield errorChunk;
     } finally {
+      const last = c.messages.at(-1)!;
+      if (last.role === 'assistant') {
+        last.chunks.push(...chunks);
+      }
       await ChatService.updateOne({ _id }, { messages: c.messages });
     }
   });

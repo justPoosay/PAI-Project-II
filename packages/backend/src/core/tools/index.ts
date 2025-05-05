@@ -1,10 +1,10 @@
 import { type Tool as CoreTool } from 'ai';
 import { entries } from 'common/utils';
-import { repo_file, repo_tree } from '../../core/tools/impl/github';
-import scrape from '../../core/tools/impl/scrape';
-import search from '../../core/tools/impl/search';
-import weather from '../../core/tools/impl/weather';
 import logger from '../../lib/logger';
+import contents from './impl/contents';
+import { repo_file, repo_tree } from './impl/github';
+import search from './impl/search';
+import weather from './impl/weather';
 
 export interface Tool {
   core: CoreTool;
@@ -15,7 +15,7 @@ export interface Tool {
 
 export const tools = Object.freeze({
   weather,
-  scrape,
+  contents,
   search,
   repo_tree,
   repo_file
