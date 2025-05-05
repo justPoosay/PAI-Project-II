@@ -108,6 +108,9 @@ export async function getLimits(user: (typeof auth.$Infer)['Session']['user']) {
 
   const now = new Date();
   if (limits.refresh < now) {
+    if (subData.status === 'active') {
+      limits.refresh = dayjs.unix(subData.currentPeriodEnd).toDate();
+    }
     let date = dayjs(limits.refresh);
     while (date.isBefore(now)) {
       date = date.add(1, 'month');

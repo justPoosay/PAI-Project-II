@@ -128,7 +128,7 @@
               v-model="input"
               @keydown="handleKeyDown"
               placeholder="Type a message..."
-              class="placeholder:text-text-secondary-light dark:placeholder:text-text-secondary-dark max-h-[10rem] min-h-[3rem] w-full resize-none overflow-y-auto bg-transparent focus:outline-none"
+              class="placeholder:text-muted-light dark:placeholder:text-muted-dark max-h-[10rem] min-h-[3rem] w-full resize-none overflow-y-auto bg-transparent focus:outline-none"
             />
             <!-- buttons -->
             <label
@@ -512,17 +512,17 @@ watch(input, () => {
   pre:has(code.hljs)
     @apply backdrop-blur-xs text-sm overflow-x-auto max-w-full rounded-md border-t-0 rounded-t-none border border-black/10 dark:border-white/10
     code
-      @apply block p-2 whitespace-pre-wrap break-all font-sf_mono
+      @apply block p-2 whitespace-pre-wrap break-all font-mono
 
   // Code blocks without language ```
   pre:not(:has(code.hljs))
     @apply rounded overflow-x-auto bg-sky-50 dark:bg-zinc-800 p-2 my-2 border border-black/10 dark:border-white/10
     code
-      @apply font-sf_mono text-sm
+      @apply font-mono text-sm
 
   // Inline code `code`
   code:not(.hljs)
-    @apply bg-sky-100 dark:bg-pink-950/50 backdrop-blur-xs rounded px-1 py-0.5 text-sm font-sf_mono text-sky-800 dark:text-pink-300 border border-sky-200 dark:border-pink-800/50
+    @apply bg-sky-100 dark:bg-pink-950/50 backdrop-blur-xs rounded px-1 py-0.5 text-sm font-mono text-sky-800 dark:text-pink-300 border border-sky-200 dark:border-pink-800/50
 
   strong
     @apply font-bold

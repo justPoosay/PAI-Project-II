@@ -43,17 +43,14 @@
         <div class="min-h-0 grow overflow-y-auto">
           <div v-if="state === 'idle'">
             <div v-for="group in keys(groups)" v-bind:key="group">
-              <p
-                class="text-xs font-semibold text-[#55CDFC] dark:text-[#F7A8B8]"
-                v-if="groups[group].length"
-              >
+              <p class="text-accent text-xs font-semibold" v-if="groups[group].length">
                 {{ group }}
               </p>
               <RouterLink
                 v-for="c in groups[group]"
                 v-bind:key="String(c._id)"
                 :to="{ name: 'chat', params: { id: String(c._id) } }"
-                class="flex flex-row items-center rounded-xl p-2 text-sm transition hover:bg-black/5 dark:hover:bg-gray-200/5"
+                class="flex flex-row items-center rounded-xl p-2 text-sm font-medium transition hover:bg-black/5 dark:hover:bg-gray-200/5"
               >
                 <span class="block truncate" :title="c.name ?? undefined">
                   {{ c.name ?? 'Untitled' }}

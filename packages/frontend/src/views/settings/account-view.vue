@@ -15,19 +15,19 @@
         <div class="flex flex-row gap-8 *:max-w-sm">
           <div class="gap-1">
             <div class="flex items-center gap-1">
-              <RocketIcon class="text-pink-2 size-5" />
+              <RocketIcon class="text-accent size-5" />
               <h1 class="text-base font-bold">All AI Models</h1>
             </div>
-            <p class="text-text-secondary text-sm">
+            <p class="text-muted text-sm">
               Get access to our full suite of models including Claude, o4-mini-high, and more!
             </p>
           </div>
           <div class="gap-1">
             <div class="flex items-center gap-1">
-              <SparklesIcon class="text-pink-2 size-5" />
+              <SparklesIcon class="text-accent size-5" />
               <h1 class="text-base font-bold">Generous Message Limits</h1>
             </div>
-            <p class="text-text-secondary text-sm">
+            <p class="text-muted text-sm">
               Receive {{ messagesPerMonth.pro }} message credits per month
             </p>
           </div>
@@ -42,9 +42,7 @@
     </div>
     <div class="flex flex-col gap-4">
       <h1 class="text-3xl font-bold">Danger Zone</h1>
-      <p class="text-text-secondary text-sm">
-        Permanently delete your account and all associated data.
-      </p>
+      <p class="text-muted text-sm">Permanently delete your account and all associated data.</p>
       <DialogRoot>
         <DialogTrigger
           class="cursor-pointer self-start rounded-lg border border-red-600/50 bg-red-500/10 px-4 py-2 font-semibold text-red-600 transition hover:bg-red-600 hover:text-white dark:border-red-500/25 dark:bg-red-500/25 dark:text-white dark:hover:bg-red-500"
@@ -54,13 +52,13 @@
         <DialogPortal>
           <DialogOverlay class="fixed inset-0 z-30 bg-black/50 backdrop-blur-sm" />
           <DialogContent
-            class="bg-dialog-bg text-text-primary fixed top-[50%] left-[50%] z-99 flex translate-x-[-50%] translate-y-[-50%] flex-col gap-4 rounded-md p-2"
+            class="bg-dialog text-primary fixed top-[50%] left-[50%] z-99 flex translate-x-[-50%] translate-y-[-50%] flex-col gap-4 rounded-md p-2"
           >
             <div>
               <DialogTitle class="text-xl font-semibold">
                 Are you sure you want to delete your account?
               </DialogTitle>
-              <DialogDescription class="text-text-secondary text-sm">
+              <DialogDescription class="text-muted text-sm">
                 This action cannot be undone. All your data will be permanently deleted.
               </DialogDescription>
             </div>

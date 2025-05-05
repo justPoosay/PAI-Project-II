@@ -8,7 +8,7 @@
     </PopoverTrigger>
     <PopoverPortal>
       <PopoverContent
-        class="text-text-primary bg-dialog-bg border-border z-999999 flex flex-col rounded-md border p-1 shadow-lg"
+        class="text-primary bg-dialog border-border z-999999 flex flex-col rounded-md border p-1 shadow-lg"
         align="start"
         :side-offset="5"
       >
@@ -19,7 +19,7 @@
           @click="selectModel(model)"
         >
           <div class="flex items-center gap-2">
-            <component :is="icons[models[model].icon]" class="text-pink-2 size-4" />
+            <component :is="icons[models[model].icon]" class="text-accent size-4" />
             {{ modelFullName(model) }}
           </div>
           <div class="flex items-center space-x-1.5 *:cursor-default">

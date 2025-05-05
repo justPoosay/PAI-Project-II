@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-sidebar text-text-primary flex h-full overflow-hidden">
+  <div class="bg-sidebar text-primary flex h-full overflow-hidden">
     <Sidebar v-model="isSidebarExpanded" />
     <div
       :data-s="isSidebarExpanded"
