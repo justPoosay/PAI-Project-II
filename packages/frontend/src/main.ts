@@ -1,10 +1,10 @@
-import './assets/main.css';
+import '@/assets/main.css';
 
 import { createPinia } from 'pinia';
 import { createApp } from 'vue';
 
-import App from './app.vue';
-import router from './router';
+import App from '@/app.vue';
+import router from '@/router';
 
 const app = createApp(App);
 

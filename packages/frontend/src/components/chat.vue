@@ -47,40 +47,30 @@
                   </button>
                 </div>
               </template>
-              <Transition
-                enter-active-class="transition-all duration-300 ease-in-out"
-                enter-from-class="-translate-x-4 opacity-0"
-                enter-to-class="translate-x-0 opacity-100"
+              <div
+                v-if="messageMetadata.author !== 'user'"
+                class="flex space-x-1.5 rounded-md p-0.5 pl-0 backdrop-blur-xs"
               >
-                <div
-                  v-if="
-                    /* show only if message is by assistant and is finished, or is by assistant and isn't finished, but the abort controller isn't present */
-                    messageMetadata.author !== 'user' &&
-                    (messageMetadata.finished || (!messageMetadata.finished && !abortController))
+                <button
+                  v-if="messageMetadata.finished"
+                  title="Copy"
+                  @click="
+                    copyToClipboard(
+                      messageMetadata.message.filter(v => typeof v === 'string').join('')
+                    )
                   "
-                  class="flex space-x-1.5 rounded-md p-0.5 pl-0 backdrop-blur-xs"
+                  class="rounded-md p-1 transition hover:bg-white/5"
                 >
-                  <button
-                    v-if="messageMetadata.finished"
-                    title="Copy"
-                    @click="
-                      copyToClipboard(
-                        messageMetadata.message.filter(v => typeof v === 'string').join('')
-                      )
-                    "
-                    class="rounded-md p-1 transition hover:bg-white/5"
-                  >
-                    <CopyIcon class="size-5" />
-                  </button>
-                  <button
-                    title="Regenerate"
-                    @click="regenerateLastMessage"
-                    class="rounded-md p-1 transition hover:bg-white/5"
-                  >
-                    <RefreshCwIcon class="size-5 transition-all duration-500" />
-                  </button>
-                </div>
-              </Transition>
+                  <CopyIcon class="size-5" />
+                </button>
+                <button
+                  title="Regenerate"
+                  @click="regenerateLastMessage"
+                  class="rounded-md p-1 transition hover:bg-white/5"
+                >
+                  <RefreshCwIcon class="size-5 transition-all duration-500" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -95,7 +85,7 @@
     <!-- Input Area -->
     <div class="pointer-events-none absolute right-0 bottom-0 left-0 z-10 sm:right-4 sm:left-4">
       <div
-        class="dark:from-blue/10 dark:via-purple/10 dark:to-pink/10 from-blue/30 via-purple/30 to-pink/30 pointer-events-auto mx-auto max-w-3xl rounded-3xl rounded-b-none border-b-0 bg-gradient-to-r p-2 pb-0 shadow-lg backdrop-blur-xs dark:backdrop-blur-md"
+        class="dark:from-blue/10 dark:via-purple/10 dark:to-pink/10 from-blue/30 via-purple/30 to-pink/30 pointer-events-auto mx-auto max-w-3xl rounded-3xl rounded-b-none border-b-0 bg-gradient-to-r p-2 pb-0 shadow-lg backdrop-blur-lg"
       >
         <div
           class="dark:from-blue/5 dark:via-purple/5 dark:to-pink/5 from-blue/30 via-purple/30 to-pink/30 flex flex-col items-start rounded-2xl rounded-b-none border-b-0 border-transparent bg-gradient-to-r p-1"
@@ -110,7 +100,7 @@
             <!-- buttons -->
             <label
               :aria-disabled="!includes(models[model].capabilities, 'imageInput')"
-              class="rounded-xl p-2 transition hover:bg-black/10 aria-disabled:text-[#333333]/40 aria-[disabled=false]:cursor-pointer dark:hover:bg-white/5 dark:aria-disabled:text-white/40"
+              class="aria-disabled:text-muted rounded-xl p-2 transition hover:bg-black/10 aria-disabled:hover:bg-transparent aria-[disabled=false]:cursor-pointer dark:hover:bg-white/5 dark:aria-disabled:text-white/40"
               :title="
                 includes(models[model].capabilities, 'imageInput')
                   ? 'Upload File'
@@ -143,8 +133,6 @@
 </template>
 
 <script setup lang="ts">
-import 'highlight.js/styles/github-dark.min.css';
-
 import EffortSelector from '@/components/effort-selector.vue';
 import ModelSelector from '@/components/model-selector.vue';
 import { fromLS, toLS } from '@/lib/local';
@@ -468,149 +456,3 @@ watch(input, () => {
   });
 });
 </script>
-
-<style lang="sass">
-.markdown-content
-  @apply break-words text-[#333333] dark:text-gray-200
-
-  a
-    @apply text-sky-600 hover:underline dark:text-pink-400
-
-  pre:has(code.hljs)
-    @apply backdrop-blur-xs text-sm overflow-x-auto max-w-full rounded-md border-t-0 rounded-t-none border border-black/10 dark:border-white/10
-    code
-      @apply block p-2 whitespace-pre-wrap break-all font-mono
-
-  // Code blocks without language ```
-  pre:not(:has(code.hljs))
-    @apply rounded overflow-x-auto bg-sky-50 dark:bg-zinc-800 p-2 my-2 border border-black/10 dark:border-white/10
-    code
-      @apply font-mono text-sm
-
-  // Inline code `code`
-  code:not(.hljs)
-    @apply bg-sky-100 dark:bg-pink-950/50 backdrop-blur-xs rounded px-1 py-0.5 text-sm font-mono text-sky-800 dark:text-pink-300 border border-sky-200 dark:border-pink-800/50
-
-  strong
-    @apply font-bold
-
-  em
-    @apply italic
-
-  // Headings
-  h1, h2, h3, h4, h5, h6
-    @apply font-bold mt-4 mb-2 pb-1
-
-  h1
-    @apply text-3xl
-  h2
-    @apply text-2xl
-  h3
-    @apply text-xl
-  h4
-    @apply text-lg
-  h5
-    @apply text-base
-  h6
-    @apply text-sm
-
-  // Lists
-  ol
-    @apply list-decimal list-outside ml-6 my-2
-    & ol, & ul
-      @apply mt-1 mb-1
-
-  ul
-    @apply list-disc list-outside ml-6 my-2
-    & ul, & ol
-      @apply mt-1 mb-1
-
-  li
-    @apply mb-1
-    & > ul, & > ol
-      @apply ml-4
-
-  hr
-    @apply border-t border-sky-200 dark:border-pink-800/50 my-4
-
-  // Blockquote
-  blockquote
-    @apply border-l-4 border-sky-300 dark:border-pink-600/80 p-2 pl-3 italic bg-sky-50 dark:bg-pink-950/30 rounded my-3 text-gray-700 dark:text-gray-300
-    p // Remove default margins inside blockquote
-      @apply m-0
-
-    // Callouts like [!NOTE]
-    &[data-type="note"],
-    &[data-type="tip"],
-    &[data-type="important"],
-    &[data-type="warning"],
-    &[data-type="caution"],
-    &[data-type="error"]
-      @apply not-italic
-      .callout-title
-        @apply font-bold flex items-center gap-1.5 mb-1 // Style title
-
-    &[data-type="note"],
-    &[data-type="tip"]
-      @apply border-sky-500 dark:border-pink-500
-      .callout-title
-        @apply text-sky-600 dark:text-pink-400
-
-    &[data-type="important"]
-      @apply border-violet-500 dark:border-violet-400
-      .callout-title
-        @apply text-violet-600 dark:text-violet-400
-
-    &[data-type="warning"]
-      @apply border-yellow-500 dark:border-yellow-400
-      .callout-title
-        @apply text-yellow-600 dark:text-yellow-400
-
-    &[data-type="caution"],
-    &[data-type="error"]
-      @apply border-red-500 dark:border-red-400
-      .callout-title
-        @apply text-red-600 dark:text-red-400
-
-  // Table
-  table
-    @apply w-full border-collapse my-4 text-sm border border-sky-200 dark:border-white/20
-    th, td
-      @apply border border-sky-200 dark:border-white/20 p-2 text-left
-
-    th
-      @apply bg-sky-100 dark:bg-white/10 font-semibold
-
-    tr:nth-child(even)
-      @apply bg-sky-50/50 dark:bg-white/5
-
-// Highlight.js theme overrides
-.hljs
-  @apply bg-transparent dark:bg-transparent // Use parent pre background
-
-.hljs-container
-  @apply flex flex-col
-  &:not(:last-child)
-    @apply mb-1
-  &:not(:first-child)
-    @apply mt-1
-
-.hljs-header // Style for code block header (e.g., language name)
-  @apply bg-sky-100 dark:bg-zinc-700 flex items-center justify-between py-1 px-3 text-xs text-gray-600 dark:text-gray-400 rounded-t-md border-b border-black/10 dark:border-white/10
-
-// Tooltip styles
-.v-popper--theme-tooltip
-  .v-popper__inner
-    @apply bg-white/15 backdrop-blur-md dark:bg-[#0E0A09] dark:border-[1px] dark:border-[#847A6C] text-xs rounded-md shadow-lg
-
-  .v-popper__arrow-outer
-    @apply hidden
-
-// Disable transitions for light mode tooltips (fix for flickering)
-@media (prefers-color-scheme: light)
-  .v-popper__popper
-    transition: none !important
-
-    *
-      transition: none !important
-</style>

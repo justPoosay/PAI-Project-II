@@ -61,5 +61,6 @@ export default {
       createContext,
       router
     });
-  }
+  },
+  idleTimeout: 255
 } satisfies Serve;

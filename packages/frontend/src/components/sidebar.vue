@@ -93,7 +93,7 @@
                             Cancel
                           </DialogClose>
                           <DialogClose
-                            @click="chatStore.$delete(String(c._id))"
+                            @click="deleteThread(String(c._id))"
                             class="bg-danger hover:bg-danger/75 cursor-pointer rounded-md px-4 py-2 text-sm font-semibold transition"
                           >
                             Delete
@@ -195,7 +195,6 @@ import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { RouterLink } from 'vue-router';
 
 const session = useSession();
-
 const chatStore = useChatStore();
 const { chats: allChats } = storeToRefs(chatStore);
 
@@ -203,7 +202,6 @@ const isExpanded = defineModel<boolean>({ required: true });
 const circumstances = ref<Partial<{ force: boolean; narrow: boolean }>>({});
 
 const tier = ref<'free' | 'pro'>('free');
-
 const state = ref<'idle' | 'loading' | 'error'>('loading');
 
 const chats = computed(() => {
@@ -298,6 +296,14 @@ async function pinThread(id: string) {
   if (!chat) return;
 
   await chatStore.$modify({ pinned: !chat.pinned, id });
+}
+
+async function deleteThread(id: string) {
+  await chatStore.$delete(id);
+  const currentRoute = router.currentRoute.value;
+  if (currentRoute.name === 'chat' && currentRoute.params['id'] === id) {
+    router.push({ name: 'chat', params: { id: 'new' } });
+  }
 }
 
 onMounted(function () {
