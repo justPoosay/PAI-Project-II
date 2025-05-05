@@ -45,7 +45,7 @@
       <p class="text-muted text-sm">Permanently delete your account and all associated data.</p>
       <DialogRoot>
         <DialogTrigger
-          class="cursor-pointer self-start rounded-lg border border-red-600/50 bg-red-500/10 px-4 py-2 font-semibold text-red-600 transition hover:bg-red-600 hover:text-white dark:border-red-500/25 dark:bg-red-500/25 dark:text-white dark:hover:bg-red-500"
+          class="border-danger/50 bg-danger/10 text-danger hover:bg-danger cursor-pointer self-start rounded-lg border px-4 py-2 font-semibold transition hover:text-white"
         >
           Delete Account
         </DialogTrigger>
@@ -64,7 +64,7 @@
             </div>
             <div class="flex flex-row gap-2">
               <button
-                class="cursor-pointer rounded-lg border border-red-600/50 bg-red-500/10 px-3 py-1 font-semibold text-red-600 transition hover:bg-red-600 hover:text-white dark:border-red-500/25 dark:bg-red-500/25 dark:text-white dark:hover:bg-red-500"
+                class="border-danger/50 bg-danger/10 text-danger hover:bg-danger cursor-pointer self-start rounded-lg border px-2 py-1 font-semibold transition hover:text-white"
                 @click="
                   deleteUser({
                     fetchOptions: {
