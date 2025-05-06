@@ -162,9 +162,9 @@
 
 <script setup lang="ts">
 import Loader from '@/components/loader.vue';
+import { isTRPCClientError } from '@/lib/api';
 import { useSession } from '@/lib/auth-client';
 import { fromLS } from '@/lib/local';
-import { isTRPCClientError } from '@/lib/trpc';
 import { capitalize } from '@/lib/utils';
 import router from '@/router';
 import { useChatStore } from '@/stores/chats';

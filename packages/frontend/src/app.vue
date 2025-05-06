@@ -5,8 +5,8 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { RouterView } from 'vue-router';
+import { trpc } from './lib/api';
 import { fromLS, fromLSSafe, toLS } from './lib/local';
-import { trpc } from './lib/trpc';
 import { setTheme } from './lib/utils';
 
 if (!fromLSSafe('user-preferences')) {

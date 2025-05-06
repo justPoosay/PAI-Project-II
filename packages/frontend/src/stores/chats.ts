@@ -1,4 +1,4 @@
-import { trpc } from '@/lib/trpc';
+import { trpc } from '@/lib/api';
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 

@@ -1,4 +1,4 @@
-import type { trpc } from './trpc';
+import type { trpc } from './api';
 import type { ART } from './types';
 
 export const messagesPerMonth: Record<ART<typeof trpc.stripe.getLimits.query>['tier'], number> = {

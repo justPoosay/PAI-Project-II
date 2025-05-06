@@ -26,8 +26,8 @@
 </template>
 
 <script setup lang="ts">
+import { trpc } from '@/lib/api';
 import { toLS } from '@/lib/local';
-import { trpc } from '@/lib/trpc';
 import { capitalize, selfOrFirst } from '@/lib/utils';
 import type { Effort } from 'common';
 import { keys } from 'common/utils';

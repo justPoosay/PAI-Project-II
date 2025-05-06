@@ -31,7 +31,6 @@
   },
   "dependencies": {
     "@stripe/stripe-js": "^7.3.0",
-    "@trpc/client": "^11.1.2",
     "arktype": "^2.1.20",
     "better-auth": "^1.2.7",
     "bson-objectid": "^2.0.4",
@@ -44,6 +43,7 @@
     "marked": "^15.0.11",
     "marked-highlight": "^2.2.1",
     "marked-katex-extension": "^5.1.4",
+    "neverthrow": "^8.2.0",
     "pinia": "^2.3.1",
     "reka-ui": "^2.2.1",
     "superjson": "^2.2.2",

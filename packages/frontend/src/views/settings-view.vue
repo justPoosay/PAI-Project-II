@@ -106,10 +106,10 @@
 
 <script setup lang="ts">
 import ThemeToggle from '@/components/theme-toggle.vue';
+import { trpc } from '@/lib/api';
 import { signOut, useSession } from '@/lib/auth-client';
 import { messagesPerMonth } from '@/lib/constants';
 import { fromLS, toLS } from '@/lib/local';
-import { trpc } from '@/lib/trpc';
 import type { ART } from '@/lib/types';
 import { capitalize } from '@/lib/utils';
 import router from '@/router';

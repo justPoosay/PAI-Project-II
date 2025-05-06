@@ -147,9 +147,9 @@
 <script setup lang="ts">
 import EffortSelector from '@/components/effort-selector.vue';
 import ModelSelector from '@/components/model-selector.vue';
+import { trpc } from '@/lib/api';
 import { fromLS } from '@/lib/local';
 import { parseMarkdown } from '@/lib/markdown.ts';
-import { trpc } from '@/lib/trpc';
 import { capitalize, selfOrFirst } from '@/lib/utils.ts';
 import router from '@/router';
 import { useChatStore } from '@/stores/chats';

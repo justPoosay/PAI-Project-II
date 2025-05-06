@@ -93,10 +93,10 @@
 </template>
 
 <script setup lang="ts">
+import { trpc } from '@/lib/api';
 import { deleteUser } from '@/lib/auth-client';
 import { messagesPerMonth } from '@/lib/constants';
 import { fromLS, toLS } from '@/lib/local';
-import { trpc } from '@/lib/trpc';
 import type { ART } from '@/lib/types';
 import router from '@/router';
 import { RocketIcon, SparklesIcon } from 'lucide-vue-next';

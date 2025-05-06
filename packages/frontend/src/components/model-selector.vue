@@ -43,9 +43,9 @@
 <script setup lang="ts">
 import ImageInput from '@/components/model-capabilities/image-input.vue';
 import Reasoning from '@/components/model-capabilities/reasoning.vue';
+import { trpc } from '@/lib/api';
 import { icons } from '@/lib/icons';
 import { fromLS, toLS } from '@/lib/local';
-import { trpc } from '@/lib/trpc';
 import { modelFullName, selfOrFirst } from '@/lib/utils';
 import { models, type Model, type ModelInfo } from 'common';
 import { includes, keys } from 'common/utils';
