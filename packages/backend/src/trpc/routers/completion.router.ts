@@ -139,13 +139,30 @@ export const completionRouter = protectedProcedure
     const chunks: MessageChunk[] = [];
 
     try {
-      for await (const chunk of stream.fullStream) {
+      let reasoning = false;
+      for await (let chunk of stream.fullStream) {
         if (
           chunk.type !== 'tool-call' &&
           chunk.type !== 'text-delta' &&
           chunk.type !== 'reasoning'
         ) {
           continue;
+        }
+
+        if (chunk.type === 'text-delta' && chunk.textDelta === '<think>' && !reasoning) {
+          reasoning = true;
+          continue;
+        } else if (chunk.type === 'text-delta' && chunk.textDelta === '</think>' && reasoning) {
+          reasoning = false;
+          continue;
+        }
+
+        // Deepseek R1 distilled on llama reasoning hack
+        if (chunk.type === 'text-delta' && reasoning) {
+          chunk = {
+            type: 'reasoning',
+            textDelta: chunk.textDelta
+          };
         }
 
         chunks.push(chunk);
