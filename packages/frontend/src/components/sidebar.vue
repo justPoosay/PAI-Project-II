@@ -163,7 +163,8 @@
 <script setup lang="ts">
 import Loader from '@/components/loader.vue';
 import { useSession } from '@/lib/auth-client';
-import { isTRPCClientError, trpc } from '@/lib/trpc';
+import { fromLS } from '@/lib/local';
+import { isTRPCClientError } from '@/lib/trpc';
 import { capitalize } from '@/lib/utils';
 import router from '@/router';
 import { useChatStore } from '@/stores/chats';
@@ -196,17 +197,13 @@ import { RouterLink } from 'vue-router';
 
 const session = useSession();
 const chatStore = useChatStore();
-const { chats: allChats } = storeToRefs(chatStore);
+const { chats } = storeToRefs(chatStore);
 
 const isExpanded = defineModel<boolean>({ required: true });
 const circumstances = ref<Partial<{ force: boolean; narrow: boolean }>>({});
 
-const tier = ref<'free' | 'pro'>('free');
+const tier = ref(fromLS('limits').tier);
 const state = ref<'idle' | 'loading' | 'error'>('loading');
-
-const chats = computed(() => {
-  return allChats.value.filter(c => !c.deleted);
-});
 
 init();
 
@@ -224,10 +221,6 @@ function init() {
         router.push({ name: 'login' });
       }
     });
-
-  trpc.stripe.getLimits.query().then(data => {
-    tier.value = data.tier;
-  });
 }
 
 const groups = computed(function () {
@@ -261,12 +254,10 @@ const groups = computed(function () {
 
   return chats.value.reduce(
     (acc, c) => {
-      if (!c.deleted) {
-        const group = c.pinned
-          ? 'Pinned'
-          : (keys(groups).find(g => groups[g](c.updatedAt)) ?? 'Older');
-        (acc[group] ??= []).push(c);
-      }
+      const group = c.pinned
+        ? 'Pinned'
+        : (keys(groups).find(g => groups[g](c.updatedAt)) ?? 'Older');
+      (acc[group] ??= []).push(c);
       return acc;
     },
     Object.fromEntries(['Pinned', ...keys(groups)].map(g => [g, [] as typeof chats.value]))

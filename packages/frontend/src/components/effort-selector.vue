@@ -4,7 +4,7 @@
       class="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm font-semibold hover:bg-gray-200/5"
       title="Reasoning effort"
     >
-      {{ capitalize(effort) }}
+      {{ capitalize(selected) }}
     </PopoverTrigger>
     <PopoverPortal>
       <PopoverContent
@@ -26,11 +26,16 @@
 </template>
 
 <script setup lang="ts">
-import { capitalize } from '@/lib/utils';
+import { toLS } from '@/lib/local';
+import { trpc } from '@/lib/trpc';
+import { capitalize, selfOrFirst } from '@/lib/utils';
 import type { Effort } from 'common';
 import { keys } from 'common/utils';
 import { PopoverContent, PopoverPortal, PopoverRoot, PopoverTrigger } from 'reka-ui';
 import { ref } from 'vue';
+import { useRoute } from 'vue-router';
+
+const route = useRoute();
 
 const efforts = Object.freeze({
   high: null,
@@ -38,12 +43,17 @@ const efforts = Object.freeze({
   low: null
 } satisfies { [K in Effort]: unknown });
 
+const selected = defineModel<Effort>({ required: true });
 const isOpen = ref(false);
 
-const effort = defineModel<Effort>({ required: true });
-
-function selectEffort(e: Effort) {
-  effort.value = e;
+function selectEffort(reasoningEffort: Effort) {
+  selected.value = reasoningEffort;
   isOpen.value = false;
+  toLS('default-reasoning-effort', reasoningEffort);
+
+  const id = selfOrFirst(route.params['id']);
+  if (id) {
+    trpc.chat.modify.mutate({ id, reasoningEffort });
+  }
 }
 </script>

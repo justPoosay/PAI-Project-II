@@ -1,7 +1,7 @@
 import { streamText } from 'ai';
 import { type } from 'arktype';
 import { redis } from 'bun';
-import { models, type MessageChunk } from 'common';
+import { Effort, Model, models, type MessageChunk } from 'common';
 import { ObjectId } from 'mongodb';
 import { stringify } from 'superjson';
 import { getTextContent } from '../../core/utils';
@@ -12,15 +12,16 @@ import { protectedProcedure } from '../trpc';
 
 export const completionRouter = protectedProcedure
   .input(
-    type({
-      message: 'string>0',
-      for: 'string.hex==24',
+    type.or({ message: 'string>0' }, { messageIndex: 'number' }).and({
+      id: 'string.hex==24',
       'preferences?': {
         name: 'string',
         occupation: 'string',
         selectedTraits: 'string',
         additionalInfo: 'string'
-      }
+      },
+      model: Model,
+      reasoningEffort: Effort
     })
   )
   .query(async function* ({ input, ctx, signal }) {
@@ -37,7 +38,7 @@ export const completionRouter = protectedProcedure
       limits.messagesUsed += 1;
     }
 
-    const _id = new ObjectId(input.for);
+    const _id = new ObjectId(input.id);
     const c = await ChatService.findOne({
       _id,
       deleted: false,
@@ -45,15 +46,24 @@ export const completionRouter = protectedProcedure
     });
     if (!c) return;
 
-    const model = c.model ?? 'o4-mini';
-    const reasoningEffort = c.reasoningEffort;
+    if ('message' in input) {
+      c.messages.push({ role: 'user', content: input.message });
+    } else {
+      const message = c.messages.at(input.messageIndex);
+      if (!message) return;
+      if (message.role === 'user') {
+        c.messages = c.messages.slice(0, input.messageIndex + 1);
+      } else {
+        c.messages = c.messages.slice(0, input.messageIndex);
+      }
+    }
 
-    c.messages.push({ role: 'user', content: input.message });
-    c.messages.push({ role: 'assistant', chunks: [], author: model });
+    c.model = input.model;
+    c.reasoningEffort = input.reasoningEffort;
 
     await ChatService.updateOne({ _id }, { messages: c.messages });
 
-    let prompt = `You are an AI assistant powered by the ${models[model].name} model. You are here to help and engage in conversation. Feel free to mention that you're using the ${models[model].name} model if asked.`;
+    let prompt = `You are an AI assistant powered by the ${models[c.model].name} model. You are here to help and engage in conversation. Feel free to mention that you're using the ${models[c.model].name} model if asked.`;
 
     // TODO: math toggle?
     prompt += ` If you are generating responses with math, you should use LaTeX, wrapped in $$.`;
@@ -80,7 +90,7 @@ export const completionRouter = protectedProcedure
     prompt += ` Always strive to be helpful, respectful and engaging in your interactions.`;
 
     const options: Parameters<typeof streamText>[0] = {
-      model: models[model].provider.it,
+      model: models[c.model].provider.it,
       messages: c.messages.map(m =>
         m.role === 'user' ? m : { role: 'assistant', content: getTextContent(m.chunks) }
       ),
@@ -88,10 +98,10 @@ export const completionRouter = protectedProcedure
       system: prompt
     };
 
-    if (model === 'claude-3-7-sonnet-thinking' && reasoningEffort) {
+    if (c.model === 'claude-3-7-sonnet-thinking') {
       let budgetTokens = 1024;
-      if (reasoningEffort === 'medium') budgetTokens = 2048;
-      if (reasoningEffort === 'high') budgetTokens = 4096;
+      if (c.reasoningEffort === 'medium') budgetTokens = 2048;
+      if (c.reasoningEffort === 'high') budgetTokens = 4096;
 
       options.providerOptions = {
         anthropic: {
@@ -103,18 +113,18 @@ export const completionRouter = protectedProcedure
       };
     }
 
-    if ((model === 'o4-mini' || model === 'o3-mini') && reasoningEffort) {
+    if (c.model === 'o4-mini' || c.model === 'o3-mini') {
       options.providerOptions = {
         openai: {
-          reasoningEffort
+          reasoningEffort: c.reasoningEffort
         }
       };
     }
 
-    if (model === 'gemini-2.5-flash-thinking' && reasoningEffort) {
+    if (c.model === 'gemini-2.5-flash-thinking') {
       let max_tokens = 1024;
-      if (reasoningEffort === 'medium') max_tokens = 2048;
-      if (reasoningEffort === 'high') max_tokens = 4096;
+      if (c.reasoningEffort === 'medium') max_tokens = 2048;
+      if (c.reasoningEffort === 'high') max_tokens = 4096;
 
       options.providerOptions = {
         openrouter: {
@@ -153,10 +163,7 @@ export const completionRouter = protectedProcedure
       chunks.push(errorChunk);
       yield errorChunk;
     } finally {
-      const last = c.messages.at(-1)!;
-      if (last.role === 'assistant') {
-        last.chunks.push(...chunks);
-      }
+      c.messages.push({ role: 'assistant', chunks, author: c.model });
       await ChatService.updateOne({ _id }, { messages: c.messages });
     }
   });

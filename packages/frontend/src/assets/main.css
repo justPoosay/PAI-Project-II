@@ -5,7 +5,7 @@
 
 @import 'markdown.scss';
 
-@config "../../tailwind.config.ts";
+@config '../../tailwind.config.ts';
 
 @custom-variant dark (&:where(.dark, .dark *));
 @custom-variant light (&:where(:not(.dark), :not(.dark) *));

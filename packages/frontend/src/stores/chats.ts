@@ -17,39 +17,27 @@ export const useChatStore = defineStore('chats', () => {
     return c;
   }
 
-  type ModifyData = {
-    requestChange?: boolean;
-  } & Parameters<typeof trpc.chat.modify.mutate>[0];
+  async function $modify(input: Parameters<typeof trpc.chat.modify.mutate>[0]) {
+    const index = chats.value.findIndex(c => c._id.toHexString() === input.id);
 
-  async function $modify({ requestChange = true, ...data }: ModifyData) {
-    const index = chats.value.findIndex(c => c._id.toHexString() === data.id);
-
-    if (index === -1 || !chats.value[index] || chats.value[index].deleted) {
+    if (index === -1 || !chats.value[index]) {
       return;
     }
 
-    if (requestChange) {
-      const c = await trpc.chat.modify.mutate(data);
-      if (c) {
-        chats.value[index] = c;
-      }
-      return;
+    const c = await trpc.chat.modify.mutate(input);
+    if (c) {
+      chats.value[index] = c;
     }
-
-    chats.value[index] = {
-      ...chats.value[index]!,
-      ...data,
-      updatedAt: new Date()
-    };
+    return;
   }
 
   async function $delete(id: string) {
     await trpc.chat.delete.mutate({ id });
     const index = chats.value.findIndex(c => c._id.toHexString() === id);
-    if (index !== -1) {
-      const { userId, _id } = chats.value[index]!;
-      chats.value[index] = { deleted: true, userId, _id };
+    if (index === -1 || !chats.value[index]) {
+      return;
     }
+    chats.value.splice(index, 1);
   }
 
   return {

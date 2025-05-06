@@ -5,7 +5,7 @@ import logger from '../lib/logger';
 export async function createContext({ req, resHeaders, info }: FetchCreateContextFnOptions) {
   const session = await auth.api.getSession(req);
 
-  logger.trace('[tRPC]', info.calls.map(c => c.path).join(','), 'by', session?.user ?? null);
+  logger.trace('[tRPC]', info.calls.map(c => c.path).join(','), 'by', session?.user?.email ?? null);
 
   return {
     req,

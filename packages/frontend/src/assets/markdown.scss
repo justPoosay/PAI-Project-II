@@ -122,7 +122,8 @@
     }
 
     &[data-type='important'] {
-      @apply border-purple .callout-title {
+      @apply border-purple;
+      .callout-title {
         @apply text-purple;
       }
     }

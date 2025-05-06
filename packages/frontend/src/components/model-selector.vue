@@ -44,14 +44,18 @@
 import ImageInput from '@/components/model-capabilities/image-input.vue';
 import Reasoning from '@/components/model-capabilities/reasoning.vue';
 import { icons } from '@/lib/icons';
-import { fromLS } from '@/lib/local';
-import { modelFullName } from '@/lib/utils';
+import { fromLS, toLS } from '@/lib/local';
+import { trpc } from '@/lib/trpc';
+import { modelFullName, selfOrFirst } from '@/lib/utils';
 import { models, type Model, type ModelInfo } from 'common';
 import { includes, keys } from 'common/utils';
 import { ChevronUp } from 'lucide-vue-next';
 import { PopoverContent, PopoverPortal, PopoverRoot, PopoverTrigger } from 'reka-ui';
 import type { DefineComponent } from 'vue';
 import { ref } from 'vue';
+import { useRoute } from 'vue-router';
+
+const route = useRoute();
 
 const capabilities = Object.freeze({
   imageInput: [ImageInput, 'Supports image uploads and analysis'],
@@ -68,11 +72,16 @@ const capabilities = Object.freeze({
 }>);
 
 const selected = defineModel<Model>({ required: true });
-
 const isOpen = ref(false);
 
-function selectModel(modelName: Model) {
-  selected.value = modelName;
+function selectModel(model: Model) {
+  selected.value = model;
   isOpen.value = false;
+  toLS('default-model', model);
+
+  const id = selfOrFirst(route.params['id']);
+  if (id) {
+    trpc.chat.modify.mutate({ id, model });
+  }
 }
 </script>

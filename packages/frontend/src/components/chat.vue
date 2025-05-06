@@ -5,71 +5,83 @@
     <div v-if="messages.length" class="flex-1 overflow-x-hidden overflow-y-auto p-4 pb-28">
       <div class="mx-auto max-w-5xl space-y-8">
         <div
-          v-for="(messageMetadata, i) in messages.map(getMessageMetadata)"
-          :key="i"
+          v-for="(messageMetadata, messageIndex) in messages.map(getMessageMetadata)"
+          :key="messageIndex"
           class="relative"
         >
           <div
             :data-self="messageMetadata.author === 'user'"
-            class="flex items-start justify-start space-x-2 data-[self=true]:justify-end"
+            class="group flex items-start justify-start space-x-2 data-[self=true]:justify-end"
           >
             <div
               :data-self="messageMetadata.author === 'user'"
-              class="group relative max-w-[90%] rounded-lg border-[#a2d0e5] p-2 data-[self=true]:border data-[self=true]:bg-[#B3D6E6] data-[self=true]:px-4 data-[self=true]:shadow-xs max-md:max-w-full dark:border-[#422f42] dark:data-[self=true]:bg-[#3E2A3E]"
+              class="group max-w-full md:max-w-[90%]"
             >
-              <template v-for="(part, partIndex) in messageMetadata.message">
-                <div
-                  v-if="typeof part === 'string'"
-                  v-html="parseMarkdown(part, false)"
-                  class="markdown-content"
-                  v-bind:key="`str@${partIndex}`"
-                />
-                <div v-else class="m-1 ml-0" v-bind:key="partIndex">
-                  <button
-                    class="inline-flex cursor-pointer items-center space-x-1 rounded-lg bg-white/15 p-1 text-sm dark:bg-[#282828]"
-                    @click="
-                      unfoldedTools.includes(part.id)
-                        ? (unfoldedTools = unfoldedTools.filter(v => v !== part.id))
-                        : unfoldedTools.push(part.id)
-                    "
-                  >
-                    <component :is="toolIcons[part.name] ?? toolIcons['default']" class="size-4" />
-                    <div class="inline-flex items-center space-x-3 select-none">
-                      <p>{{ capitalize(part.name) }}</p>
-                      <LoaderCircleIcon class="size-4 animate-spin" v-if="!('result' in part)" />
-                      <ChevronUpIcon
-                        v-else-if="part.result"
-                        :data-folded="!unfoldedTools.includes(part.id)"
-                        class="size-4 transition-all duration-100 ease-in-out data-[folded=true]:rotate-180"
-                      />
-                      <CheckIcon v-else class="size-4 text-green-500" />
-                    </div>
-                  </button>
-                </div>
-              </template>
               <div
-                v-if="messageMetadata.author !== 'user'"
-                class="flex space-x-1.5 rounded-md p-0.5 pl-0 backdrop-blur-xs"
+                class="relative rounded-lg border-[#a2d0e5] p-2 group-data-[self=false]:pb-0 group-data-[self=true]:border group-data-[self=true]:bg-[#B3D6E6] group-data-[self=true]:px-4 group-data-[self=true]:shadow-xs dark:border-[#422f42] dark:group-data-[self=true]:bg-[#3E2A3E]"
+              >
+                <template v-for="(part, partIndex) in messageMetadata.message">
+                  <div
+                    v-if="typeof part === 'string'"
+                    v-html="parseMarkdown(part, false)"
+                    class="markdown-content"
+                    v-bind:key="`str@${partIndex}`"
+                  />
+                  <div v-else class="m-1 ml-0" v-bind:key="partIndex">
+                    <button
+                      class="inline-flex cursor-pointer items-center space-x-1 rounded-lg bg-white/15 p-1 text-sm dark:bg-[#282828]"
+                      @click="
+                        unfoldedTools.includes(part.id)
+                          ? (unfoldedTools = unfoldedTools.filter(v => v !== part.id))
+                          : unfoldedTools.push(part.id)
+                      "
+                    >
+                      <component
+                        :is="toolIcons[part.name] ?? toolIcons['default']"
+                        class="size-4"
+                      />
+                      <div class="inline-flex items-center space-x-3 select-none">
+                        <p>{{ capitalize(part.name) }}</p>
+                        <LoaderCircleIcon class="size-4 animate-spin" v-if="!('result' in part)" />
+                        <ChevronUpIcon
+                          v-else-if="part.result"
+                          :data-folded="!unfoldedTools.includes(part.id)"
+                          class="size-4 transition-all duration-100 ease-in-out data-[folded=true]:rotate-180"
+                        />
+                        <CheckIcon v-else class="size-4 text-green-500" />
+                      </div>
+                    </button>
+                  </div>
+                </template>
+              </div>
+              <div
+                class="flex items-center gap-1 rounded-md px-2 pt-1 pl-0 opacity-0 transition group-hover:opacity-100 group-data-[self=true]:justify-end"
               >
                 <button
+                  title="Retry message"
+                  @click="regenerateMessage(messageIndex)"
+                  class="hover:bg-accent/10 cursor-pointer rounded-md p-2 transition dark:hover:bg-white/5"
+                >
+                  <RefreshCwIcon class="size-4" />
+                </button>
+                <button
                   v-if="messageMetadata.finished"
-                  title="Copy"
+                  title="Copy message"
                   @click="
                     copyToClipboard(
                       messageMetadata.message.filter(v => typeof v === 'string').join('')
                     )
                   "
-                  class="rounded-md p-1 transition hover:bg-white/5"
+                  class="hover:bg-accent/10 cursor-pointer rounded-md p-2 transition dark:hover:bg-white/5"
                 >
-                  <CopyIcon class="size-5" />
+                  <CopyIcon class="size-4" />
                 </button>
-                <button
-                  title="Regenerate"
-                  @click="regenerateLastMessage"
-                  class="rounded-md p-1 transition hover:bg-white/5"
+                <p
+                  v-if="messageMetadata.author !== 'user'"
+                  class="text-muted ml-2 text-sm select-none"
                 >
-                  <RefreshCwIcon class="size-5 transition-all duration-500" />
-                </button>
+                  Generated with {{ models[messageMetadata.author].name }}
+                </p>
               </div>
             </div>
           </div>
@@ -135,14 +147,14 @@
 <script setup lang="ts">
 import EffortSelector from '@/components/effort-selector.vue';
 import ModelSelector from '@/components/model-selector.vue';
-import { fromLS, toLS } from '@/lib/local';
+import { fromLS } from '@/lib/local';
 import { parseMarkdown } from '@/lib/markdown.ts';
 import { trpc } from '@/lib/trpc';
-import { capitalize } from '@/lib/utils.ts';
+import { capitalize, selfOrFirst } from '@/lib/utils.ts';
 import router from '@/router';
-import { useChatStore, type Chat } from '@/stores/chats';
+import { useChatStore } from '@/stores/chats';
 import { models, type AssistantMessage, type Effort, type Message, type Model } from 'common';
-import { includes, type Nullish } from 'common/utils';
+import { includes, type EnhancedOmit } from 'common/utils';
 import {
   CheckIcon,
   ChevronUpIcon,
@@ -160,24 +172,16 @@ import {
   SunIcon,
   type LucideProps
 } from 'lucide-vue-next';
-import { storeToRefs } from 'pinia';
 import { computed, nextTick, onMounted, ref, watch, type FunctionalComponent } from 'vue';
 import { onBeforeRouteUpdate, useRoute } from 'vue-router';
 
 const route = useRoute();
-
 const chatStore = useChatStore();
-const { chats } = storeToRefs(chatStore);
+
+const id = computed(() => selfOrFirst(route.params['id'])!);
 
 const messages = ref<Message[]>([]);
 const fetchToken = ref(0);
-const chat = computed(
-  () =>
-    chats.value.find(
-      (c): c is Extract<Chat, { deleted: false }> =>
-        !c.deleted && c._id.toHexString() === route.params['id']
-    ) ?? null
-);
 const input = ref('');
 const abortController = ref<AbortController | null>(null);
 const unfoldedTools = ref<string[]>([]);
@@ -199,18 +203,8 @@ function copyToClipboard(text: string) {
 const model = ref<Model>(fromLS('default-model'));
 const reasoningEffort = ref<Effort>(fromLS('default-reasoning-effort'));
 
-watch(model, function (newValue, oldValue) {
-  toLS('default-model', newValue);
-  if (newValue !== oldValue && chat.value && chat.value.model !== newValue) {
-    chatStore.$modify({ id: chat.value._id.toHexString(), model: newValue });
-  }
-});
-
-watch(reasoningEffort, function (newValue, oldValue) {
-  toLS('default-reasoning-effort', newValue);
-  if (newValue !== oldValue && chat.value && chat.value.reasoningEffort !== newValue) {
-    chatStore.$modify({ id: chat.value._id.toHexString(), reasoningEffort: newValue });
-  }
+watch(reasoningEffort, function (reasoningEffort) {
+  chatStore.$modify({ id: id.value, reasoningEffort });
 });
 
 function init(id: string) {
@@ -221,22 +215,23 @@ function init(id: string) {
   const isNew = id === 'new';
 
   messages.value = [];
-  model.value = chat.value?.model ?? fromLS('default-model');
-  reasoningEffort.value = chat.value?.reasoningEffort ?? 'high';
 
   if (isNew) {
+    model.value = fromLS('default-model');
+    reasoningEffort.value = fromLS('default-reasoning-effort');
+
     return;
   }
 
-  fetchMessages(id, token);
-}
-
-function fetchMessages(id: string, token: number) {
-  console.log('[FETCH]', id);
-
-  trpc.chat.messages.query({ id }).then(msgs => {
-    if (token !== fetchToken.value) return;
-    messages.value = msgs;
+  trpc.chat.get.query({ id }).then(chat => {
+    if (token !== fetchToken.value || !chat) return;
+    messages.value = chat.messages;
+    if (chat.model) {
+      model.value = chat.model;
+    }
+    if (chat.reasoningEffort) {
+      reasoningEffort.value = chat.reasoningEffort;
+    }
   });
 }
 
@@ -249,7 +244,7 @@ onBeforeRouteUpdate((to, from, next) => {
       skipNextInit = false;
       return next();
     }
-    init(to.params['id'] as string);
+    init(selfOrFirst(to.params['id'])!);
   }
   return next();
 });
@@ -374,64 +369,64 @@ async function handleSend() {
 
   await requestCompletion({
     id,
-    message: content,
-    model: model.value
+    message: content
   });
 }
 
-/** Checks if the message ends with a null chunk */
-function finished(msg: Nullish<Message>) {
-  const u = undefined;
-  return (msg ? ('chunks' in msg ? msg.chunks : u) : u)?.at(-1) === null;
-}
-
-interface CompletionOptions {
-  id?: string;
-  message: string | null;
-  model?: Model;
-  attachmentIds?: string[];
-}
-
-async function requestCompletion({
-  id = route.params['id'] as string,
-  message
-}: CompletionOptions) {
+async function requestCompletion(
+  input: EnhancedOmit<
+    Parameters<typeof trpc.completion.query>[0],
+    'model' | 'reasoningEffort' | 'preferences'
+  >
+) {
   abortController.value = new AbortController();
 
-  let msg = messages.value.at(-1)!;
-  if (msg.role === 'user' || finished(msg)) {
+  let msg = messages.value.at(-1);
+  if (!msg || msg?.role === 'user') {
     const index =
       messages.value.push({
         role: 'assistant',
         chunks: [],
         author: model.value
       }) - 1;
-    msg = messages.value[index] as AssistantMessage;
+    msg = messages.value[index];
   }
 
-  const stream = await trpc.completion.query({
-    message: message!,
-    for: id,
-    preferences: fromLS('user-preferences')
-  });
+  // should never happen
+  if (msg?.role !== 'assistant') {
+    return;
+  }
+
+  const stream = await trpc.completion.query(
+    {
+      ...input,
+      model: model.value,
+      reasoningEffort: reasoningEffort.value,
+      preferences: fromLS('user-preferences')
+    },
+    { signal: abortController.value?.signal }
+  );
 
   for await (const chunk of stream) {
-    if (chunk?.type === 'error') {
-      // TODO: handle error
-      continue;
-    }
     msg.chunks.push(chunk);
   }
 
   abortController.value = null;
 }
 
-async function regenerateLastMessage() {
-  const last = messages.value.at(-1);
-  if (last?.role !== 'assistant') return;
-  last.chunks = [];
-  last.author = model.value;
-  await requestCompletion({ message: null, model: model.value });
+async function regenerateMessage(messageIndex: number) {
+  const message = messages.value.at(messageIndex);
+  if (!message) return;
+  if (message.role === 'user') {
+    messages.value = messages.value.slice(0, messageIndex + 1);
+  } else {
+    messages.value = messages.value.slice(0, messageIndex);
+  }
+
+  await requestCompletion({
+    id: route.params['id'] as string,
+    messageIndex
+  });
 }
 
 function handleKeyDown(e: KeyboardEvent) {
