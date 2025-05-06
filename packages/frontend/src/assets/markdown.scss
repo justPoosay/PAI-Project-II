@@ -1,0 +1,280 @@
+.markdown-content {
+  @apply text-primary break-words;
+
+  a {
+    @apply text-blue dark:text-pink hover:underline;
+  }
+
+  pre,
+  code {
+    @apply font-mono;
+  }
+
+  // Code blocks with language highlighting
+  pre:has(code.hljs) {
+    @apply bg-sidebar max-w-full overflow-x-auto rounded-sm rounded-t-none text-sm backdrop-blur-xs;
+    code {
+      @apply block p-2 break-all whitespace-pre-wrap;
+    }
+  }
+
+  // Code blocks without language
+  pre:not(:has(code.hljs)) {
+    @apply bg-sidebar my-2 overflow-x-auto rounded border p-2;
+    code {
+      @apply text-primary text-sm;
+    }
+  }
+
+  // Inline code
+  code:not(.hljs) {
+    @apply border-border bg-sidebar text-muted dark:border-pink/50 dark:text-pink rounded border px-1 py-0.5 text-sm backdrop-blur-xs;
+  }
+
+  strong {
+    @apply font-bold;
+  }
+
+  em {
+    @apply italic;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply text-primary mt-4 mb-2 pb-1 font-bold;
+  }
+
+  h1 {
+    @apply text-3xl;
+  }
+  h2 {
+    @apply text-2xl;
+  }
+  h3 {
+    @apply text-xl;
+  }
+  h4 {
+    @apply text-lg;
+  }
+  h5 {
+    @apply text-base;
+  }
+  h6 {
+    @apply text-sm;
+  }
+
+  ol {
+    @apply my-2 ml-6 list-outside list-decimal;
+    & ol,
+    & ul {
+      @apply mt-1 mb-1;
+    }
+  }
+
+  ul {
+    @apply my-2 ml-6 list-outside list-disc;
+    & ul,
+    & ol {
+      @apply mt-1 mb-1;
+    }
+  }
+
+  li {
+    @apply mb-1;
+    & > ul,
+    & > ol {
+      @apply ml-4;
+    }
+  }
+
+  hr {
+    @apply border-border my-4 border-t;
+  }
+
+  blockquote {
+    @apply border-blue bg-sidebar/70 text-muted dark:border-pink my-3 rounded border-l-4 p-2 pl-3 italic;
+    p {
+      @apply m-0;
+    }
+
+    &[data-type='note'],
+    &[data-type='tip'],
+    &[data-type='important'],
+    &[data-type='warning'],
+    &[data-type='caution'],
+    &[data-type='error'] {
+      @apply not-italic;
+      .callout-title {
+        @apply mb-1 flex items-center gap-1.5 font-bold;
+      }
+    }
+
+    &[data-type='note'],
+    &[data-type='tip'] {
+      @apply border-blue;
+      .callout-title {
+        @apply text-blue;
+      }
+    }
+
+    &[data-type='important'] {
+      @apply border-purple;
+      .callout-title {
+        @apply text-purple;
+      }
+    }
+
+    &[data-type='warning'] {
+      @apply border-accent;
+      .callout-title {
+        @apply text-accent;
+      }
+    }
+
+    &[data-type='caution'],
+    &[data-type='error'] {
+      @apply border-danger;
+      .callout-title {
+        @apply text-danger;
+      }
+    }
+  }
+
+  table {
+    @apply border-border my-4 w-full border-collapse border text-sm;
+    th,
+    td {
+      @apply border-border border p-2 text-left;
+    }
+
+    th {
+      @apply bg-sidebar text-primary font-semibold;
+    }
+
+    tr:nth-child(even) {
+      @apply bg-sidebar/50;
+    }
+  }
+}
+
+.hljs-container {
+  @apply flex flex-col;
+  &:not(:last-child) {
+    @apply mb-1;
+  }
+  &:not(:first-child) {
+    @apply mt-1;
+  }
+}
+
+.hljs-header {
+  @apply bg-accent/40 flex items-center justify-between rounded-t-sm px-3 py-2 text-xs dark:bg-[#2c282d];
+
+  & > button {
+    @apply hover:text-accent cursor-pointer font-medium transition;
+  }
+
+  & > p {
+    @apply font-mono text-sm;
+  }
+}
+
+// --- Code theme ---
+
+.hljs {
+  @apply bg-[#ff9ccc]/20 dark:bg-[#201e22];
+}
+
+.hljs-comment,
+.hljs-quote {
+  @apply text-[#888888] italic dark:text-[#666666];
+}
+
+.hljs-string,
+.hljs-attribute,
+.hljs-link,
+.hljs-regexp,
+.hljs-bullet,
+.hljs-symbol {
+  @apply text-[#477647] dark:text-[#88b388];
+}
+
+.hljs-number,
+.hljs-literal,
+.hljs-variable.constant_ {
+  @apply text-[#a04da0] dark:text-[#c299c2];
+}
+
+.hljs-keyword,
+.hljs-built_in,
+.hljs-selector-tag,
+.hljs-section,
+.hljs-meta,
+.hljs-selector-id,
+.hljs-selector-class {
+  @apply text-[#4477bb] dark:text-[#88aadd];
+}
+
+.hljs-title,
+.hljs-title.class_,
+.hljs-title.function_,
+.hljs-type,
+.hljs-class .hljs-title {
+  @apply text-[#b38844] dark:text-[#d8b577];
+}
+
+.hljs-type,
+.hljs-class {
+  @apply text-[#448888] dark:text-[#88cccc];
+}
+
+.hljs-tag,
+.hljs-name {
+  @apply text-[#4477bb] dark:text-[#88aadd];
+}
+
+.hljs-attr {
+  @apply text-[#a04da0] dark:text-[#c299c2];
+}
+
+.hljs-variable,
+.hljs-template-variable,
+.hljs-params {
+  @apply text-[#444444] dark:text-[#cccccc];
+}
+
+.hljs-params {
+  @apply text-[#666666] italic dark:text-[#aaaaaa];
+}
+
+.hljs-addition {
+  @apply bg-[#47764726] text-[#477647] dark:bg-[#88b38826] dark:text-[#88b388];
+}
+
+.hljs-deletion {
+  @apply bg-[#aa333326] text-[#aa3333] dark:bg-[#d0666626] dark:text-[#d06666];
+}
+
+.hljs-emphasis {
+  @apply text-[#a04da0] italic dark:text-[#c299c2];
+}
+
+.hljs-strong {
+  @apply font-bold text-[#6688dd] dark:text-[#aabbf0];
+}
+
+.hljs-keyword + .hljs-meta {
+  @apply text-[#aa3333] dark:text-[#d06666];
+}
+
+.hljs-meta .hljs-string {
+  @apply text-[#477647] dark:text-[#88b388];
+}
+
+.hljs-meta .hljs-keyword {
+  @apply text-[#448888] dark:text-[#88cccc];
+}

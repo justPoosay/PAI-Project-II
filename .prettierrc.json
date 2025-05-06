@@ -9,5 +9,5 @@
   "arrowParens": "avoid",
   "singleQuote": true,
   "trailingComma": "none",
-  "plugins": ["prettier-plugin-organize-imports"]
+  "plugins": ["prettier-plugin-organize-imports", "prettier-plugin-tailwindcss"]
 }

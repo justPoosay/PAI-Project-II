@@ -1,174 +1,64 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
 
-@layer base {
-  @font-face {
-    font-family: 'SF Pro Rounded';
-    font-style: normal;
-    font-weight: 900;
-    font-display: swap;
-    src: url('/fonts/SF-Pro-Rounded/SF-Pro-Rounded-Black.woff2') format('woff2');
-  }
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap');
+@import 'sf-mono.scss';
 
-  @font-face {
-    font-family: 'SF Pro Rounded';
-    font-style: normal;
-    font-weight: 700;
-    font-display: swap;
-    src: url('/fonts/SF-Pro-Rounded/SF-Pro-Rounded-Bold.woff2') format('woff2');
-  }
+@import 'markdown.scss';
 
-  @font-face {
-    font-family: 'SF Pro Rounded';
-    font-style: normal;
-    font-weight: 800;
-    font-display: swap;
-    src: url('/fonts/SF-Pro-Rounded/SF-Pro-Rounded-Heavy.woff2') format('woff2');
-  }
+@config '../../tailwind.config.ts';
 
-  @font-face {
-    font-family: 'SF Pro Rounded';
-    font-style: normal;
-    font-weight: 300;
-    font-display: swap;
-    src: url('/fonts/SF-Pro-Rounded/SF-Pro-Rounded-Light.woff2') format('woff2');
-  }
+@custom-variant dark (&:where(.dark, .dark *));
+@custom-variant light (&:where(:not(.dark), :not(.dark) *));
 
-  @font-face {
-    font-family: 'SF Pro Rounded';
-    font-style: normal;
-    font-weight: 500;
-    font-display: swap;
-    src: url('/fonts/SF-Pro-Rounded/SF-Pro-Rounded-Medium.woff2') format('woff2');
-  }
+@theme {
+  --color-background: #f7f6f0;
+  --color-sidebar: #fffdf5;
+  --color-border: #e0ddd0;
 
-  @font-face {
-    font-family: 'SF Pro Rounded';
-    font-style: normal;
-    font-weight: 400;
-    font-display: swap;
-    src: url('/fonts/SF-Pro-Rounded/SF-Pro-Rounded-Regular.woff2') format('woff2');
-  }
+  --color-primary: #4e0a49;
+  --color-muted: #755573;
 
-  @font-face {
-    font-family: 'SF Pro Rounded';
-    font-style: normal;
-    font-weight: 600;
-    font-display: swap;
-    src: url('/fonts/SF-Pro-Rounded/SF-Pro-Rounded-Semibold.woff2') format('woff2');
-  }
+  --color-danger: #ff4d65;
 
-  @font-face {
-    font-family: 'SF Pro Rounded';
-    font-style: normal;
-    font-weight: 100;
-    font-display: swap;
-    src: url('/fonts/SF-Pro-Rounded/SF-Pro-Rounded-Thin.woff2') format('woff2');
-  }
+  --color-blue: #73bfff;
+  --color-purple: #b283ff;
+  --color-pink: #ff82bb;
 
-  @font-face {
-    font-family: 'SF Pro Rounded';
-    font-style: normal;
-    font-weight: 200;
-    font-display: swap;
-    src: url('/fonts/SF-Pro-Rounded/SF-Pro-Rounded-Ultralight.woff2') format('woff2');
-  }
+  --color-accent: #ff5ca1;
 
-  @font-face {
-    font-family: 'SF Mono';
-    font-style: italic;
-    font-weight: 700;
-    font-display: swap;
-    src: url('/fonts/SF-Mono/SF-Mono-BoldItalic.woff2') format('woff2');
-  }
+  --color-btn-pri-start: #73bfff;
+  --color-btn-pri-end: #b283ff;
+  --color-btn-pri-hover-start: #8cc7ff;
+  --color-btn-pri-hover-end: #c09aff;
+  --color-btn-pri-act-start: #6694e5;
+  --color-btn-pri-act-end: #995ed6;
 
-  @font-face {
-    font-family: 'SF Mono';
-    font-style: normal;
-    font-weight: 700;
-    font-display: swap;
-    src: url('/fonts/SF-Mono/SF-Mono-Bold.woff2') format('woff2');
-  }
+  --color-btn-sec-start: #ff82bb;
+  --color-btn-sec-end: #ff5ca1;
+  --color-btn-sec-hover-start: #ff9ccc;
+  --color-btn-sec-hover-end: #ff7ba5;
+  --color-btn-sec-act-start: #e6608e;
+  --color-btn-sec-act-end: #d55282;
 
-  @font-face {
-    font-family: 'SF Mono';
-    font-style: italic;
-    font-weight: 800;
-    font-display: swap;
-    src: url('/fonts/SF-Mono/SF-Mono-HeavyItalic.woff2') format('woff2');
-  }
+  --color-dialog: #fffdf5;
 
-  @font-face {
-    font-family: 'SF Mono';
-    font-style: normal;
-    font-weight: 800;
-    font-display: swap;
-    src: url('/fonts/SF-Mono/SF-Mono-Heavy.woff2') format('woff2');
-  }
+  --font-main: 'Manrope', sans-serif;
+  --font-mono: 'SF Mono', monospace;
+}
 
-  @font-face {
-    font-family: 'SF Mono';
-    font-style: italic;
-    font-weight: 300;
-    font-display: swap;
-    src: url('/fonts/SF-Mono/SF-Mono-LightItalic.woff2') format('woff2');
-  }
+@layer theme {
+  :root,
+  :host {
+    @variant dark {
+      --color-background: #111115;
+      --color-sidebar: #1e1e26;
+      --color-border: #2a2a2a;
 
-  @font-face {
-    font-family: 'SF Mono';
-    font-style: normal;
-    font-weight: 300;
-    font-display: swap;
-    src: url('/fonts/SF-Mono/SF-Mono-Light.woff2') format('woff2');
-  }
+      --color-primary: #e0e0e0;
+      --color-muted: #888888;
 
-  @font-face {
-    font-family: 'SF Mono';
-    font-style: italic;
-    font-weight: 500;
-    font-display: swap;
-    src: url('/fonts/SF-Mono/SF-Mono-MediumItalic.woff2') format('woff2');
-  }
-
-  @font-face {
-    font-family: 'SF Mono';
-    font-style: normal;
-    font-weight: 500;
-    font-display: swap;
-    src: url('/fonts/SF-Mono/SF-Mono-Medium.woff2') format('woff2');
-  }
-
-  @font-face {
-    font-family: 'SF Mono';
-    font-style: italic;
-    font-weight: 400;
-    font-display: swap;
-    src: url('/fonts/SF-Mono/SF-Mono-RegularItalic.woff2') format('woff2');
-  }
-
-  @font-face {
-    font-family: 'SF Mono';
-    font-style: normal;
-    font-weight: 400;
-    font-display: swap;
-    src: url('/fonts/SF-Mono/SF-Mono-Regular.woff2') format('woff2');
-  }
-
-  @font-face {
-    font-family: 'SF Mono';
-    font-style: italic;
-    font-weight: 600;
-    font-display: swap;
-    src: url('/fonts/SF-Mono/SF-Mono-SemiboldItalic.woff2') format('woff2');
-  }
-
-  @font-face {
-    font-family: 'SF Mono';
-    font-style: normal;
-    font-weight: 600;
-    font-display: swap;
-    src: url('/fonts/SF-Mono/SF-Mono-Semibold.woff2') format('woff2');
+      --color-dialog: #1e1e26;
+    }
   }
 }
 
@@ -176,7 +66,7 @@
 html,
 body,
 #app {
-  @apply h-full font-sf_pro_rounded;
+  @apply h-full;
 }
 
 ::-webkit-scrollbar {

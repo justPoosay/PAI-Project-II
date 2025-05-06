@@ -5,10 +5,14 @@
   "scripts": {
     "type-check": "bun run --filter '*' type-check",
     "dev": "bun run --filter '*' dev",
-    "prettier": "bunx prettier --check .",
-    "prettier:fix": "bunx prettier --write .",
-    "lint": "bunx eslint .",
-    "lint:fix": "bunx eslint . --fix"
+    "dev:backend": "bun run --filter 'backend' dev",
+    "dev:frontend": "bun run --filter 'frontend' dev",
+    "prettier": "prettier --check .",
+    "prettier:fix": "prettier --write .",
+    "lint:eslint": "eslint .",
+    "lint:eslint:fix": "eslint . --fix",
+    "lint:oxlint": "oxlint . -D correctness --ignore-path .gitignore",
+    "lint:oxlint:fix": "oxlint . --fix -D correctness --ignore-path .gitignore"
   },
   "workspaces": [
     "packages/*"
@@ -16,12 +20,13 @@
   "devDependencies": {
     "@vue/eslint-config-prettier": "^10.2.0",
     "@vue/eslint-config-typescript": "^14.5.0",
-    "eslint": "^9.23.0",
-    "eslint-plugin-oxlint": "^0.16.3",
-    "eslint-plugin-vue": "^10.0.0",
+    "eslint": "^9.26.0",
+    "eslint-plugin-oxlint": "^0.16.9",
+    "eslint-plugin-vue": "^10.1.0",
     "jiti": "^2.4.2",
-    "oxlint": "^0.16.3",
+    "oxlint": "^0.16.9",
     "prettier": "^3.5.3",
-    "prettier-plugin-organize-imports": "^4.1.0"
+    "prettier-plugin-organize-imports": "^4.1.0",
+    "prettier-plugin-tailwindcss": "^0.6.11"
   }
 }

@@ -1,8 +1,10 @@
 import { type } from 'arktype';
+import { models } from './models';
+import { keys } from './utils';
 
-export const Model = type(
-  "'gpt-4o' | 'gpt-4o-mini' | 'claude-3-5-sonnet' | 'grok-2' | 'grok-beta' | 'llama-3.3-70b-versatile' | 'mixtral-8x7b-32768' | 'o3-mini'"
-);
+export const Model = type.or(...keys(models).map(key => `'${key}'` as const));
+
+export const Effort = type("'low' | 'medium' | 'high'");
 
 export const Attachment = type({
   id: 'string',
@@ -38,53 +40,33 @@ export const MessageChunk = type.or(
   'null'
 );
 
-export const Message = type.or(
-  {
-    role: "'user'",
-    content: 'string',
-    'attachmentIds?': 'string[]'
-  },
-  {
-    role: "'assistant'",
-    chunks: MessageChunk.array(),
-    author: Model
-  }
-);
+export const UserMessage = type({
+  role: "'user'",
+  content: 'string',
+  'attachmentIds?': 'string[]'
+});
 
-export const Conversation = type({
+export const AssistantMessage = type({
+  role: "'assistant'",
+  chunks: MessageChunk.array(),
+  author: Model
+});
+
+export const Message = type.or(UserMessage, AssistantMessage);
+
+export const Chat = type({
   id: 'string',
-  name: 'string | null',
-  model: Model,
-  updated_at: 'string.date'
+  'name?': 'string | null',
+  'model?': Model,
+  'reasoningEffort?': Effort,
+  updatedAt: 'Date'
 });
 
-export const SSE = type.or(
-  {
-    kind: "'rename'",
-    for: 'string',
-    newName: 'string'
-  },
-  {
-    kind: "'error'",
-    for: 'string',
-    title: 'string',
-    message: 'string'
-  },
-  {
-    kind: "'keep-alive'"
-  }
-);
-
-export const routes = Object.freeze({
-  '[id]': {
-    messages: Message.array()
-  },
-  conversations: Conversation.array(),
-  create: Conversation,
-  models: Model.array(),
-  upload: type({
-    id: 'string',
-    hash: 'string',
-    image: 'boolean'
-  }).array()
-});
+export type Model = typeof Model.infer;
+export type Effort = typeof Effort.infer;
+export type Attachment = typeof Attachment.infer;
+export type MessageChunk = typeof MessageChunk.infer;
+export type UserMessage = typeof UserMessage.infer;
+export type AssistantMessage = typeof AssistantMessage.infer;
+export type Message = typeof Message.infer;
+export type Chat = typeof Chat.infer;

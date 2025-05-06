@@ -1,31 +1,7 @@
-import type { Nullish } from './types';
-
-export function isValidJSON(str: string): boolean {
-  try {
-    JSON.parse(str);
-    return true;
-  } catch (e) {
-    return false;
-  }
-}
-
-// eslint-disable-next-line
-export function safeParse<T = any, F = null>(str: Nullish<string>, fallback = null as F): T | F {
-  if (!str) return fallback;
-  try {
-    return JSON.parse(str);
-  } catch (e) {
-    return fallback;
-  }
-}
+import { models, type Model, type ModelInfo } from 'common';
 
 export function capitalize(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1);
-}
-
-export async function isBackendAlive(): Promise<boolean> {
-  const res = await fetch('/api/alive');
-  return res.ok;
 }
 
 export async function calculateHash(buffer: ArrayBuffer) {
@@ -36,13 +12,23 @@ export async function calculateHash(buffer: ArrayBuffer) {
   return { hex, base64 };
 }
 
-export function omit<T extends Record<string, unknown>, K extends keyof T>(
-  obj: T,
-  keys: K[]
-): Omit<T, K> {
-  const copy = { ...obj };
-  for (const key of keys) {
-    delete copy[key];
+export const modelFullName = (model: Model) =>
+  models[model].name +
+  ((models[model] as ModelInfo).text ? ` (${(models[model] as ModelInfo).text})` : '');
+
+export const selfOrFirst = <T>(it: T | T[]) => (Array.isArray(it) ? it[0]! : it);
+
+export function setTheme(theme: 'light' | 'dark' | 'system') {
+  document.documentElement.classList.toggle(
+    'dark',
+    theme === 'dark' ||
+      (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+  );
+}
+
+export function isKey<T>(maybeKey: PropertyKey, obj: T): maybeKey is keyof T {
+  if (!obj || typeof obj !== 'object') {
+    return false;
   }
-  return copy;
+  return maybeKey in obj;
 }

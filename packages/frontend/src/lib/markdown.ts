@@ -25,7 +25,7 @@ const renderer = new Renderer();
 renderer.blockquote = function ({ text, raw }) {
   const match = text.match(/^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION|ERROR)]/);
   if (match) {
-    const type = match[1].toLowerCase();
+    const type = match[1]!.toLowerCase();
     const title = capitalize(type);
     return `<blockquote data-type="${type}">${text
       .replace(match[0], title)

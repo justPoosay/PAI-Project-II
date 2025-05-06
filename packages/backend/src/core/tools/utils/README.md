@@ -1,1 +1,0 @@
-# Some functions required by tool implementations, to not bloat their files

@@ -1,101 +1,230 @@
 <template>
-  <div
+  <nav
     :data-expanded="isExpanded"
-    class="flex flex-col bg-gradient-to-b from-gray-300/5 via-gray-300/[2%] to-gray-300/5 dark:bg-none dark:bg-vue-black-darker backdrop-blur-md transition-all duration-300 ease-out w-16 max-lg:w-0 shadow-sm data-[expanded=true]:w-64 light:data-[expanded=true]:rounded-r-xl text-white/75 dark:text-white h-screen z-50 max-lg:fixed"
+    class="z-50 flex h-screen w-0 animate-[rotate-gradient_5s_linear_infinite] flex-col border-transparent bg-clip-padding transition-all duration-100 ease-out data-[expanded=false]:pointer-events-none data-[expanded=true]:w-64 max-lg:fixed max-lg:[background:linear-gradient(var(--color-sidebar),var(--color-sidebar))_padding-box,linear-gradient(var(--angle,225deg),#FF000E,#FF7300,#FAD220,#138F3E,#3558A0,#880082)_border-box] max-lg:data-[expanded=true]:border-r-2 max-lg:data-[expanded=true]:shadow-md dark:max-lg:data-[expanded=true]:border-r"
   >
-    <div class="p-1 pb-0 flex flex-col h-full relative">
-      <div
-        :data-expanded="isExpanded"
-        class="flex data-[expanded=false]:max-lg:flex-col-reverse justify-center data-[expanded=true]:justify-between lg:justify-between data-[expanded=true]:items-center data-[expanded=false]:max-lg:absolute data-[expanded=false]:max-lg:p-1 data-[expanded=false]:max-lg:bg-white/10 data-[expanded=false]:max-lg:backdrop-blur-sm data-[expanded=false]:max-lg:rounded-full"
-      >
-        <RouterLink
-          to="/c/new"
-          class="p-2 rounded-full hover:bg-white/5 transition"
-          :title="isExpanded ? 'New Chat' : ''"
+    <div class="flex h-full w-64 flex-col p-1">
+      <div class="relative flex w-fit shrink-0 flex-row p-1">
+        <button
+          @click="toggleSidebar"
+          class="pointer-events-auto z-20 cursor-pointer rounded-md p-2 transition hover:bg-black/5 dark:hover:bg-gray-200/5"
         >
-          <PlusIcon class="w-5 h-5" />
-        </RouterLink>
-        <button @click="toggleSidebar" class="p-2 rounded-full hover:bg-white/5 transition">
-          <ChevronLeftIcon
-            :data-expanded="isExpanded"
-            class="w-5 h-5 data-[expanded=true]: data-[expanded=false]:rotate-180 transition-all duration-300 ease-out"
-          />
+          <SidebarIcon class="size-4" />
         </button>
+        <div
+          :data-expanded="isExpanded"
+          class="pointer-events-auto flex flex-row transition-all data-[expanded=false]:delay-100 data-[expanded=true]:pointer-events-none data-[expanded=true]:-translate-x-full data-[expanded=true]:opacity-0"
+        >
+          <button
+            @click="'TODO'"
+            class="z-20 cursor-pointer rounded-md p-2 transition hover:bg-black/5 dark:hover:bg-gray-200/5"
+          >
+            <SearchIcon class="size-4" />
+          </button>
+          <RouterLink
+            class="rounded-md p-2 transition hover:bg-black/5 dark:hover:bg-gray-200/5"
+            :to="{ name: 'chat', params: { id: 'new' } }"
+          >
+            <PlusIcon class="size-4" />
+          </RouterLink>
+        </div>
       </div>
       <div
         :data-expanded="isExpanded"
-        class="w-full h-[2px] bg-white/15 mt-1 data-[expanded=false]:max-lg:hidden"
-      />
-      <div class="flex-1 space-y-1 overflow-y-auto pt-1">
-        <div
-          v-for="[group, conversations] in Object.entries(groups).filter(v => v[1].length)"
-          v-bind:key="group"
+        class="flex grow flex-col space-y-1 overflow-hidden p-1 transition-transform duration-100 ease-out data-[expanded=false]:-translate-x-full"
+      >
+        <RouterLink
+          class="from-btn-sec-start to-btn-sec-end hover:from-btn-sec-hover-start hover:to-btn-sec-hover-end active:from-btn-sec-act-start active:to-btn-sec-act-end block shrink-0 rounded-md bg-linear-to-r py-1.5 text-center text-sm font-semibold transition"
+          :to="{ name: 'chat', params: { id: 'new' } }"
+          :tabindex="isExpanded ? 0 : -1"
         >
-          <div class="text-white/50 text-sm px-2 py-1" :key="group">{{ group }}</div>
-          <div v-for="c in conversations" :key="c.id">
-            <VMenu v-if="editingId !== c.id" placement="right">
-              <RouterLink
-                :data-current="router.currentRoute.value.params.id === c.id"
-                :to="`/c/${c.id}`"
-                class="flex-grow block py-2 px-2 rounded transition-all duration-300 ease-out from-white/5 via-white/[2%] to-white/5 data-[current=true]:shadow-md dark:data-[current=true]:shadow-none dark:data-[current=true]:bg-vue-black-mute hover:bg-gradient-to-r dark:hover:bg-emerald-500 dark:hover:bg-none overflow-hidden hover:pl-4"
+          New Chat
+        </RouterLink>
+        <div class="min-h-0 grow overflow-y-auto">
+          <div v-if="state === 'idle'">
+            <div v-for="group in keys(groups)" v-bind:key="group" class="space-y-0.5">
+              <p class="text-accent text-xs font-bold" v-if="groups[group]?.length">
+                {{ group }}
+              </p>
+              <div
+                v-for="c in groups[group]"
+                :key="c._id.toHexString()"
+                :data-active="c._id.toHexString() === $route.params['id']"
+                class="group hover:bg-accent/10 data-[active=true]:bg-accent/10 relative flex items-center overflow-hidden rounded-lg text-sm font-medium transition"
               >
-                <span class="block truncate" :title="c.name ?? undefined">{{
-                  c.name ?? 'Untitled'
-                }}</span>
-              </RouterLink>
-
-              <template #popper>
-                <div class="flex p-2 text-white/75 dark:text-white space-x-2">
-                  <button title="delete" @click="deleteConversation(c.id)">
-                    <Trash2Icon class="w-5 h-5" />
+                <RouterLink
+                  :to="{ name: 'chat', params: { id: c._id.toHexString() } }"
+                  class="block w-full truncate p-2"
+                  :title="c.name ?? undefined"
+                >
+                  {{ c.name ?? 'Untitled' }}
+                </RouterLink>
+                <div
+                  class="pointer-events-none absolute top-1/2 right-2 flex -translate-y-1/2 items-center gap-1 opacity-0 transition-opacity group-hover:pointer-events-auto group-hover:opacity-100"
+                >
+                  <button
+                    :data-pinned="!!c.pinned"
+                    @click="pinThread(c._id.toHexString())"
+                    class="group hover:bg-accent/15 cursor-pointer rounded-lg p-1.5 transition"
+                  >
+                    <PinIcon class="size-4 group-data-[pinned=true]:hidden" />
+                    <PinOffIcon class="size-4 group-data-[pinned=false]:hidden" />
                   </button>
-                  <button title="rename" @click="startEdit(c)">
-                    <Pencil class="w-5 h-5" />
-                  </button>
+                  <DialogRoot>
+                    <DialogTrigger
+                      class="hover:bg-danger/50 cursor-pointer rounded-lg p-1.5 transition"
+                    >
+                      <XIcon class="size-4" />
+                    </DialogTrigger>
+                    <DialogPortal>
+                      <DialogOverlay class="fixed inset-0 z-99 bg-black/50 backdrop-blur-sm" />
+                      <DialogContent
+                        class="bg-dialog border-border fixed top-[50%] left-[50%] z-100 flex translate-x-[-50%] translate-y-[-50%] flex-col gap-2 rounded-lg border p-6"
+                      >
+                        <DialogTitle class="font-bold">Delete Thread</DialogTitle>
+                        <DialogDescription class="text-sm">
+                          Are you sure you want to delete "{{ c.name ?? 'Untitled' }}"? This action
+                          cannot be undone.
+                        </DialogDescription>
+                        <div class="flex flex-row justify-end gap-2">
+                          <DialogClose
+                            class="hover:bg-accent/10 cursor-pointer rounded-md px-4 py-2 text-sm font-semibold transition"
+                          >
+                            Cancel
+                          </DialogClose>
+                          <DialogClose
+                            @click="deleteThread(c._id.toHexString())"
+                            class="bg-danger hover:bg-danger/75 cursor-pointer rounded-md px-4 py-2 text-sm font-semibold transition"
+                          >
+                            Delete
+                          </DialogClose>
+                        </div>
+                      </DialogContent>
+                    </DialogPortal>
+                  </DialogRoot>
                 </div>
-              </template>
-            </VMenu>
-            <input
-              v-else
-              v-model="editedName"
-              @keydown.enter="saveEdit(c.id)"
-              @keydown.esc="cancelEdit"
-              @blur="cancelEdit"
-              class="flex-grow block py-2 px-2 rounded bg-white/10 dark:bg-vue-black text-white focus:outline-none focus:ring-0 w-full"
-              :ref="
-                el => {
-                  if (el) (el as HTMLInputElement).focus();
-                }
-              "
-            />
+              </div>
+            </div>
           </div>
+          <div v-else class="flex size-full items-center justify-center">
+            <Loader v-if="state === 'loading'" />
+            <div v-else class="text-center">
+              <button @click="init" class="group text-sm font-semibold">
+                <span class="block text-[#f82447] group-hover:hidden">Error</span>
+                <span class="hidden text-[#55CDFC] group-hover:inline dark:text-[#F7A8B8]">
+                  Retry
+                </span>
+              </button>
+              <p class="text-xs">check the browser console for details</p>
+            </div>
+          </div>
+        </div>
+        <div class="flex shrink-0 pt-1">
+          <RouterLink
+            v-if="!session.data"
+            :to="{ name: 'login' }"
+            class="flex w-full items-center space-x-2 rounded-xl p-2 hover:bg-black/5 dark:hover:bg-gray-200/5"
+          >
+            <LogInIcon class="size-4" />
+            <p>Login</p>
+          </RouterLink>
+          <RouterLink
+            v-else
+            class="flex w-full items-center space-x-2 rounded-xl p-2 hover:bg-black/5 dark:hover:bg-gray-200/5"
+            :to="{ name: 'account-settings', query: { ci: $route.params['id'] } }"
+          >
+            <AvatarRoot class="size-9 rounded-full bg-gray-300 select-none dark:bg-gray-700">
+              <AvatarImage
+                class="size-full rounded-[inherit] object-cover"
+                :src="session.data.user.image ?? ''"
+                :alt="session.data.user.name"
+              />
+              <AvatarFallback
+                class="flex size-full items-center justify-center font-semibold text-emerald-500"
+              >
+                {{ session.data.user.name.charAt(0) || 'U' }}
+              </AvatarFallback>
+            </AvatarRoot>
+            <div class="flex flex-col items-start">
+              <p class="m-0 text-sm font-semibold">
+                {{ session.data.user.name ?? 'User' }}
+              </p>
+              <p class="m-0 text-xs text-gray-500 dark:text-gray-400">
+                {{ capitalize(tier) }}
+              </p>
+            </div>
+          </RouterLink>
         </div>
       </div>
     </div>
-  </div>
+  </nav>
 </template>
 
 <script setup lang="ts">
-import { useConversationStore } from '@/stores/conversations.ts';
-import { ChevronLeftIcon, Pencil, PlusIcon, Trash2Icon } from 'lucide-vue-next';
+import Loader from '@/components/loader.vue';
+import { isTRPCClientError } from '@/lib/api';
+import { useSession } from '@/lib/auth-client';
+import { fromLS } from '@/lib/local';
+import { capitalize } from '@/lib/utils';
+import router from '@/router';
+import { useChatStore } from '@/stores/chats';
+import { keys } from 'common/utils';
+import {
+  LogInIcon,
+  PinIcon,
+  PinOffIcon,
+  PlusIcon,
+  SearchIcon,
+  SidebarIcon,
+  XIcon
+} from 'lucide-vue-next';
 import { storeToRefs } from 'pinia';
-import { computed, onMounted, onUnmounted, type Ref, ref } from 'vue';
-import { useRouter } from 'vue-router';
+import {
+  AvatarFallback,
+  AvatarImage,
+  AvatarRoot,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogOverlay,
+  DialogPortal,
+  DialogRoot,
+  DialogTitle,
+  DialogTrigger
+} from 'reka-ui';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { RouterLink } from 'vue-router';
 
-const router = useRouter();
-const isExpanded = ref(true);
-const editingId = ref<string | null>(null);
-const editedName = ref('');
+const session = useSession();
+const chatStore = useChatStore();
+const { chats } = storeToRefs(chatStore);
 
-const conversationStore = useConversationStore();
-const { conversations } = storeToRefs(conversationStore);
+const isExpanded = defineModel<boolean>({ required: true });
+const circumstances = ref<Partial<{ force: boolean; narrow: boolean }>>({});
 
-// const showSettingModal = defineModel<boolean>({ required: true });
+const tier = ref(fromLS('limits').tier);
+const state = ref<'idle' | 'loading' | 'error'>('loading');
 
-type Conversations = typeof conversations extends Ref<infer U> ? U : never;
+init();
+
+function init() {
+  state.value = 'loading';
+  chatStore
+    .$fetch()
+    .then(() => {
+      state.value = 'idle';
+    })
+    .catch(e => {
+      state.value = 'error';
+      console.error(e);
+      if (isTRPCClientError(e) && e.message === 'UNAUTHORIZED') {
+        router.push({ name: 'login' });
+      }
+    });
+}
 
 const groups = computed(function () {
-  const groups = {
+  const groups = Object.freeze({
     Today(date) {
       const today = new Date();
       return (
@@ -121,59 +250,50 @@ const groups = computed(function () {
     Older() {
       return true;
     }
-  } as const satisfies Record<string, (date: Date) => boolean>;
+  } satisfies Record<string, (date: Date) => boolean>);
 
-  return conversations.value.reduce(
-    function (acc, v) {
-      const group =
-        Object.keys(groups).find(g => groups[g as keyof typeof groups](v.updated_at)) ?? 'Older';
-      acc[group as keyof typeof acc].push(v);
+  return chats.value.reduce(
+    (acc, c) => {
+      const group = c.pinned
+        ? 'Pinned'
+        : (keys(groups).find(g => groups[g](c.updatedAt)) ?? 'Older');
+      (acc[group] ??= []).push(c);
       return acc;
     },
-    Object.fromEntries(Object.keys(groups).map(v => [v, [] as Conversations])) as Record<
-      keyof typeof groups,
-      Conversations
-    >
+    Object.fromEntries(['Pinned', ...keys(groups)].map(g => [g, [] as typeof chats.value]))
   );
 });
 
 function toggleSidebar() {
   isExpanded.value = !isExpanded.value;
-}
-
-function startEdit(conversation: { id: string; name: string | null }) {
-  editingId.value = conversation.id;
-  editedName.value = conversation.name ?? '';
-}
-
-async function saveEdit(id: string) {
-  if (editedName.value.trim() !== '') {
-    await conversationStore.$modify({ id, name: editedName.value.trim() });
-    editingId.value = null;
-  }
-}
-
-function cancelEdit() {
-  editingId.value = null;
-}
-
-async function deleteConversation(id: string) {
-  try {
-    const res = await fetch(`/api/${id}/modify`, { method: 'DELETE' });
-    if (!res.ok) throw new Error('Failed to delete conversation');
-    conversationStore.conversations = conversationStore.conversations.filter(c => c.id !== id);
-    if (router.currentRoute.value.params.id === id) {
-      await router.push({ name: 'c', params: { id: 'new' } });
-    }
-  } catch (e) {
-    // TODO
-    console.error(e);
-  }
+  circumstances.value = { force: false, narrow: window.innerWidth < 1024 };
 }
 
 function resizeHandler() {
-  if (window.innerWidth < 1024 && isExpanded.value) {
+  if (window.innerWidth < 1024 && isExpanded.value && !circumstances.value.narrow) {
     isExpanded.value = false;
+    circumstances.value.force = true;
+  } else if (window.innerWidth >= 1024) {
+    if (circumstances.value.force) {
+      isExpanded.value = true;
+      circumstances.value.force = false;
+    }
+    circumstances.value.narrow = false;
+  }
+}
+
+async function pinThread(id: string) {
+  const chat = chats.value.find(c => c._id.toHexString() === id);
+  if (!chat) return;
+
+  await chatStore.$modify({ pinned: !chat.pinned, id });
+}
+
+async function deleteThread(id: string) {
+  await chatStore.$delete(id);
+  const currentRoute = router.currentRoute.value;
+  if (currentRoute.name === 'chat' && currentRoute.params['id'] === id) {
+    router.push({ name: 'chat', params: { id: 'new' } });
   }
 }
 
@@ -186,23 +306,3 @@ onUnmounted(function () {
   window.removeEventListener('resize', resizeHandler);
 });
 </script>
-
-<style lang="sass" scoped>
-ul.overflow-y-auto
-  -ms-overflow-style: none
-  scrollbar-width: none
-
-  &::-webkit-scrollbar
-    display: none
-</style>
-
-<style lang="sass">
-.v-popper--theme-dropdown .v-popper__inner
-  @apply bg-white/15 dark:bg-vue-black-tooltip backdrop-blur-md border-none
-
-.v-popper--theme-dropdown .v-popper__arrow-inner
-  @apply hidden
-
-.v-popper--theme-dropdown .v-popper__arrow-outer
-  @apply border-white/15 dark:border-vue-black-tooltip
-</style>
