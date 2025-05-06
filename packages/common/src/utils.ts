@@ -1,9 +1,8 @@
 export type Merge<T, U> = Omit<T, keyof U> & U;
 export type Nullish<T> = T | null | undefined;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type EnhancedOmit<T, K extends keyof T> = string extends keyof T
-  ? T
+  ? T // eslint-disable-next-line @typescript-eslint/no-explicit-any
   : T extends any
     ? Pick<T, Exclude<keyof T, K>>
     : never;
