@@ -20,6 +20,7 @@ type RouteString = `${Method} /${string}`;
 
 const DBChatRepresentation = type.or(
   Chat.omit('id').and({
+    _id: type.instanceOf(ObjectId),
     'pinned?': 'boolean',
     messages: Message.array()
   })
@@ -27,8 +28,7 @@ const DBChatRepresentation = type.or(
 
 const routes = {
   'DELETE /chat/:id': {
-    i: type({ id: 'string' }),
-    o: type({ success: 'boolean' })
+    i: type({ id: 'string' })
   },
   'PATCH /chat/:id': {
     i: type({
@@ -45,18 +45,16 @@ const routes = {
     o: type.or('null', DBChatRepresentation)
   },
   'GET /chat/': {
-    o: type({
-      _id: type.instanceOf(ObjectId),
-      name: Chat.get('name'),
-      pinned: 'boolean',
-      updatedAt: 'Date'
-    })
+    o: DBChatRepresentation.pick('_id', 'name', 'pinned', 'updatedAt').array()
+  },
+  'POST /chat/': {
+    o: DBChatRepresentation
   }
-} as const satisfies Record<RouteString, { i?: Type<unknown, object>; o: Type<unknown, object> }>;
+} as const satisfies Record<RouteString, { i?: Type<unknown, object>; o?: Type<unknown, object> }>;
 
 type Routes = typeof routes;
 type InputOf<K extends keyof Routes> = Routes[K] extends { i: Type<infer I, object> } ? I : never;
-type OutputOf<K extends keyof Routes> = Routes[K]['o']['inferOut'];
+type OutputOf<K extends keyof Routes> = Routes[K] extends { o: Type<infer O, object> } ? O : void;
 
 export async function query<K extends keyof Routes>(
   route: K,
@@ -103,13 +101,17 @@ export async function query<K extends keyof Routes>(
       return err('API response is not valid (Super)JSON');
     }
 
+    if (!('o' in routes[route])) {
+      return ok(undefined as OutputOf<K>);
+    }
+
     const out = routes[route].o(superJason);
 
     if (out instanceof type.errors) {
       return err(out.summary);
     }
 
-    return ok(out);
+    return ok(out as OutputOf<K>);
   } catch (e) {
     if (e instanceof TypeError) {
       return err('Network error');
