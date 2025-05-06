@@ -18,10 +18,17 @@ export const modelFullName = (model: Model) =>
 
 export const selfOrFirst = <T>(it: T | T[]) => (Array.isArray(it) ? it[0]! : it);
 
-export const setTheme = (theme: 'light' | 'dark' | 'system') => {
+export function setTheme(theme: 'light' | 'dark' | 'system') {
   document.documentElement.classList.toggle(
     'dark',
     theme === 'dark' ||
       (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
   );
-};
+}
+
+export function isKey<T>(maybeKey: PropertyKey, obj: T): maybeKey is keyof T {
+  if (!obj || typeof obj !== 'object') {
+    return false;
+  }
+  return maybeKey in obj;
+}

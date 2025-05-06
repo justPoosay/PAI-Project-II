@@ -25,7 +25,7 @@ SuperJSON.registerCustom<ObjectId, string>(
 
 const app = express();
 
-app.all('/api/auth/*', toNodeHandler(auth));
+app.all(/\/api\/auth\/.*/, toNodeHandler(auth));
 
 app.post('/stripe', express.raw({ type: 'application/json' }), async (req, res) => {
   const sig = req.headers['stripe-signature'];

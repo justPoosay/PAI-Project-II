@@ -1,9 +1,10 @@
 import { type, type Type } from 'arktype';
 import ObjectId from 'bson-objectid';
-import { Chat } from 'common';
-import { omit } from 'common/utils';
+import { Chat, Effort, Message, Model } from 'common';
+import { entries } from 'common/utils';
 import { err, ok, type Result } from 'neverthrow';
 import SuperJSON, { parse } from 'superjson';
+import { isKey } from './utils';
 
 SuperJSON.registerCustom<ObjectId, string>(
   {
@@ -17,10 +18,31 @@ SuperJSON.registerCustom<ObjectId, string>(
 type Method = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
 type RouteString = `${Method} /${string}`;
 
+const DBChatRepresentation = type.or(
+  Chat.omit('id').and({
+    'pinned?': 'boolean',
+    messages: Message.array()
+  })
+);
+
 const routes = {
   'DELETE /chat/:id': {
     i: type({ id: 'string' }),
     o: type({ success: 'boolean' })
+  },
+  'PATCH /chat/:id': {
+    i: type({
+      id: 'string',
+      'name?': 'string | null',
+      'model?': Model,
+      'reasoningEffort?': Effort,
+      'pinned?': 'boolean'
+    }),
+    o: type.or('null', DBChatRepresentation)
+  },
+  'GET /chat/:id': {
+    i: type({ id: 'string' }),
+    o: type.or('null', DBChatRepresentation)
   },
   'GET /chat/': {
     o: type({
@@ -41,12 +63,33 @@ export async function query<K extends keyof Routes>(
   ...args: InputOf<K> extends never ? [] : [input: InputOf<K>]
 ): Promise<Result<OutputOf<K>, string>> {
   const [method, path] = route.split(' ') as [Method, string];
-  let input = args.length ? ('i' in routes[route] ? routes[route].i.assert(args[0]) : null) : null;
+  const input = args.length
+    ? 'i' in routes[route]
+      ? routes[route].i.assert(args[0])
+      : null
+    : null;
 
   const urlParams = path.match(/:[^/]+/g)?.map(p => p.slice(1)) ?? [];
+  let templatedPath = path;
+  urlParams.forEach(param => {
+    if (input && isKey(param, input)) {
+      templatedPath = templatedPath.replace(`:${param}`, encodeURIComponent(input[param]));
+    } else {
+      throw new Error(`Missing parameter: ${param}`);
+    }
+  });
+
+  const queryParams = new URLSearchParams();
+  for (const param of entries(input ?? {})) {
+    if (urlParams.includes(param[0])) {
+      continue;
+    }
+
+    queryParams.append(param[0], param[1]);
+  }
 
   try {
-    const res = await fetch(`/${templatedPath}`, { method });
+    const res = await fetch(`/api${templatedPath}?${queryParams.toString()}`, { method });
     if (!res.ok) {
       return err(res.statusText);
     }
