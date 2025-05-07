@@ -37,7 +37,7 @@
                 />
               </div>
               <div
-                class="relative w-fit rounded-lg border-[#a2d0e5] group-data-[self=false]:pb-0 group-data-[self=true]:border group-data-[self=true]:bg-[#B3D6E6] group-data-[self=true]:p-2 group-data-[self=true]:px-4 group-data-[self=true]:shadow-xs dark:border-[#422f42] dark:group-data-[self=true]:bg-[#3E2A3E]"
+                class="border-accent/40 group-data-[self=true]:bg-accent/50 relative w-fit rounded-lg group-data-[self=false]:pb-0 group-data-[self=true]:border group-data-[self=true]:p-2 group-data-[self=true]:px-4 group-data-[self=true]:shadow-xs dark:border-[#422f42] dark:group-data-[self=true]:bg-[#3E2A3E]"
               >
                 <template v-for="(part, partIndex) in messageMetadata.message">
                   <div

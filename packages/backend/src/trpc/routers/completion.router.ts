@@ -4,6 +4,7 @@ import { redis } from 'bun';
 import { Effort, Model, models, type MessageChunk } from 'common';
 import { ObjectId } from 'mongodb';
 import { stringify } from 'superjson';
+import tools from '../../core/tools';
 import { getTextContent } from '../../core/utils';
 import { ChatService } from '../../lib/db';
 import { env } from '../../lib/env';
@@ -95,7 +96,8 @@ export const completionRouter = protectedProcedure
         m.role === 'user' ? m : { role: 'assistant', content: getTextContent(m.chunks) }
       ),
       abortSignal: signal,
-      system: prompt
+      system: prompt,
+      tools
     };
 
     if (c.model === 'claude-3-7-sonnet-thinking') {
@@ -135,10 +137,10 @@ export const completionRouter = protectedProcedure
 
     await redis.set(`user:limits:${ctx.auth.user.id}`, stringify(limits));
 
-    const stream = streamText(options);
     const chunks: MessageChunk[] = [];
 
     try {
+      const stream = streamText(options);
       let reasoning = false;
       for await (let chunk of stream.fullStream) {
         if (
@@ -169,7 +171,6 @@ export const completionRouter = protectedProcedure
 
         yield chunk;
       }
-
       chunks.push(null);
       yield null;
     } catch (err) {
