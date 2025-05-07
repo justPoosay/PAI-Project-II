@@ -3,7 +3,7 @@
   <div class="relative flex flex-1 flex-col">
     <!-- Chat Messages -->
     <div v-if="messages.length" class="flex-1 overflow-x-hidden overflow-y-auto p-4 pb-28">
-      <div class="mx-auto max-w-5xl space-y-8">
+      <div class="mx-auto max-w-5xl space-y-2">
         <div
           v-for="(messageMetadata, messageIndex) in messages.map(getMessageMetadata)"
           :key="messageIndex"
@@ -11,23 +11,42 @@
         >
           <div
             :data-self="messageMetadata.author === 'user'"
-            class="group flex items-start justify-start space-x-2 data-[self=true]:justify-end"
+            class="group flex items-start justify-start data-[self=true]:justify-end"
           >
             <div
               :data-self="messageMetadata.author === 'user'"
-              class="group max-w-full md:max-w-[90%]"
+              class="group flex max-w-full flex-col data-[self=true]:items-end md:max-w-[90%]"
             >
+              <div v-if="messageMetadata.reasoning" class="pb-4">
+                <button
+                  class="text-muted flex cursor-pointer items-center gap-2 text-sm"
+                  @click="
+                    unfoldedReasoning = unfoldedReasoning === messageIndex ? null : messageIndex
+                  "
+                >
+                  <ChevronRightIcon
+                    class="size-4 transition-all duration-100 ease-in-out data-[unfolded=true]:rotate-90"
+                    :data-unfolded="unfoldedReasoning === messageIndex"
+                  />
+                  Reasoning
+                </button>
+                <div
+                  v-if="unfoldedReasoning === messageIndex"
+                  v-html="parseMarkdown(messageMetadata.reasoning)"
+                  class="markdown-content mt-1 rounded-md bg-black/5 p-2 dark:bg-black/50"
+                />
+              </div>
               <div
-                class="relative rounded-lg border-[#a2d0e5] p-2 group-data-[self=false]:pb-0 group-data-[self=true]:border group-data-[self=true]:bg-[#B3D6E6] group-data-[self=true]:px-4 group-data-[self=true]:shadow-xs dark:border-[#422f42] dark:group-data-[self=true]:bg-[#3E2A3E]"
+                class="relative w-fit rounded-lg border-[#a2d0e5] group-data-[self=false]:pb-0 group-data-[self=true]:border group-data-[self=true]:bg-[#B3D6E6] group-data-[self=true]:p-2 group-data-[self=true]:px-4 group-data-[self=true]:shadow-xs dark:border-[#422f42] dark:group-data-[self=true]:bg-[#3E2A3E]"
               >
                 <template v-for="(part, partIndex) in messageMetadata.message">
                   <div
                     v-if="typeof part === 'string'"
                     v-html="parseMarkdown(part, false)"
                     class="markdown-content"
-                    v-bind:key="`str@${partIndex}`"
+                    :key="`str@${partIndex}`"
                   />
-                  <div v-else class="m-1 ml-0" v-bind:key="partIndex">
+                  <div v-else class="m-1 ml-0" :key="partIndex">
                     <button
                       class="inline-flex cursor-pointer items-center space-x-1 rounded-lg bg-white/15 p-1 text-sm dark:bg-[#282828]"
                       @click="
@@ -55,7 +74,7 @@
                 </template>
               </div>
               <div
-                class="flex items-center gap-1 rounded-md px-2 pt-1 pl-0 opacity-0 transition group-hover:opacity-100 group-data-[self=true]:justify-end"
+                class="flex items-center gap-1 pt-1 opacity-0 transition group-hover:opacity-100 group-data-[self=true]:justify-end"
               >
                 <button
                   title="Retry message"
@@ -157,6 +176,7 @@ import { models, type AssistantMessage, type Effort, type Message, type Model } 
 import { includes, type EnhancedOmit } from 'common/utils';
 import {
   CheckIcon,
+  ChevronRightIcon,
   ChevronUpIcon,
   CircleStopIcon,
   CopyIcon,
@@ -185,6 +205,7 @@ const fetchToken = ref(0);
 const input = ref('');
 const abortController = ref<AbortController | null>(null);
 const unfoldedTools = ref<string[]>([]);
+const unfoldedReasoning = ref<number | null>(null);
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const toolIcons: Record<string, FunctionalComponent<LucideProps, any, any, any>> = {
