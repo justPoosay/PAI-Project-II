@@ -10,7 +10,7 @@ COPY patches patches
 
 WORKDIR /usr/src/app/packages/frontend
 
-RUN bun install --frozen-lockfile
+RUN bun install
 
 RUN bunx vite build
 

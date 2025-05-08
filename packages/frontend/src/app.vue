@@ -57,8 +57,10 @@ Promise.all([
     if (v.isOk()) {
       toLS('limits', v.value);
     } else {
-      console.error('Failed to fetch limits:', v.error);
-      throw v.error;
+      if (v.error !== 401) {
+        console.error('Failed to fetch limits:', v.error);
+        throw v.error;
+      }
     }
   })
 ]).then(() => {

@@ -8,7 +8,7 @@ COPY package.json bun.lock ./
 COPY packages/backend packages/backend
 COPY packages/common packages/common
 
-RUN bun install --frozen-lockfile
+RUN bun install
 
 FROM base AS install-prod
 WORKDIR /temp/prod
@@ -16,8 +16,10 @@ WORKDIR /temp/prod
 COPY package.json bun.lock ./
 COPY packages/backend packages/backend
 COPY packages/common packages/common
+COPY packages/frontend/package.json packages/frontend/package.json
+COPY patches patches
 
-RUN bun install --frozen-lockfile --production
+RUN bun install --production
 
 FROM base AS prerelease
 COPY --from=install /temp/dev/packages/backend packages/backend
@@ -29,9 +31,9 @@ WORKDIR /usr/src/app/packages/backend
 ENV NODE_ENV=production
 
 FROM base AS release
-COPY --from=install-prod /temp/prod/packages/backend/node_modules packages/backend/node_modules
+COPY --from=install-prod /temp/prod/node_modules node_modules
 COPY --from=prerelease /usr/src/app/packages/backend packages/backend
-COPY --from=prerelease /usr/src/app/common packages/common
+COPY --from=prerelease /usr/src/app/packages/common packages/common
 
 WORKDIR /usr/src/app/packages/backend
 
