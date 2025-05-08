@@ -3,13 +3,8 @@
     "Vue.volar",
     "dbaeumer.vscode-eslint",
     "EditorConfig.EditorConfig",
-<<<<<<< HEAD
-    "oxc.oxc-vscode",
-    "esbenp.prettier-vscode"
-=======
     "esbenp.prettier-vscode",
     "oxc.oxc-vscode",
     "arktypeio.arkdark"
->>>>>>> 7e726c86a63f0d74ca75da038e3030db4f540bc1
   ]
 }

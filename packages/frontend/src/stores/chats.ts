@@ -3,7 +3,9 @@ import type { Result } from 'neverthrow';
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 
-export type Chat = (Awaited<ReturnType<typeof query<'GET /chat/'>>> extends Result<infer T, unknown> ? T : never)[number];
+export type Chat = (Awaited<ReturnType<typeof query<'GET /chat/'>>> extends Result<infer T, unknown>
+  ? T
+  : never)[number];
 
 export const useChatStore = defineStore('chats', () => {
   const chats = ref<Chat[]>([]);

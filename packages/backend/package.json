@@ -10,36 +10,16 @@
   },
   "devDependencies": {
     "@types/bun": "latest",
-<<<<<<< HEAD
-    "@types/node": "latest",
-    "@types/express": "^5.0.1",
-    "@types/mongodb": "^4.0.7"
-=======
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.1",
     "@types/jest": "^29.5.14",
     "@types/mongodb": "^4.0.7",
     "@types/node": "latest"
->>>>>>> 7e726c86a63f0d74ca75da038e3030db4f540bc1
   },
   "peerDependencies": {
     "typescript": "latest"
   },
   "dependencies": {
-<<<<<<< HEAD
-    "@mendable/firecrawl-js": "^1.21.0",
-    "ai": "^4.2.5",
-    "arktype": "^2.1.13",
-    "cheerio": "^1.0.0",
-    "common": "workspace:*",
-    "dayjs": "^1.11.13",
-    "express": "^4.21.2",
-    "mongodb": "^6.15.0",
-    "octokit": "^4.1.2",
-    "owoifyx": "^1.0.4",
-    "serpapi": "^2.1.0",
-    "zod": "^3.24.2"
-=======
     "ai": "^4.3.13",
     "arktype": "^2.1.20",
     "better-auth": "^1.2.7",
@@ -53,6 +33,5 @@
     "stripe": "^18.1.0",
     "superjson": "^2.2.2",
     "zod": "^3.24.4"
->>>>>>> 7e726c86a63f0d74ca75da038e3030db4f540bc1
   }
 }
