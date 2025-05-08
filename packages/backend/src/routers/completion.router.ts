@@ -5,6 +5,7 @@ import { Effort, Model, models } from 'common';
 import { Router } from 'express';
 import { ObjectId } from 'mongodb';
 import { stringify } from 'superjson';
+import tools from '../core/tools';
 import { getTextContent } from '../core/utils';
 import { ChatService } from '../lib/db';
 import { env } from '../lib/env';
@@ -98,7 +99,8 @@ completionRouter.post('/:id', async (req, res) => {
         m.role === 'user' ? m : { role: 'assistant', content: getTextContent(m.chunks) }
       ),
       abortSignal: undefined,
-      system: prompt
+      system: prompt,
+      tools
     };
 
     if (c.model === 'claude-3-7-sonnet-thinking') {
