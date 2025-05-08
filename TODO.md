@@ -1,5 +1,4 @@
 - indexed db and sync layer
 - editing messages
 - better error displaying
-- fix the docker image not building
 - "Anonymous" chats
