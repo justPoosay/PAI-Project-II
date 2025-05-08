@@ -1,20 +1,29 @@
-import { trpc } from '@/lib/api';
+import { query } from '@/lib/api';
+import type { Result } from 'neverthrow';
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 
-export type Chat = Awaited<ReturnType<typeof trpc.chat.list.query>>[number];
+export type Chat = (Awaited<ReturnType<typeof query<'GET /chat/'>>> extends Result<infer T, unknown> ? T : never)[number];
 
 export const useChatStore = defineStore('chats', () => {
   const chats = ref<Chat[]>([]);
 
   async function $fetch() {
-    chats.value = await trpc.chat.list.query();
+    const result = await query('GET /chat/');
+    if (result.isOk()) {
+      chats.value = result.value;
+    } else {
+      console.error('Failed to fetch chats:', result.error);
+    }
   }
 
-  async function $create(data: Parameters<typeof trpc.chat.new.mutate>[0] = {}) {
-    const c = await trpc.chat.new.mutate(data);
-    chats.value.unshift(c);
-    return c;
+  async function $create() {
+    const result = await query('POST /chat/');
+    if (result.isOk()) {
+      chats.value.unshift(result.value);
+      return result;
+    }
+    return result;
   }
 
   async function $modify(input: Parameters<typeof trpc.chat.modify.mutate>[0]) {

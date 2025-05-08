@@ -147,14 +147,14 @@
 <script setup lang="ts">
 import EffortSelector from '@/components/effort-selector.vue';
 import ModelSelector from '@/components/model-selector.vue';
-import { trpc } from '@/lib/api';
+import { query } from '@/lib/api';
 import { fromLS } from '@/lib/local';
 import { parseMarkdown } from '@/lib/markdown.ts';
 import { capitalize, selfOrFirst } from '@/lib/utils.ts';
 import router from '@/router';
 import { useChatStore } from '@/stores/chats';
 import { models, type AssistantMessage, type Effort, type Message, type Model } from 'common';
-import { includes, type EnhancedOmit } from 'common/utils';
+import { includes } from 'common/utils';
 import {
   CheckIcon,
   ChevronUpIcon,
@@ -223,14 +223,16 @@ function init(id: string) {
     return;
   }
 
-  trpc.chat.get.query({ id }).then(chat => {
-    if (token !== fetchToken.value || !chat) return;
-    messages.value = chat.messages;
-    if (chat.model) {
-      model.value = chat.model;
-    }
-    if (chat.reasoningEffort) {
-      reasoningEffort.value = chat.reasoningEffort;
+  query('GET /chat/:id', { id }).then(result => {
+    if (result.isOk()) {
+      if (token !== fetchToken.value || !result.value) return;
+      messages.value = result.value.messages;
+      if (result.value.model) {
+        model.value = result.value.model;
+      }
+      if (result.value.reasoningEffort) {
+        reasoningEffort.value = result.value.reasoningEffort;
+      }
     }
   });
 }
@@ -347,10 +349,12 @@ async function handleSend() {
   let id: string = route.params['id'] as string;
 
   if (route.params['id'] === 'new') {
-    const c = await chatStore.$create({ model: model.value });
-    id = c._id.toHexString();
-    skipNextInit = true;
-    await router.push({ name: 'chat', params: { id } });
+    const result = await chatStore.$create();
+    if (result.isOk()) {
+      id = result.value._id.toHexString();
+      skipNextInit = true;
+      await router.push({ name: 'chat', params: { id } });
+    }
   }
 
   messages.value.push(
@@ -373,12 +377,7 @@ async function handleSend() {
   });
 }
 
-async function requestCompletion(
-  input: EnhancedOmit<
-    Parameters<typeof trpc.completion.query>[0],
-    'model' | 'reasoningEffort' | 'preferences'
-  >
-) {
+async function requestCompletion(input: unknown) {
   abortController.value = new AbortController();
 
   let msg = messages.value.at(-1);
