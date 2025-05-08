@@ -162,7 +162,6 @@
 
 <script setup lang="ts">
 import Loader from '@/components/loader.vue';
-import { isTRPCClientError } from '@/lib/api';
 import { useSession } from '@/lib/auth-client';
 import { fromLS } from '@/lib/local';
 import { capitalize } from '@/lib/utils';
@@ -209,18 +208,18 @@ init();
 
 function init() {
   state.value = 'loading';
-  chatStore
-    .$fetch()
-    .then(() => {
-      state.value = 'idle';
-    })
-    .catch(e => {
+  chatStore.$fetch().then(data => {
+    if (data.isErr()) {
       state.value = 'error';
-      console.error(e);
-      if (isTRPCClientError(e) && e.message === 'UNAUTHORIZED') {
+      if (data.error === 401) {
         router.push({ name: 'login' });
+      } else {
+        console.error(data.error);
       }
-    });
+    }
+
+    state.value = 'idle';
+  });
 }
 
 const groups = computed(function () {

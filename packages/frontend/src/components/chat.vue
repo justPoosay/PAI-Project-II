@@ -153,7 +153,14 @@ import { parseMarkdown } from '@/lib/markdown.ts';
 import { capitalize, selfOrFirst } from '@/lib/utils.ts';
 import router from '@/router';
 import { useChatStore } from '@/stores/chats';
-import { models, type AssistantMessage, type Effort, type Message, type Model } from 'common';
+import {
+  MessageChunk,
+  models,
+  type AssistantMessage,
+  type Effort,
+  type Message,
+  type Model
+} from 'common';
 import { includes } from 'common/utils';
 import {
   CheckIcon,
@@ -233,6 +240,12 @@ function init(id: string) {
       if (result.value.reasoningEffort) {
         reasoningEffort.value = result.value.reasoningEffort;
       }
+    } else {
+      if (result.error === 404) {
+        router.push({ name: 'chat', params: { id: 'new' } });
+        return;
+      }
+      console.error('Failed to fetch chat', result.error);
     }
   });
 }
@@ -354,6 +367,8 @@ async function handleSend() {
       id = result.value._id.toHexString();
       skipNextInit = true;
       await router.push({ name: 'chat', params: { id } });
+    } else {
+      console.error('Failed to create chat', result.error);
     }
   }
 
@@ -377,7 +392,22 @@ async function handleSend() {
   });
 }
 
-async function requestCompletion(input: unknown) {
+/*
+type.or({ message: 'string>0' }, { messageIndex: 'number' }).and({
+    'preferences?': {
+      name: 'string',
+      occupation: 'string',
+      selectedTraits: 'string',
+      additionalInfo: 'string'
+    },
+    model: Model,
+    reasoningEffort: Effort
+  })
+*/
+
+async function requestCompletion(
+  input: ({ message: string } | { messageIndex: number }) & { id: string }
+) {
   abortController.value = new AbortController();
 
   let msg = messages.value.at(-1);
@@ -396,18 +426,61 @@ async function requestCompletion(input: unknown) {
     return;
   }
 
-  const stream = await trpc.completion.query(
-    {
+  // const stream = await trpc.completion.query(
+  //   {
+  //     ...input,
+  //     model: model.value,
+  //     reasoningEffort: reasoningEffort.value,
+  //     preferences: fromLS('user-preferences')
+  //   },
+  //   { signal: abortController.value?.signal }
+  // );
+
+  // for await (const chunk of stream) {
+  //   msg.chunks.push(chunk);
+  // }
+
+  // abortController.value = null;
+
+  const res = await fetch(`/api/completion/${input.id}`, {
+    method: 'POST',
+    body: JSON.stringify({
       ...input,
       model: model.value,
       reasoningEffort: reasoningEffort.value,
       preferences: fromLS('user-preferences')
-    },
-    { signal: abortController.value?.signal }
-  );
+    }),
+    signal: abortController.value?.signal,
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
 
-  for await (const chunk of stream) {
-    msg.chunks.push(chunk);
+  if (!res.ok) {
+    console.error('Failed to request completion', res.status);
+    return;
+  }
+
+  const reader = res.body?.getReader();
+  if (!reader) {
+    console.error('Failed to get reader');
+    return;
+  }
+
+  const decoder = new TextDecoder();
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (value) {
+      const text = decoder.decode(value, { stream: true });
+      const chunks = text
+        .split(/(?<=\})\s+(?=\{)/)
+        .map(v => v.trim())
+        .filter(v => v)
+        .map(v => JSON.parse(v))
+        .filter(MessageChunk.allows);
+      msg.chunks.push(...chunks);
+    }
   }
 
   abortController.value = null;

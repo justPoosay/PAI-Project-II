@@ -8,18 +8,19 @@ import { stringify } from 'superjson';
 import { getTextContent } from '../core/utils';
 import { ChatService } from '../lib/db';
 import { env } from '../lib/env';
+import logger from '../lib/logger';
 import { getLimits } from '../lib/stripe';
 
 export const completionRouter = Router();
 
 completionRouter.post('/:id', async (req, res) => {
   if (!req.session?.user) {
-    return void res.status(401).json({ error: 'Unauthorized' });
+    return void res.status(401).send();
   }
 
   const _id = type('string.hex==24').pipe(id => new ObjectId(id))(req.params.id);
   if (_id instanceof type.errors) {
-    return void res.status(400).json({ error: 'Invalid chat id', details: _id.summary });
+    return void res.status(400).send();
   }
 
   const input = type.or({ message: 'string>0' }, { messageIndex: 'number' }).and({
@@ -33,7 +34,7 @@ completionRouter.post('/:id', async (req, res) => {
     reasoningEffort: Effort
   })(req.body);
   if (input instanceof type.errors) {
-    return void res.status(400).json({ error: 'Invalid input', details: input.summary });
+    return void res.status(400).send();
   }
 
   try {
@@ -41,10 +42,7 @@ completionRouter.post('/:id', async (req, res) => {
     const messagesPerMonth =
       limits.tier === 'pro' ? env.VITE_MESSAGES_PER_MONTH_PAID : env.VITE_MESSAGES_PER_MONTH_FREE;
     if (limits.messagesUsed >= messagesPerMonth) {
-      return void res.status(429).json({
-        type: 'error',
-        message: 'You have reached your message limit for this month.'
-      });
+      return void res.status(429).send();
     } else {
       limits.messagesUsed += 1;
     }
@@ -54,13 +52,13 @@ completionRouter.post('/:id', async (req, res) => {
       deleted: false,
       userId: new ObjectId(req.session.user.id)
     });
-    if (!c) return void res.status(404).json({ error: 'Chat not found' });
+    if (!c) return void res.status(404).send();
 
     if ('message' in input) {
       c.messages.push({ role: 'user', content: input.message });
     } else {
       const message = c.messages.at(input.messageIndex);
-      if (!message) return void res.status(400).json({ error: 'Message not found' });
+      if (!message) return void res.status(400).send();
       if (message.role === 'user') {
         c.messages = c.messages.slice(0, input.messageIndex + 1);
       } else {
@@ -74,7 +72,7 @@ completionRouter.post('/:id', async (req, res) => {
     await ChatService.updateOne({ _id }, { messages: c.messages });
 
     if (!models[c.model]) {
-      return void res.status(400).json({ error: 'Invalid model' });
+      return void res.status(400).send();
     }
 
     let prompt = `You are an AI assistant powered by the ${models[c.model].name} model. You are here to help and engage in conversation. Feel free to mention that you're using the ${models[c.model].name} model if asked.`;
@@ -183,6 +181,7 @@ completionRouter.post('/:id', async (req, res) => {
       await ChatService.updateOne({ _id }, { messages: c.messages });
     }
   } catch (err) {
-    res.status(500).json({ error: 'Internal server error', details: `${err}` });
+    logger.error(`[POST /completion/:id] ${err}`);
+    res.status(500).send();
   }
 });

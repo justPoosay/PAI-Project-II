@@ -26,7 +26,7 @@
 </template>
 
 <script setup lang="ts">
-import { trpc } from '@/lib/api';
+import { query } from '@/lib/api';
 import { toLS } from '@/lib/local';
 import { capitalize, selfOrFirst } from '@/lib/utils';
 import type { Effort } from 'common';
@@ -53,7 +53,7 @@ function selectEffort(reasoningEffort: Effort) {
 
   const id = selfOrFirst(route.params['id']);
   if (id) {
-    trpc.chat.modify.mutate({ id, reasoningEffort });
+    query('PATCH /chat/:id', { id, reasoningEffort });
   }
 }
 </script>

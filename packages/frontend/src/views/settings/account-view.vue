@@ -93,11 +93,10 @@
 </template>
 
 <script setup lang="ts">
-import { trpc } from '@/lib/api';
+import { query, routes } from '@/lib/api';
 import { deleteUser } from '@/lib/auth-client';
 import { messagesPerMonth } from '@/lib/constants';
 import { fromLS, toLS } from '@/lib/local';
-import type { ART } from '@/lib/types';
 import router from '@/router';
 import { RocketIcon, SparklesIcon } from 'lucide-vue-next';
 import {
@@ -112,25 +111,37 @@ import {
 } from 'reka-ui';
 import { ref } from 'vue';
 
-const price = ref<ART<typeof trpc.stripe.getPrice.query>>(fromLS('price'));
-const limits = ref<ART<typeof trpc.stripe.getLimits.query>>(fromLS('limits'));
+const price = ref<(typeof routes)['GET /stripe/price']['o']['inferOut']>(fromLS('price'));
+const limits = ref<(typeof routes)['GET /stripe/limits']['o']['inferOut']>(fromLS('limits'));
 
-trpc.stripe.getLimits.query().then(data => {
-  limits.value = data;
-  toLS('limits', data);
-}, console.error);
+query('GET /stripe/limits').then(data => {
+  if (data.isOk()) {
+    limits.value = data.value;
+    toLS('limits', data.value);
+  } else {
+    console.error('Failed to fetch limits:', data.error);
+  }
+});
 
-trpc.stripe.getPrice.query().then(data => {
-  price.value = data;
-  toLS('price', data);
+query('GET /stripe/price').then(data => {
+  if (data.isOk()) {
+    price.value = data.value;
+    toLS('price', data.value);
+  } else {
+    console.error('Failed to fetch price:', data.error);
+  }
 }, console.error);
 
 async function handleSubButton() {
-  const { url } =
+  const result =
     fromLS('limits').tier === 'pro'
-      ? await trpc.stripe.createPortalSession.query()
-      : await trpc.stripe.createCheckoutSession.query();
-  location.href = url;
+      ? await query('GET /stripe/create-portal-session')
+      : await query('GET /stripe/create-checkout-session');
+  if (result.isOk()) {
+    window.location.href = result.value.url;
+  } else {
+    console.error('Failed to create session:', result.error);
+  }
 }
 
 function formatPrice(price: number, currency: string) {

@@ -43,7 +43,7 @@
 <script setup lang="ts">
 import ImageInput from '@/components/model-capabilities/image-input.vue';
 import Reasoning from '@/components/model-capabilities/reasoning.vue';
-import { trpc } from '@/lib/api';
+import { query } from '@/lib/api';
 import { icons } from '@/lib/icons';
 import { fromLS, toLS } from '@/lib/local';
 import { modelFullName, selfOrFirst } from '@/lib/utils';
@@ -81,7 +81,7 @@ function selectModel(model: Model) {
 
   const id = selfOrFirst(route.params['id']);
   if (id) {
-    trpc.chat.modify.mutate({ id, model });
+    query('PATCH /chat/:id', { id, model });
   }
 }
 </script>

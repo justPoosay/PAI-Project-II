@@ -5,7 +5,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { RouterView } from 'vue-router';
-import { trpc } from './lib/api';
+import { query } from './lib/api';
 import { fromLS, fromLSSafe, toLS } from './lib/local';
 import { setTheme } from './lib/utils';
 
@@ -33,15 +33,34 @@ if (!fromLSSafe('default-reasoning-effort')) {
 }
 
 Promise.all([
-  trpc.model.available.query().then(v => {
-    toLS('available-models', v);
-    const defaultModel = fromLSSafe('default-model');
-    if (!defaultModel || !v.includes(defaultModel)) {
-      toLS('default-model', v[0]!);
+  query('GET /model/available').then(v => {
+    if (v.isOk()) {
+      toLS('available-models', v.value);
+      const defaultModel = fromLSSafe('default-model');
+      if (!defaultModel || !v.value.includes(defaultModel)) {
+        toLS('default-model', v.value[0]!);
+      }
+    } else {
+      console.error('Failed to fetch available models:', v.error);
+      throw v.error;
     }
   }),
-  trpc.stripe.getPrice.query().then(v => toLS('price', v)),
-  trpc.stripe.getLimits.query().then(v => toLS('limits', v), console.error)
+  query('GET /stripe/price').then(v => {
+    if (v.isOk()) {
+      toLS('price', v.value);
+    } else {
+      console.error('Failed to fetch price:', v.error);
+      throw v.error;
+    }
+  }),
+  query('GET /stripe/limits').then(v => {
+    if (v.isOk()) {
+      toLS('limits', v.value);
+    } else {
+      console.error('Failed to fetch limits:', v.error);
+      throw v.error;
+    }
+  })
 ]).then(() => {
   loaded.value = true;
 }, console.error);

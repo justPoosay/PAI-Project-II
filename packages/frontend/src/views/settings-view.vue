@@ -106,11 +106,10 @@
 
 <script setup lang="ts">
 import ThemeToggle from '@/components/theme-toggle.vue';
-import { trpc } from '@/lib/api';
+import { routes as apiRoutes, query } from '@/lib/api';
 import { signOut, useSession } from '@/lib/auth-client';
 import { messagesPerMonth } from '@/lib/constants';
 import { fromLS, toLS } from '@/lib/local';
-import type { ART } from '@/lib/types';
 import { capitalize } from '@/lib/utils';
 import router from '@/router';
 import { entries } from 'common/utils';
@@ -122,12 +121,14 @@ import { RouterLink } from 'vue-router';
 
 const session = useSession();
 
-const limits = ref<ART<typeof trpc.stripe.getLimits.query>>(fromLS('limits'));
+const limits = ref<(typeof apiRoutes)['GET /stripe/limits']['o']['inferOut']>(fromLS('limits'));
 
-trpc.stripe.getLimits.query().then(data => {
-  limits.value = data;
-  toLS('limits', data);
-}, console.error);
+query('GET /stripe/limits').then(data => {
+  if (data.isOk()) {
+    limits.value = data.value;
+    toLS('limits', data.value);
+  }
+});
 
 const routes = {
   'account-settings': 'Account',

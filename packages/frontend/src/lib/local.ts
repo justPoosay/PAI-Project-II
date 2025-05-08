@@ -1,6 +1,7 @@
 import { type, type Type } from 'arktype';
 import { Effort, Model } from 'common';
 import { parse, stringify } from 'superjson';
+import { routes } from './api';
 
 export function fromLS<K extends keyof typeof keyToSchema>(
   key: K
@@ -33,17 +34,8 @@ const keyToSchema = {
   'available-models': Model.array(),
   'default-model': Model,
   'default-reasoning-effort': Effort,
-  price: type({
-    id: 'string',
-    unitAmount: 'number',
-    currency: 'string',
-    interval: "'day' | 'month' | 'week' | 'year' | undefined"
-  }),
-  limits: type({
-    messagesUsed: 'number',
-    refresh: 'Date',
-    tier: "'free' | 'pro'"
-  }),
+  price: routes['GET /stripe/price']['o'],
+  limits: routes['GET /stripe/limits']['o'],
   'user-preferences': type({
     name: 'string',
     occupation: 'string',

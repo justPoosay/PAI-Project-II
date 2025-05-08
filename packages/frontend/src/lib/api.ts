@@ -21,12 +21,12 @@ type RouteString = `${Method} /${string}`;
 const DBChatRepresentation = type.or(
   Chat.omit('id').and({
     _id: type.instanceOf(ObjectId),
-    'pinned?': 'boolean',
+    'pinned?': 'boolean | undefined',
     messages: Message.array()
   })
 );
 
-const routes = {
+export const routes = {
   'DELETE /chat/:id': {
     i: type({ id: 'string' })
   },
@@ -49,6 +49,30 @@ const routes = {
   },
   'POST /chat/': {
     o: DBChatRepresentation
+  },
+  'GET /stripe/create-checkout-session': {
+    o: type({ url: 'string' })
+  },
+  'GET /stripe/create-portal-session': {
+    o: type({ url: 'string' })
+  },
+  'GET /stripe/price': {
+    o: type({
+      id: 'string',
+      unitAmount: 'number',
+      currency: 'string',
+      interval: "'day' | 'month' | 'week' | 'year' | undefined"
+    })
+  },
+  'GET /stripe/limits': {
+    o: type({
+      messagesUsed: 'number',
+      refresh: 'Date',
+      tier: "'free' | 'pro'"
+    })
+  },
+  'GET /model/available': {
+    o: Model.array()
   }
 } as const satisfies Record<RouteString, { i?: Type<unknown, object>; o?: Type<unknown, object> }>;
 
@@ -59,7 +83,7 @@ type OutputOf<K extends keyof Routes> = Routes[K] extends { o: Type<infer O, obj
 export async function query<K extends keyof Routes>(
   route: K,
   ...args: InputOf<K> extends never ? [] : [input: InputOf<K>]
-): Promise<Result<OutputOf<K>, string>> {
+): Promise<Result<OutputOf<K>, string | number>> {
   const [method, path] = route.split(' ') as [Method, string];
   const input = args.length
     ? 'i' in routes[route]
@@ -89,7 +113,8 @@ export async function query<K extends keyof Routes>(
   try {
     const res = await fetch(`/api${templatedPath}?${queryParams.toString()}`, { method });
     if (!res.ok) {
-      return err(res.statusText);
+      console.error(`[${route}] ${res.status}`);
+      return err(res.status);
     }
     const jason = await res.text();
     let superJason: unknown;
@@ -97,7 +122,7 @@ export async function query<K extends keyof Routes>(
     try {
       superJason = parse(jason);
     } catch (e) {
-      void e;
+      console.error(`[${route}] ${e}`);
       return err('API response is not valid (Super)JSON');
     }
 
@@ -108,6 +133,7 @@ export async function query<K extends keyof Routes>(
     const out = routes[route].o(superJason);
 
     if (out instanceof type.errors) {
+      console.error(`[${route}] ${out.summary}`);
       return err(out.summary);
     }
 

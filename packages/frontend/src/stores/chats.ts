@@ -1,11 +1,8 @@
-import { query } from '@/lib/api';
-import type { Result } from 'neverthrow';
+import { query, type routes } from '@/lib/api';
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 
-export type Chat = (Awaited<ReturnType<typeof query<'GET /chat/'>>> extends Result<infer T, unknown>
-  ? T
-  : never)[number];
+export type Chat = (typeof routes)['GET /chat/']['o']['inferOut'][number];
 
 export const useChatStore = defineStore('chats', () => {
   const chats = ref<Chat[]>([]);
@@ -17,6 +14,7 @@ export const useChatStore = defineStore('chats', () => {
     } else {
       console.error('Failed to fetch chats:', result.error);
     }
+    return result;
   }
 
   async function $create() {
@@ -28,27 +26,31 @@ export const useChatStore = defineStore('chats', () => {
     return result;
   }
 
-  async function $modify(input: Parameters<typeof trpc.chat.modify.mutate>[0]) {
+  async function $modify(input: (typeof routes)['PATCH /chat/:id']['i']['inferOut']) {
     const index = chats.value.findIndex(c => c._id.toHexString() === input.id);
 
     if (index === -1 || !chats.value[index]) {
       return;
     }
 
-    const c = await trpc.chat.modify.mutate(input);
-    if (c) {
-      chats.value[index] = c;
+    const c = await query('PATCH /chat/:id', input);
+    if (c.isOk() && c.value) {
+      chats.value[index] = c.value;
     }
-    return;
+
+    return c;
   }
 
   async function $delete(id: string) {
-    await trpc.chat.delete.mutate({ id });
-    const index = chats.value.findIndex(c => c._id.toHexString() === id);
-    if (index === -1 || !chats.value[index]) {
-      return;
+    const c = await query('DELETE /chat/:id', { id });
+    if (c.isOk()) {
+      const index = chats.value.findIndex(c => c._id.toHexString() === id);
+      if (index === -1 || !chats.value[index]) {
+        return;
+      }
+      chats.value.splice(index, 1);
     }
-    chats.value.splice(index, 1);
+    return c;
   }
 
   return {
