@@ -3,9 +3,9 @@ services:
     build:
       context: .
       dockerfile: packages/frontend/Dockerfile
-    environment:
-      - VITE_MESSAGES_PER_MONTH_FREE=${VITE_MESSAGES_PER_MONTH_FREE:-100}
-      - VITE_MESSAGES_PER_MONTH_PAID=${VITE_MESSAGES_PER_MONTH_PAID:-1500}
+      args:
+        VITE_MESSAGES_PER_MONTH_FREE: ${VITE_MESSAGES_PER_MONTH_FREE:-100}
+        VITE_MESSAGES_PER_MONTH_PAID: ${VITE_MESSAGES_PER_MONTH_PAID:-1500}
     ports:
       - '80:80'
     depends_on:
