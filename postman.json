@@ -1,0 +1,291 @@
+{
+  "info": {
+    "name": "__ Chat",
+    "description": "The API use auth via better-auth.session_token cookie.  \nrefer to \\`better-auth\\` docs for more info",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Delete chat by id",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseURL}}/chat/:id",
+          "host": ["{{baseURL}}"],
+          "path": ["chat", ":id"],
+          "variable": [
+            {
+              "key": "id",
+              "value": "",
+              "description": "24 char hex string"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Modify chat by id",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "PATCH",
+        "header": [],
+        "url": {
+          "raw": "{{baseURL}}/chat/:id?name=&model=&reasoningEffort&pinned",
+          "host": ["{{baseURL}}"],
+          "path": ["chat", ":id"],
+          "query": [
+            {
+              "key": "name",
+              "value": "",
+              "description": "optional, string"
+            },
+            {
+              "key": "model",
+              "value": "",
+              "description": "optional, string (kind of)"
+            },
+            {
+              "key": "reasoningEffort",
+              "value": null,
+              "description": "optional, string (\"low\" | \"medium\" | \"high\") "
+            },
+            {
+              "key": "pinned",
+              "value": null,
+              "description": "optional, boolean"
+            }
+          ],
+          "variable": [
+            {
+              "key": "id",
+              "value": "",
+              "description": "24 char hex string"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get chat by id",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseURL}}/chat/:id",
+          "host": ["{{baseURL}}"],
+          "path": ["chat", ":id"],
+          "variable": [
+            {
+              "key": "id",
+              "value": "",
+              "description": "24 char hex string"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "List chats",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseURL}}/chat/",
+          "host": ["{{baseURL}}"],
+          "path": ["chat", ""]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create new chat",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{baseURL}}/chat/",
+          "host": ["{{baseURL}}"],
+          "path": ["chat", ""]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create completion",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseURL}}/completion/:id",
+          "host": ["{{baseURL}}"],
+          "path": ["completion", ":id"],
+          "variable": [
+            {
+              "key": "id",
+              "value": "",
+              "description": "24 char hex string"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get available models",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseURL}}/model/available",
+          "host": ["{{baseURL}}"],
+          "path": ["model", "available"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get message statistics",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseURL}}/stats/chat",
+          "host": ["{{baseURL}}"],
+          "path": ["stats", "chat"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get model statistics",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseURL}}/stats/models",
+          "host": ["{{baseURL}}"],
+          "path": ["stats", "models"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create checkout session",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseURL}}/stripe/create-checkout-session",
+          "host": ["{{baseURL}}"],
+          "path": ["stripe", "create-checkout-session"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Create portal session",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseURL}}/stripe/create-portal-session",
+          "host": ["{{baseURL}}"],
+          "path": ["stripe", "create-portal-session"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get subscription price",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseURL}}/stripe/price",
+          "host": ["{{baseURL}}"],
+          "path": ["stripe", "price"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get ratelimit info",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseURL}}/stripe/limits",
+          "host": ["{{baseURL}}"],
+          "path": ["stripe", "limits"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Update user subscription status",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseURL}}/success",
+          "host": ["{{baseURL}}"],
+          "path": ["success"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Stripe webhook endpoint",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{baseURL}}/stripe",
+          "host": ["{{baseURL}}"],
+          "path": ["stripe"]
+        }
+      },
+      "response": []
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "exec": [""]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "exec": [""]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseURL",
+      "value": "http://localhost:3000",
+      "type": "string"
+    }
+  ]
+}
