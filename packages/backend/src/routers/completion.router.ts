@@ -21,7 +21,7 @@ completionRouter.post('/:id', async (req, res) => {
 
   const _id = type('string.hex==24').pipe(id => new ObjectId(id))(req.params.id);
   if (_id instanceof type.errors) {
-    return void res.status(400).send();
+    return void res.status(400).send(_id.summary);
   }
 
   const input = type.or({ message: 'string>0' }, { messageIndex: 'number' }).and({
@@ -35,7 +35,7 @@ completionRouter.post('/:id', async (req, res) => {
     reasoningEffort: Effort
   })(req.body);
   if (input instanceof type.errors) {
-    return void res.status(400).send();
+    return void res.status(400).send(input.summary);
   }
 
   try {

@@ -1,0 +1,626 @@
+openapi: 3.1.0
+info:
+  title: __ Chat
+  description: All API responses returning JSON (except /completion) use SuperJSON serialization. The /completion endpoint streams JSONL message chunks.
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  version: '0.1'
+
+components:
+  schemas:
+    ObjectId:
+      type: string
+      pattern: '^[0-9a-fA-F]{24}$'
+      description: MongoDB ObjectId
+      examples: ['663bcf2c1c9b8e1718f0db71']
+
+    DateString:
+      type: string
+      format: date-time
+      description: ISO 8601 date string
+      examples: ['2025-05-08T21:34:49.000Z']
+
+    Model:
+      type: string
+      enum:
+        - o4-mini
+        - o3-mini
+        - claude-3-5-sonnet
+        - claude-3-7-sonnet
+        - claude-3-7-sonnet-thinking
+        - gpt-4.1
+        - gpt-4.1-mini
+        - gpt-4o
+        - gpt-4o-mini
+        - grok-3
+        - llama-3.3-70b-versatile
+        - deepseek-r1-distill-llama-70b
+        - deepseek-r1-distill-qwen-32b
+        - gemini-2.5-pro
+        - gemini-2.5-flash
+        - gemini-2.5-flash-thinking
+        - gemini-2.0-flash
+      description: AI Model identifier
+
+    Effort:
+      type: string
+      enum:
+        - 'low'
+        - 'medium'
+        - 'high'
+      description: Reasoning effort for the AI model
+
+    MessageChunk:
+      oneOf:
+        - $ref: '#/components/schemas/ToolCall'
+        - $ref: '#/components/schemas/ToolResult'
+        - $ref: '#/components/schemas/TextDelta'
+        - $ref: '#/components/schemas/Reasoning'
+        - $ref: '#/components/schemas/ErrorChunk'
+        - type: 'null'
+
+    ToolCall:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ['tool-call']
+        toolCallId:
+          type: string
+        toolName:
+          type: string
+        args:
+          type: object
+          additionalProperties: true
+      required:
+        - type
+        - toolCallId
+        - toolName
+        - args
+
+    ToolResult:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ['tool-result']
+        toolCallId:
+          type: string
+        toolName:
+          type: string
+        args:
+          type: object
+          additionalProperties: true
+        result: {}
+      required:
+        - type
+        - toolCallId
+        - toolName
+        - args
+        - result
+
+    TextDelta:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ['text-delta']
+        textDelta:
+          type: string
+      required:
+        - type
+        - textDelta
+
+    Reasoning:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ['reasoning']
+        textDelta:
+          type: string
+      required:
+        - type
+        - textDelta
+
+    ErrorChunk:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: ['error']
+        message:
+          type: string
+      required:
+        - type
+        - message
+
+    Message:
+      oneOf:
+        - $ref: '#/components/schemas/UserMessage'
+        - $ref: '#/components/schemas/AssistantMessage'
+
+    UserMessage:
+      type: object
+      properties:
+        role:
+          type: string
+          enum: ['user']
+        content:
+          type: string
+        attachmentIds:
+          type: array
+          items:
+            type: string
+      required:
+        - role
+        - content
+
+    AssistantMessage:
+      type: object
+      properties:
+        role:
+          type: string
+          enum: ['assistant']
+        chunks:
+          type: array
+          items:
+            $ref: '#/components/schemas/MessageChunk'
+        author:
+          $ref: '#/components/schemas/Model'
+      required:
+        - role
+        - chunks
+        - author
+
+    Chat:
+      type: object
+      properties:
+        _id:
+          $ref: '#/components/schemas/ObjectId'
+        name:
+          type:
+            - string
+            - 'null'
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/Message'
+        deleted:
+          type: boolean
+        pinned:
+          type: boolean
+        updatedAt:
+          $ref: '#/components/schemas/DateString'
+        userId:
+          $ref: '#/components/schemas/ObjectId'
+        model:
+          $ref: '#/components/schemas/Model'
+        reasoningEffort:
+          $ref: '#/components/schemas/Effort'
+      required:
+        - _id
+        - name
+        - messages
+        - deleted
+        - updatedAt
+        - userId
+        - model
+        - reasoningEffort
+
+  securitySchemes:
+    session:
+      type: apiKey
+      in: cookie
+      name: better-auth.session_token
+
+security:
+  - session: []
+
+paths:
+  /api/auth/{proxy+}:
+    get:
+      summary: Authentication Endpoints (Handled by BetterAuth)
+      description: |
+        These routes are managed by the `better-auth` library.
+        They handle user session management, OAuth sign-in (e.g., GitHub), sign-out, etc.
+        Examples: `/api/auth/session`, `/api/auth/signin/github`, `/api/auth/callback/github`, `/api/auth/signout`.
+        Refer to `better-auth` documentation for behaviors.
+      tags:
+        - Auth
+      parameters:
+        - name: proxy+
+          in: path
+          required: true
+          description: Specific authentication path (e.g., 'session', 'signin/github').
+          schema:
+            type: string
+      security: []
+
+  /chat/:
+    get:
+      summary: List all active chats for the user
+      description: Retrieves a list of chat summaries (ID, name, pinned status, last update) for the authenticated user. Response is SuperJSON stringified.
+      tags:
+        - Chat
+      responses:
+        '200':
+          description: A list of chat summaries.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      $ref: '#/components/schemas/ObjectId'
+                    name:
+                      type: string
+                    pinned:
+                      type: boolean
+                    lastUpdatedAt:
+                      $ref: '#/components/schemas/DateString'
+        '401':
+          description: Unauthorized.
+        '500':
+          description: Internal Server Error.
+
+    post:
+      summary: Create a new chat
+      description: Creates a new chat session for the authenticated user. Response is SuperJSON stringified.
+      tags:
+        - Chat
+      responses:
+        '201':
+          description: The created chat object.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Chat'
+        '401':
+          description: Unauthorized.
+        '500':
+          description: Internal Server Error.
+
+  /chat/{id}:
+    get:
+      summary: Get a chat by ID
+      description: Retrieves a chat object for the authenticated user.
+      tags:
+        - Chat
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ObjectId'
+      responses:
+        '200':
+          description: The chat object.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Chat'
+        '400':
+          description: Invalid chat ID.
+        '401':
+          description: Unauthorized.
+        '404':
+          description: Chat not found.
+        '500':
+          description: Internal Server Error.
+    patch:
+      summary: Update a chat
+      description: Modifies properties of an existing chat.
+      tags:
+        - Chat
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ObjectId'
+        - name: name
+          in: query
+          schema:
+            type:
+              - string
+              - 'null'
+        - name: model
+          in: query
+          schema:
+            $ref: '#/components/schemas/Model'
+        - name: reasoningEffort
+          in: query
+          schema:
+            $ref: '#/components/schemas/Effort'
+        - name: pinned
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: The updated chat object.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Chat'
+        '400':
+          description: Invalid request parameters.
+        '401':
+          description: Unauthorized.
+        '404':
+          description: Chat not found.
+        '500':
+          description: Internal Server Error.
+    delete:
+      summary: Delete a chat
+      description: Soft-deletes a chat for the authenticated user.
+      tags:
+        - Chat
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ObjectId'
+      responses:
+        '204':
+          description: Chat deleted successfully.
+        '400':
+          description: Invalid chat ID.
+        '401':
+          description: Unauthorized.
+        '404':
+          description: Chat not found.
+        '500':
+          description: Internal Server Error.
+
+  /completion/{id}:
+    post:
+      summary: Send or continue a chat message
+      description: Sends a message or continues a conversation in a chat session. Response is streaming MessageChunks in JSONL.
+      tags:
+        - Completion
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ObjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  description: The message text to send.
+                messageIndex:
+                  type: integer
+                  description: Index of the message to regenerate from.
+                preferences:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    occupation:
+                      type: string
+                    selectedTraits:
+                      type: string
+                    additionalInfo:
+                      type: string
+                model:
+                  $ref: '#/components/schemas/Model'
+                reasoningEffort:
+                  $ref: '#/components/schemas/Effort'
+              required:
+                - model
+                - reasoningEffort
+              oneOf:
+                - required: [message]
+                - required: [messageIndex]
+      responses:
+        '200':
+          description: Stream of message chunks.
+          content:
+            application/jsonl:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MessageChunk'
+        '400':
+          description: Invalid request.
+        '401':
+          description: Unauthorized.
+        '404':
+          description: Chat not found.
+        '429':
+          description: Rate limit exceeded.
+        '500':
+          description: Internal Server Error.
+
+  /model/available:
+    get:
+      summary: Get available AI models
+      description: Returns a list of available AI model identifiers.
+      tags:
+        - Model
+      responses:
+        '200':
+          description: A list of model identifiers.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Model'
+        '500':
+          description: Internal Server Error.
+
+  /stripe:
+    post:
+      summary: Stripe webhook endpoint
+      description: Receives Stripe webhook events and processes them.
+      tags:
+        - Stripe
+      parameters:
+        - name: stripe-signature
+          in: header
+          required: true
+          description: Stripe webhook signature header.
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Webhook received successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  received:
+                    type: boolean
+                required:
+                  - received
+        '400':
+          description: Bad request or invalid signature.
+        '500':
+          description: Internal Server Error.
+
+  /stripe/create-checkout-session:
+    get:
+      summary: Create Stripe checkout session
+      description: Initiates a Stripe Checkout session for subscription.
+      tags:
+        - Stripe
+      responses:
+        '200':
+          description: URL to redirect user for checkout.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                required:
+                  - url
+        '401':
+          description: Unauthorized.
+        '500':
+          description: Internal Server Error.
+
+  /stripe/create-portal-session:
+    get:
+      summary: Create Stripe billing portal session
+      description: Initiates a Stripe billing portal session for the user.
+      tags:
+        - Stripe
+      responses:
+        '200':
+          description: URL to redirect user to billing portal.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                required:
+                  - url
+        '401':
+          description: Unauthorized.
+        '403':
+          description: No Stripe customer found.
+        '500':
+          description: Internal Server Error.
+
+  /stripe/price:
+    get:
+      summary: Get Stripe price information
+      description: Retrieves pricing information for the subscription.
+      tags:
+        - Stripe
+      responses:
+        '200':
+          description: Price details.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  unitAmount:
+                    type: number
+                  currency:
+                    type: string
+                  interval:
+                    type: string
+                required:
+                  - id
+                  - unitAmount
+                  - currency
+                  - interval
+        '404':
+          description: Price not found.
+        '500':
+          description: Internal Server Error.
+
+  /stripe/limits:
+    get:
+      summary: Get usage limits
+      description: Retrieves the user's current messaging usage and subscription tier.
+      tags:
+        - Stripe
+      responses:
+        '200':
+          description: Usage limits and tier information.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  messagesUsed:
+                    type: number
+                  refresh:
+                    $ref: '#/components/schemas/DateString'
+                  tier:
+                    type: string
+                    enum:
+                      - free
+                      - pro
+                required:
+                  - messagesUsed
+                  - refresh
+                  - tier
+        '401':
+          description: Unauthorized.
+        '500':
+          description: Internal Server Error.
+
+  /success:
+    get:
+      summary: Stripe success redirect
+      description: Redirects user after successful Stripe checkout or if already subscribed.
+      tags:
+        - Stripe
+      responses:
+        '302':
+          description: Redirect to base URL.
+          headers:
+            location:
+              description: Redirect URL.
+              schema:
+                type: string

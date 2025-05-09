@@ -42,6 +42,7 @@ stripeRouter.get('/create-checkout-session', async (req, res) => {
       ui_mode: 'hosted'
     });
 
+    res.setHeader('Content-Type', 'application/json');
     res.send(stringify({ url: session.url }));
   } catch (err) {
     logger.error(`[GET /create-checkout-session] ${err}`);
@@ -66,6 +67,7 @@ stripeRouter.get('/create-portal-session', async (req, res) => {
       return_url: `${env.BASE_URL}/settings`
     });
 
+    res.setHeader('Content-Type', 'application/json');
     res.send(stringify({ url: session.url }));
   } catch (err) {
     logger.error(`[GET /create-portal-session] ${err}`);
@@ -81,6 +83,7 @@ stripeRouter.get('/price', async (_, res) => {
       return void res.status(404).send();
     }
 
+    res.setHeader('Content-Type', 'application/json');
     res.send(
       stringify({
         id: price.id,
@@ -103,6 +106,7 @@ stripeRouter.get('/limits', async (req, res) => {
 
   try {
     const limits = await getLimits(req.session.user);
+    res.setHeader('Content-Type', 'application/json');
     res.send(stringify(limits));
   } catch (err) {
     logger.error(`[GET /limits] ${err}`);

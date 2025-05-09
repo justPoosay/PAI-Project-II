@@ -67,6 +67,7 @@ chatRouter.patch('/:id', async (req, res) => {
       return void res.status(404).send();
     }
 
+    res.setHeader('Content-Type', 'application/json');
     res.send(stringify(updated));
   } catch (err) {
     logger.error(`[PATCH /chat/:id] ${err}`);
@@ -96,6 +97,7 @@ chatRouter.get('/:id', async (req, res) => {
       return void res.status(404).send();
     }
 
+    res.setHeader('Content-Type', 'application/json');
     res.send(stringify(chat));
   } catch (err) {
     logger.error(`[GET /chat/:id] ${err}`);
@@ -115,6 +117,7 @@ chatRouter.get('/', async (req, res) => {
       deleted: false
     });
 
+    res.setHeader('Content-Type', 'application/json');
     res.send(stringify(chats.map(c => pick(c, ['_id', 'name', 'pinned', 'updatedAt']))));
   } catch (err) {
     logger.error(`[GET /chat] ${err}`);
@@ -137,6 +140,7 @@ chatRouter.post('/', async (req, res) => {
       userId: new ObjectId(req.session.user.id)
     });
 
+    res.setHeader('Content-Type', 'application/json');
     res.status(201).send(stringify(inserted));
   } catch (err) {
     logger.error(`[POST /chat] ${err}`);
