@@ -49,5 +49,6 @@ const keyToSchema = {
     occupation: 'string',
     selectedTraits: 'string',
     additionalInfo: 'string'
-  })
+  }),
+  'system-prompt': type.string
 } as const satisfies Record<string, Type<unknown, object>>;

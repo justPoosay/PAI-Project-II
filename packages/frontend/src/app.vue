@@ -18,6 +18,10 @@ if (!fromLSSafe('user-preferences')) {
   });
 }
 
+if (!fromLSSafe('system-prompt')) {
+  toLS('system-prompt', '');
+}
+
 if (!fromLSSafe('theme')) {
   toLS('theme', 'system');
 }

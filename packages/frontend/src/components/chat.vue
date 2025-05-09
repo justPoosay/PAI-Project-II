@@ -423,7 +423,8 @@ async function requestCompletion(
       ...input,
       model: model.value,
       reasoningEffort: reasoningEffort.value,
-      preferences: fromLS('user-preferences')
+      preferences: fromLS('user-preferences'),
+      system: fromLS('system-prompt')
     },
     { signal: abortController.value?.signal }
   );

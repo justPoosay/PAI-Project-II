@@ -33,20 +33,31 @@
         placeholder="Interests, values, or preferences to keep in mind"
       />
     </fieldset>
+    <h2 class="text-2xl font-bold">OR</h2>
+    <fieldset class="flex flex-col gap-1">
+      <label class="text-md font-bold">Custom System Prompt</label>
+      <textarea
+        v-model="systemPrompt"
+        class="border-border focus:border-accent min-h-48 rounded-md border px-3 py-2 transition focus:outline-none"
+        placeholder="Enter a custom system prompt for __ Chat"
+      />
+    </fieldset>
     <button
       class="bg-accent hover:bg-pink disabled:hover:bg-accent cursor-pointer self-end rounded-lg px-4 py-2 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-50"
       :disabled="
         name === prevState.name &&
         occupation === prevState.occupation &&
         selectedTraits === prevState.selectedTraits &&
-        additionalInfo === prevState.additionalInfo
+        additionalInfo === prevState.additionalInfo &&
+        systemPrompt === prevState.systemPrompt
       "
       @click="
         prevState = {
           name,
           occupation,
           selectedTraits,
-          additionalInfo
+          additionalInfo,
+          systemPrompt
         }
       "
     >
@@ -59,12 +70,16 @@
 import { fromLS, toLS } from '@/lib/local';
 import { ref, watch } from 'vue';
 
-const prevState = ref(fromLS('user-preferences'));
+const prevState = ref({ ...fromLS('user-preferences'), systemPrompt: fromLS('system-prompt') });
 
 const name = ref(prevState.value.name);
 const occupation = ref(prevState.value.occupation);
 const selectedTraits = ref(prevState.value.selectedTraits);
 const additionalInfo = ref(prevState.value.additionalInfo);
+const systemPrompt = ref(prevState.value.systemPrompt);
 
-watch(prevState, state => toLS('user-preferences', state));
+watch(prevState, ({ systemPrompt, ...state }) => {
+  toLS('user-preferences', state);
+  toLS('system-prompt', systemPrompt);
+});
 </script>

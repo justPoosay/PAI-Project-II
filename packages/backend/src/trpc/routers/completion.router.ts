@@ -13,14 +13,15 @@ import { protectedProcedure } from '../trpc';
 
 export const completionRouter = protectedProcedure
   .input(
-    type.or({ message: 'string>0' }, { messageIndex: 'number' }).and({
-      id: 'string.hex==24',
+    type.and(type.or({ message: 'string>0' }, { messageIndex: 'number' }), {
       'preferences?': {
         name: 'string',
         occupation: 'string',
         selectedTraits: 'string',
         additionalInfo: 'string'
       },
+      'system?': 'string',
+      id: 'string.hex==24',
       model: Model,
       reasoningEffort: Effort
     })
@@ -64,31 +65,36 @@ export const completionRouter = protectedProcedure
 
     await ChatService.updateOne({ _id }, { messages: c.messages });
 
-    let prompt = `You are an AI assistant powered by the ${models[c.model].name} model. You are here to help and engage in conversation. Feel free to mention that you're using the ${models[c.model].name} model if asked.`;
+    let prompt: string | undefined;
+    if (input.system) {
+      prompt = input.system;
+    } else {
+      prompt = `You are an AI assistant powered by the ${models[c.model].name} model. You are here to help and engage in conversation. Feel free to mention that you're using the ${models[c.model].name} model if asked.`;
 
-    // TODO: math toggle?
-    prompt += ` If you are generating responses with math, you should use LaTeX, wrapped in $$.`;
+      // TODO: math toggle?
+      prompt += ` If you are generating responses with math, you should use LaTeX, wrapped in $$.`;
 
-    // TODO: code toggle?
-    prompt += ` If you are generating code, you should make it Prettier formatted and print width should be 80 characters.`;
+      // TODO: code toggle?
+      prompt += ` If you are generating code, you should make it Prettier formatted and print width should be 80 characters.`;
 
-    if (input.preferences?.name) {
-      prompt += ` You're speaking with ${input.preferences.name}.`;
+      if (input.preferences?.name) {
+        prompt += ` You're speaking with ${input.preferences.name}.`;
+      }
+
+      if (input.preferences?.occupation) {
+        prompt += ` The user's occupation is ${input.preferences.occupation}.`;
+      }
+
+      if (input.preferences?.selectedTraits) {
+        prompt += ` The user has requested that you behave in the following ways: ${input.preferences.selectedTraits}.`;
+      }
+
+      if (input.preferences?.additionalInfo) {
+        prompt += ` Additional information about the user: ${input.preferences.additionalInfo}. Use this information to provide more personalized responses.`;
+      }
+
+      prompt += ` Always strive to be helpful, respectful and engaging in your interactions.`;
     }
-
-    if (input.preferences?.occupation) {
-      prompt += ` The user's occupation is ${input.preferences.occupation}.`;
-    }
-
-    if (input.preferences?.selectedTraits) {
-      prompt += ` The user has requested that you behave in the following ways: ${input.preferences.selectedTraits}.`;
-    }
-
-    if (input.preferences?.additionalInfo) {
-      prompt += ` Additional information about the user: ${input.preferences.additionalInfo}. Use this information to provide more personalized responses.`;
-    }
-
-    prompt += ` Always strive to be helpful, respectful and engaging in your interactions.`;
 
     const options: Parameters<typeof streamText>[0] = {
       model: models[c.model].provider.it,
