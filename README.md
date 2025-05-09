@@ -35,8 +35,8 @@ A full-stack AI chat application featuring a Vue 3 frontend and a Bun-powered Ex
 ### 1. Clone the Repository
 
 ```bash
-git clone <repository-url>
-cd <repository-name>
+git clone https://git.averi.me/averithefox/ai-chat-app.git
+cd ai-chat-app
 ```
 
 ### 2. Install Dependencies
