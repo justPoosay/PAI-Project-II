@@ -163,7 +163,7 @@
 <script setup lang="ts">
 import Loader from '@/components/loader.vue';
 import { useSession } from '@/lib/auth-client';
-import { fromLS } from '@/lib/local';
+import { fromLSSafe } from '@/lib/local';
 import { capitalize } from '@/lib/utils';
 import router from '@/router';
 import { useChatStore } from '@/stores/chats';
@@ -201,7 +201,7 @@ const { chats } = storeToRefs(chatStore);
 const isExpanded = defineModel<boolean>({ required: true });
 const circumstances = ref<Partial<{ force: boolean; narrow: boolean }>>({});
 
-const tier = ref(fromLS('limits').tier);
+const tier = ref(fromLSSafe('limits')?.tier ?? 'free');
 const state = ref<'idle' | 'loading' | 'error'>('loading');
 
 init();
