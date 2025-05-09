@@ -14,6 +14,10 @@ import { getLimits } from '../lib/stripe';
 
 export const completionRouter = Router();
 
+/**
+ * trpc.completion
+ * @author: averithefox
+ */
 completionRouter.post('/:id', async (req, res) => {
   if (!req.session?.user) {
     return void res.status(401).send();

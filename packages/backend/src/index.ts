@@ -12,6 +12,7 @@ import { processEvent, stripe, syncStripeDataToKV } from './lib/stripe';
 import { chatRouter } from './routers/chat.router';
 import { completionRouter } from './routers/completion.router';
 import { modelRouter } from './routers/model.router';
+import { statsRouter } from './routers/stats.router';
 import { stripeRouter } from './routers/stripe.router';
 
 SuperJSON.registerCustom<ObjectId, string>(
@@ -27,6 +28,9 @@ const app = express();
 
 app.all(/\/api\/auth\/.*/, toNodeHandler(auth));
 
+/**
+ * @author: averithefox
+ */
 app.post('/stripe', express.raw({ type: 'application/json' }), async (req, res) => {
   const sig = req.headers['stripe-signature'];
 
@@ -74,6 +78,9 @@ app.use(
   }
 );
 
+/**
+ * @author: averithefox
+ */
 app.get('/success', async (req, res) => {
   if (!req.session?.user) {
     return res.redirect('/');
@@ -92,6 +99,7 @@ app.use('/chat', chatRouter);
 app.use('/completion', completionRouter);
 app.use('/model', modelRouter);
 app.use('/stripe', stripeRouter);
+app.use('/stats', statsRouter);
 
 app.listen(3000, () => {
   logger.info('Server is running on http://localhost:3000');

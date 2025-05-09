@@ -7,7 +7,10 @@ import { getLimits, stripe } from '../lib/stripe';
 
 export const stripeRouter = Router();
 
-// trpc.stripe.createCheckoutSession -> { url: string }
+/**
+ * trpc.stripe.createCheckoutSession -> { url: string }
+ * @author: BajabongoTS
+ */
 stripeRouter.get('/create-checkout-session', async (req, res) => {
   if (!req.session?.user) {
     return void res.status(401).send();
@@ -50,7 +53,10 @@ stripeRouter.get('/create-checkout-session', async (req, res) => {
   }
 });
 
-// trpc.stripe.createPortalSession -> { url: string }
+/**
+ * trpc.stripe.createPortalSession -> { url: string }
+ * @author: BajabongoTS
+ */
 stripeRouter.get('/create-portal-session', async (req, res) => {
   if (!req.session?.user) {
     return void res.status(401).send();
@@ -75,7 +81,10 @@ stripeRouter.get('/create-portal-session', async (req, res) => {
   }
 });
 
-// trpc.stripe.getPrice -> { id: string, unitAmount: number, currency: string, interval: string }
+/**
+ * trpc.stripe.getPrice -> { id: string, unitAmount: number, currency: string, interval: string }
+ * @author: BajabongoTS
+ */
 stripeRouter.get('/price', async (_, res) => {
   try {
     const price = await stripe.prices.retrieve(env.STRIPE_PRICE_ID);
@@ -98,7 +107,10 @@ stripeRouter.get('/price', async (_, res) => {
   }
 });
 
-// trpc.stripe.getLimits -> { messagesUsed: number; refresh: Date; tier: 'free' | 'pro' }
+/**
+ * trpc.stripe.getLimits -> { messagesUsed: number; refresh: Date; tier: 'free' | 'pro' }
+ * @author: BajabongoTS
+ */
 stripeRouter.get('/limits', async (req, res) => {
   if (!req.session?.user) {
     return void res.status(401).send();

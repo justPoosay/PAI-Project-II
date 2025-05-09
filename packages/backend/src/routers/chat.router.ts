@@ -9,7 +9,10 @@ import logger from '../lib/logger';
 
 export const chatRouter = Router();
 
-// trpc.chat.delete -> void
+/**
+ * trpc.chat.delete -> void
+ * @author: justPoosay
+ */
 chatRouter.delete('/:id', async (req, res) => {
   if (!req.session?.user) {
     return void res.status(401).send();
@@ -36,7 +39,10 @@ chatRouter.delete('/:id', async (req, res) => {
   }
 });
 
-// trpc.chat.modify -> Chat | null
+/**
+ * trpc.chat.modify -> Chat | null
+ * @author: justPoosay
+ */
 chatRouter.patch('/:id', async (req, res) => {
   if (!req.session?.user) {
     return void res.status(401).send();
@@ -75,7 +81,10 @@ chatRouter.patch('/:id', async (req, res) => {
   }
 });
 
-// trpc.chat.get -> Chat | null
+/**
+ * trpc.chat.get -> Chat | null
+ * @author: justPoosay
+ */
 chatRouter.get('/:id', async (req, res) => {
   if (!req.session?.user) {
     return void res.status(401).send();
@@ -105,7 +114,10 @@ chatRouter.get('/:id', async (req, res) => {
   }
 });
 
-// trpc.chat.list -> Pick<Chat, '_id' | 'name' | 'pinned' | 'updatedAt'>[]
+/**
+ * trpc.chat.list -> Pick<Chat, '_id' | 'name' | 'pinned' | 'updatedAt'>[]
+ * @author: justPoosay
+ */
 chatRouter.get('/', async (req, res) => {
   if (!req.session?.user) {
     return void res.status(401).send();
@@ -125,7 +137,10 @@ chatRouter.get('/', async (req, res) => {
   }
 });
 
-// trpc.chat.new -> Chat
+/**
+ * trpc.chat.new -> Chat
+ * @author: justPoosay
+ */
 chatRouter.post('/', async (req, res) => {
   if (!req.session?.user) {
     return void res.status(401).send();

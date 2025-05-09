@@ -208,6 +208,91 @@ components:
         - userId
         - model
         - reasoningEffort
+    StatsChat:
+      type: object
+      properties:
+        chatCount:
+          type: integer
+        messageCount:
+          type: integer
+      required:
+        - chatCount
+        - messageCount
+
+    StatsModelUsage:
+      type: object
+      description: Mapping from model identifier to number of chats
+      additionalProperties:
+        type: integer
+
+    Preferences:
+      type: object
+      description: Optional user preferences for personalization.
+      properties:
+        name:
+          type: string
+        occupation:
+          type: string
+        selectedTraits:
+          type: string
+        additionalInfo:
+          type: string
+
+    CompletionRequestMessage:
+      type: object
+      description: Request body for the /completion/{id} endpoint when sending a new message.
+      required:
+        - type
+        - message
+        - model
+        - reasoningEffort
+      properties:
+        type:
+          type: string
+          enum:
+            - message
+        message:
+          type: string
+          description: The message text to send.
+        preferences:
+          $ref: '#/components/schemas/Preferences'
+        model:
+          $ref: '#/components/schemas/Model'
+        reasoningEffort:
+          $ref: '#/components/schemas/Effort'
+
+    CompletionRequestIndex:
+      type: object
+      description: Request body for the /completion/{id} endpoint when regenerating a message.
+      required:
+        - type
+        - messageIndex
+        - model
+        - reasoningEffort
+      properties:
+        type:
+          type: string
+          enum:
+            - messageIndex
+        messageIndex:
+          type: integer
+          description: Index of the message to regenerate from.
+        preferences:
+          $ref: '#/components/schemas/Preferences'
+        model:
+          $ref: '#/components/schemas/Model'
+        reasoningEffort:
+          $ref: '#/components/schemas/Effort'
+
+    CompletionRequest:
+      oneOf:
+        - $ref: '#/components/schemas/CompletionRequestMessage'
+        - $ref: '#/components/schemas/CompletionRequestIndex'
+      discriminator:
+        propertyName: type
+        mapping:
+          message: '#/components/schemas/CompletionRequestMessage'
+          messageIndex: '#/components/schemas/CompletionRequestIndex'
 
   securitySchemes:
     session:
@@ -395,35 +480,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                message:
-                  type: string
-                  description: The message text to send.
-                messageIndex:
-                  type: integer
-                  description: Index of the message to regenerate from.
-                preferences:
-                  type: object
-                  properties:
-                    name:
-                      type: string
-                    occupation:
-                      type: string
-                    selectedTraits:
-                      type: string
-                    additionalInfo:
-                      type: string
-                model:
-                  $ref: '#/components/schemas/Model'
-                reasoningEffort:
-                  $ref: '#/components/schemas/Effort'
-              required:
-                - model
-                - reasoningEffort
-              oneOf:
-                - required: [message]
-                - required: [messageIndex]
+              $ref: '#/components/schemas/CompletionRequest'
       responses:
         '200':
           description: Stream of message chunks.
@@ -605,6 +662,42 @@ paths:
                   - messagesUsed
                   - refresh
                   - tier
+        '401':
+          description: Unauthorized.
+        '500':
+          description: Internal Server Error.
+
+  /stats/chat:
+    get:
+      summary: Get chat statistics
+      description: Retrieves the total number of chats and total messages for the authenticated user.
+      tags:
+        - Stats
+      responses:
+        '200':
+          description: Chat statistics.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatsChat'
+        '401':
+          description: Unauthorized.
+        '500':
+          description: Internal Server Error.
+
+  /stats/models:
+    get:
+      summary: Get model usage counts
+      description: Retrieves mapping of AI model identifiers to number of chats per model for the authenticated user.
+      tags:
+        - Stats
+      responses:
+        '200':
+          description: Model usage counts.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatsModelUsage'
         '401':
           description: Unauthorized.
         '500':
