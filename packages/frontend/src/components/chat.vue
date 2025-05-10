@@ -24,64 +24,84 @@
                     unfoldedReasoning = unfoldedReasoning === messageIndex ? null : messageIndex
                   "
                 >
-                  <ChevronRightIcon
+                  <span
                     class="size-4 transition-all duration-100 ease-in-out data-[unfolded=true]:rotate-90"
                     :data-unfolded="unfoldedReasoning === messageIndex"
-                  />
+                  >
+                    <ChevronRightIcon />
+                  </span>
                   Reasoning
                 </button>
                 <div
                   v-if="unfoldedReasoning === messageIndex"
                   v-html="parseMarkdown(messageMetadata.reasoning)"
                   class="markdown-content mt-1 rounded-md bg-black/5 p-2 dark:bg-black/50"
-                />
+                ></div>
               </div>
               <div
-                class="border-accent/40 group-data-[self=true]:bg-accent/50 relative w-fit rounded-lg group-data-[self=false]:pb-0 group-data-[self=true]:border group-data-[self=true]:p-2 group-data-[self=true]:px-4 group-data-[self=true]:shadow-xs dark:border-[#422f42] dark:group-data-[self=true]:bg-[#3E2A3E]"
+                class="border-accent/40 group-data-[self=true]:bg-accent/50 relative w-fit rounded-lg px-2 group-data-[self=true]:border group-data-[self=true]:px-4 group-data-[self=true]:py-2 group-data-[self=true]:shadow-xs dark:border-[#422f42] dark:group-data-[self=true]:bg-[#3E2A3E]"
               >
-                <template v-for="(part, partIndex) in messageMetadata.message">
-                  <div
-                    v-if="typeof part === 'string'"
-                    v-html="parseMarkdown(part, false)"
-                    class="markdown-content"
-                    :key="`str@${partIndex}`"
-                  />
-                  <div v-else class="m-1 ml-0" :key="partIndex">
-                    <button
-                      class="inline-flex cursor-pointer items-center space-x-1 rounded-lg bg-white/15 p-1 text-sm dark:bg-[#282828]"
-                      @click="
-                        unfoldedTools.includes(part.id)
-                          ? (unfoldedTools = unfoldedTools.filter(v => v !== part.id))
-                          : unfoldedTools.push(part.id)
-                      "
-                    >
-                      <component
-                        :is="toolIcons[part.name] ?? toolIcons['default']"
-                        class="size-4"
-                      />
-                      <div class="inline-flex items-center space-x-3 select-none">
-                        <p>{{ capitalize(part.name) }}</p>
-                        <LoaderCircleIcon class="size-4 animate-spin" v-if="!('result' in part)" />
-                        <ChevronUpIcon
-                          v-else-if="part.result"
-                          :data-folded="!unfoldedTools.includes(part.id)"
-                          class="size-4 transition-all duration-100 ease-in-out data-[folded=true]:rotate-180"
-                        />
-                        <CheckIcon v-else class="size-4 text-green-500" />
-                      </div>
-                    </button>
-                  </div>
-                </template>
-                <p
-                  v-if="
-                    !messageMetadata.message.length &&
-                    !messageMetadata.reasoning &&
-                    !messageMetadata.finished
-                  "
-                  class="text-muted animate-pulse text-sm"
+                <template
+                  v-if="!(messageMetadata.author === 'user' && editingIndex === messageIndex)"
                 >
-                  Waiting for response...
-                </p>
+                  <template v-for="(part, partIndex) in messageMetadata.message">
+                    <div
+                      v-if="typeof part === 'string'"
+                      v-html="parseMarkdown(part, false)"
+                      class="markdown-content"
+                      :key="`str@${partIndex}`"
+                    />
+                    <div v-else class="m-1 ml-0" :key="partIndex">
+                      <button
+                        class="inline-flex cursor-pointer items-center space-x-1 rounded-lg bg-white/15 p-1 text-sm dark:bg-[#282828]"
+                        @click="
+                          unfoldedTools.includes(part.id)
+                            ? (unfoldedTools = unfoldedTools.filter(v => v !== part.id))
+                            : unfoldedTools.push(part.id)
+                        "
+                      >
+                        <component
+                          :is="toolIcons[part.name] ?? toolIcons['default']"
+                          class="size-4"
+                        />
+                        <div class="inline-flex items-center space-x-3 select-none">
+                          <p>{{ capitalize(part.name) }}</p>
+                          <LoaderCircleIcon
+                            class="size-4 animate-spin"
+                            v-if="!('result' in part)"
+                          />
+                          <span
+                            v-else-if="part.result"
+                            class="size-4 transition-all duration-100 ease-in-out data-[folded=true]:rotate-180"
+                            :data-folded="!unfoldedTools.includes(part.id)"
+                          >
+                            <ChevronUpIcon />
+                          </span>
+                          <CheckIcon v-else class="size-4 text-green-500" />
+                        </div>
+                      </button>
+                    </div>
+                  </template>
+                  <p
+                    v-if="
+                      !messageMetadata.message.length &&
+                      !messageMetadata.reasoning &&
+                      !messageMetadata.finished
+                    "
+                    class="text-muted animate-pulse text-sm"
+                  >
+                    Waiting for response...
+                  </p>
+                </template>
+                <textarea
+                  v-else
+                  ref="editInput"
+                  v-model="editingContent"
+                  @keydown="e => handleKeyDown(e, () => confirmEdit(messageIndex))"
+                  @keydown.esc.prevent="cancelEdit"
+                  @input="handleInput"
+                  class="placeholder:text-muted-light dark:placeholder:text-muted-dark -mx-4 -my-2 max-h-48 min-h-[2rem] overflow-y-auto bg-transparent p-2 focus:outline-none"
+                />
               </div>
               <div
                 class="flex items-center gap-1 pt-1 opacity-0 transition group-hover:opacity-100 group-data-[self=true]:justify-end"
@@ -94,7 +114,14 @@
                   <RefreshCwIcon class="size-4" />
                 </button>
                 <button
-                  v-if="messageMetadata.finished"
+                  title="Edit message"
+                  class="hover:bg-accent/10 cursor-pointer rounded-md p-2 transition dark:hover:bg-white/5"
+                  v-if="messageMetadata.author === 'user' && editingIndex !== messageIndex"
+                  @click="startEditing(messageIndex)"
+                >
+                  <SquarePenIcon class="size-4" />
+                </button>
+                <button
                   title="Copy message"
                   @click="
                     copyToClipboard(
@@ -133,8 +160,10 @@
         >
           <div class="flex w-full flex-row items-start space-x-1.5 p-1.5 pb-0">
             <textarea
+              ref="chatInput"
               v-model="input"
-              @keydown="handleKeyDown"
+              @keydown="e => handleKeyDown(e, handleSend)"
+              @input="handleInput"
               placeholder="Type a message..."
               class="placeholder:text-muted-light dark:placeholder:text-muted-dark max-h-[10rem] min-h-[3rem] w-full resize-none overflow-y-auto bg-transparent focus:outline-none"
             />
@@ -199,6 +228,7 @@ import {
   RefreshCwIcon,
   SearchIcon,
   SendIcon,
+  SquarePenIcon,
   SunIcon,
   type LucideProps
 } from 'lucide-vue-next';
@@ -216,6 +246,10 @@ const input = ref('');
 const abortController = ref<AbortController | null>(null);
 const unfoldedTools = ref<string[]>([]);
 const unfoldedReasoning = ref<number | null>(null);
+const editingIndex = ref<number | null>(null);
+const editingContent = ref<string>('');
+const chatInput = ref<HTMLTextAreaElement | null>(null);
+const editInput = ref<HTMLTextAreaElement | null>(null);
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const toolIcons: Record<string, FunctionalComponent<LucideProps, any, any, any>> = {
@@ -407,7 +441,7 @@ async function handleSend() {
 async function requestCompletion(
   input: EnhancedOmit<
     Parameters<typeof trpc.completion.query>[0],
-    'model' | 'reasoningEffort' | 'preferences'
+    'model' | 'reasoningEffort' | 'preferences' | 'system'
   >
 ) {
   abortController.value = new AbortController();
@@ -461,25 +495,62 @@ async function regenerateMessage(messageIndex: number) {
   });
 }
 
-function handleKeyDown(e: KeyboardEvent) {
+function handleKeyDown(e: KeyboardEvent, onEnter: () => void = handleSend) {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
-    handleSend();
+    onEnter();
   }
   autoResize(e.target as HTMLTextAreaElement);
 }
 
 function autoResize(textarea: HTMLTextAreaElement) {
-  textarea.style.height = '3rem'; // Reset height to min (2 rows)
+  textarea.style.height = 'auto';
   const scrollHeight = textarea.scrollHeight;
-  textarea.style.height = Math.min(scrollHeight, 160) + 'px'; // 160px = 10rem
+  textarea.style.height = scrollHeight + 'px';
 }
 
-// Watch for input changes to handle paste events and other modifications
 watch(input, () => {
   nextTick(() => {
-    const textarea = document.querySelector('textarea');
-    if (textarea) autoResize(textarea);
+    if (chatInput.value) {
+      autoResize(chatInput.value);
+    }
   });
 });
+
+watch(editingContent, () => {
+  nextTick(() => {
+    if (editInput.value) {
+      autoResize(editInput.value);
+    }
+  });
+});
+
+function startEditing(index: number) {
+  editingIndex.value = index;
+  const msg = messages.value[index];
+  if (msg && msg.role === 'user') {
+    editingContent.value = msg.content;
+  }
+}
+
+function cancelEdit() {
+  editingIndex.value = null;
+  editingContent.value = '';
+}
+
+async function confirmEdit(index: number) {
+  messages.value = messages.value.slice(0, index);
+  messages.value.push({ role: 'user', content: editingContent.value });
+  editingIndex.value = null;
+  const chatId = route.params['id'] as string;
+  await requestCompletion({ id: chatId, messageIndex: index, message: editingContent.value });
+  editingContent.value = '';
+}
+
+function handleInput(e: Event) {
+  const target = e.target;
+  if (target instanceof HTMLTextAreaElement) {
+    autoResize(target);
+  }
+}
 </script>

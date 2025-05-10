@@ -14,18 +14,25 @@ import { protectedProcedure } from '../trpc';
 
 export const completionRouter = protectedProcedure
   .input(
-    type.and(type.or({ message: 'string>0' }, { messageIndex: 'number' }), {
-      'preferences?': {
-        name: 'string',
-        occupation: 'string',
-        selectedTraits: 'string',
-        additionalInfo: 'string'
-      },
-      'system?': 'string',
-      id: 'string.hex==24',
-      model: type.or(...getAvailableModels().map(v => `'${v}'` as const)),
-      reasoningEffort: Effort
-    })
+    type.and(
+      type.or(
+        { message: 'string>0' }, // completion
+        { messageIndex: 'number' }, // retry
+        { message: 'string>0', messageIndex: 'number' } // edit & retry
+      ),
+      {
+        'preferences?': {
+          name: 'string',
+          occupation: 'string',
+          selectedTraits: 'string',
+          additionalInfo: 'string'
+        },
+        'system?': 'string',
+        id: 'string.hex==24',
+        model: type.or(...getAvailableModels().map(v => `'${v}'` as const)),
+        reasoningEffort: Effort
+      }
+    )
   )
   .query(async function* ({ input, ctx, signal }) {
     const limits = await getLimits(ctx.auth.user);
@@ -49,7 +56,13 @@ export const completionRouter = protectedProcedure
     });
     if (!c) return;
 
-    if ('message' in input) {
+    if ('message' in input && 'messageIndex' in input) {
+      const message = c.messages.at(input.messageIndex);
+      // TODO: editing assistant messages
+      if (!message || message.role === 'assistant') return;
+      c.messages = c.messages.slice(0, input.messageIndex);
+      c.messages.push({ role: 'user', content: input.message });
+    } else if ('message' in input) {
       c.messages.push({ role: 'user', content: input.message });
     } else {
       const message = c.messages.at(input.messageIndex);
