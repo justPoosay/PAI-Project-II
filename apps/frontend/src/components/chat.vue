@@ -53,7 +53,7 @@
                         class="border-border bg-sidebar dark:bg-background overflow-hidden rounded-lg border shadow-sm transition-all hover:shadow-md"
                       >
                         <div
-                          class="flex cursor-pointer items-center space-x-2 p-2.5 transition-colors hover:bg-black/5 dark:hover:bg-white/5"
+                          class="flex cursor-pointer items-center space-x-2 p-1 transition-colors hover:bg-black/5 dark:hover:bg-white/5"
                           @click="
                             unfoldedTools.includes(part.id)
                               ? (unfoldedTools = unfoldedTools.filter(v => v !== part.id))
@@ -62,16 +62,14 @@
                         >
                           <component
                             :is="toolIcons[part.name] ?? toolIcons['default']"
-                            class="text-muted size-5 flex-shrink-0"
+                            class="text-muted size-4 flex-shrink-0"
                           />
-                          <div class="flex-grow">
-                            <p class="text-primary text-sm font-medium">
-                              {{ capitalize(part.name) }}
-                            </p>
-                          </div>
+                          <p class="text-primary text-xs font-medium">
+                            {{ capitalize(part.name) }}
+                          </p>
                           <span
                             :data-finished="!!('result' in part)"
-                            class="group relative flex size-5 flex-shrink-0 items-center [&_svg]:absolute [&_svg]:size-full [&_svg]:scale-0 [&_svg]:-rotate-90 [&_svg]:transition-all [&_svg]:duration-200"
+                            class="group relative flex size-4 flex-shrink-0 items-center [&_svg]:absolute [&_svg]:size-full [&_svg]:scale-0 [&_svg]:-rotate-90 [&_svg]:transition-all [&_svg]:duration-200"
                           >
                             <LoaderCircleIcon
                               class="text-blue animate-spin group-data-[finished=false]:scale-100 group-data-[finished=false]:rotate-0"
@@ -93,15 +91,15 @@
                             <p class="text-muted mb-0.5 font-medium">Arguments:</p>
                             <pre
                               class="text-primary mt-1 rounded-md bg-black/10 p-2 font-mono text-xs leading-relaxed whitespace-pre-wrap dark:bg-black/30"
-                              >{{ formatJson(part.args) }}</pre
-                            >
+                              v-html="highlight(formatJson(part.args), 'json')"
+                            />
                           </div>
                           <div v-if="'result' in part" class="mt-2">
                             <p class="text-muted mb-0.5 font-medium">Result:</p>
                             <pre
                               class="text-primary mt-1 rounded-md bg-black/10 p-2 font-mono text-xs leading-relaxed whitespace-pre-wrap dark:bg-black/30"
-                              >{{ formatJson(part.result) }}</pre
-                            >
+                              v-html="highlight(formatJson(part.result), 'json')"
+                            />
                           </div>
                         </div>
                       </div>
@@ -239,7 +237,7 @@
 import EffortSelector from '@/components/effort-selector.vue';
 import ModelSelector from '@/components/model-selector.vue';
 import { fromLS } from '@/lib/local';
-import { parseMarkdown } from '@/lib/markdown.ts';
+import { highlight, parseMarkdown } from '@/lib/markdown.ts';
 import { trpc } from '@/lib/trpc';
 import { capitalize, selfOrFirst } from '@/lib/utils.ts';
 import router from '@/router';

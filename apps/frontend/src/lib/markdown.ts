@@ -5,18 +5,21 @@ import { markedHighlight } from 'marked-highlight';
 import markedKatex from 'marked-katex-extension';
 import { capitalize } from './utils';
 
+export const highlight = (code: string, lang?: string) =>
+  DOMPurify.sanitize(
+    lang
+      ? hljs.getLanguage(lang)
+        ? hljs.highlight(code, { language: lang }).value
+        : hljs.highlightAuto(code).value
+      : hljs.highlightAuto(code).value
+  );
+
 const stock = new Marked(); // for parsing blockquotes
 const marked = new Marked(
   markedHighlight({
     emptyLangClass: 'hljs',
     langPrefix: 'hljs language-',
-    highlight(code, lang) {
-      return lang
-        ? hljs.getLanguage(lang)
-          ? hljs.highlight(code, { language: lang }).value
-          : hljs.highlightAuto(code).value
-        : hljs.highlightAuto(code).value;
-    }
+    highlight
   })
 );
 
