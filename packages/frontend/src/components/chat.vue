@@ -71,13 +71,13 @@
                           </div>
                           <span
                             :data-finished="!!('result' in part)"
-                            class="group relative flex h-5 w-5 flex-shrink-0 items-center"
+                            class="group relative flex size-5 flex-shrink-0 items-center [&_svg]:absolute [&_svg]:size-full [&_svg]:scale-0 [&_svg]:-rotate-90 [&_svg]:transition-all [&_svg]:duration-200"
                           >
                             <LoaderCircleIcon
-                              class="text-blue absolute inset-0 size-full animate-spin transition-opacity duration-300 group-data-[finished=false]:opacity-100 group-data-[finished=true]:opacity-0"
+                              class="text-blue animate-spin group-data-[finished=false]:scale-100 group-data-[finished=false]:rotate-0"
                             />
                             <CheckIcon
-                              class="absolute inset-0 size-full text-emerald-500 transition-opacity duration-300 group-data-[finished=false]:opacity-0 group-data-[finished=true]:opacity-100"
+                              class="text-emerald-500 group-data-[finished=true]:scale-100 group-data-[finished=true]:rotate-0"
                             />
                           </span>
                           <ChevronRightIcon
