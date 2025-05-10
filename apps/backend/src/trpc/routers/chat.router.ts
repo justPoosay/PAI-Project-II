@@ -1,6 +1,6 @@
 import { type } from 'arktype';
 import { Effort, Model } from 'common';
-import { pick } from 'common/utils';
+import { omit, pick } from 'common/utils';
 import { ObjectId } from 'mongodb';
 import { ChatService } from '../../lib/db';
 import { protectedProcedure, router } from '../trpc';
@@ -29,7 +29,7 @@ export const chatRouter = router({
     .mutation(({ ctx, input }) =>
       ChatService.updateOne(
         { _id: new ObjectId(input.id), deleted: false, userId: new ObjectId(ctx.auth.user.id) },
-        input
+        { $set: { ...omit(input, ['id']), updatedAt: new Date() } }
       )
     ),
   get: protectedProcedure.input(type({ id: 'string.hex==24' })).query(async ({ ctx, input }) => {

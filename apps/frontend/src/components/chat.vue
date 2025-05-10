@@ -87,19 +87,17 @@
                           v-if="unfoldedTools.includes(part.id)"
                           class="border-border border-t bg-black/5 p-2.5 text-xs dark:bg-white/5"
                         >
-                          <div>
+                          <div class="markdown-content">
                             <p class="text-muted mb-0.5 font-medium">Arguments:</p>
                             <pre
-                              class="text-primary mt-1 rounded-md bg-black/10 p-2 font-mono text-xs leading-relaxed whitespace-pre-wrap dark:bg-black/30"
-                              v-html="highlight(formatJson(part.args), 'json')"
-                            />
+                              class="mt-1 rounded-md"
+                            ><code class="hljs text-xs" v-html="highlight(formatJson(part.args), 'json')" /></pre>
                           </div>
-                          <div v-if="'result' in part" class="mt-2">
+                          <div v-if="'result' in part" class="markdown-content mt-2">
                             <p class="text-muted mb-0.5 font-medium">Result:</p>
                             <pre
-                              class="text-primary mt-1 rounded-md bg-black/10 p-2 font-mono text-xs leading-relaxed whitespace-pre-wrap dark:bg-black/30"
-                              v-html="highlight(formatJson(part.result), 'json')"
-                            />
+                              class="mt-1 rounded-md"
+                            ><code class="hljs text-xs" v-html="highlight(formatJson(part.result), 'json')" /></pre>
                           </div>
                         </div>
                       </div>
@@ -204,7 +202,7 @@
               class="aria-disabled:text-muted rounded-xl p-2 transition hover:bg-black/10 aria-disabled:hover:bg-transparent aria-[disabled=false]:cursor-pointer dark:hover:bg-white/5 dark:aria-disabled:text-white/40"
               v-tooltip="
                 includes(models[model].capabilities, 'imageInput')
-                  ? 'Upload File'
+                  ? 'Add an attachment'
                   : 'This model does not support file input'
               "
               for="file"
@@ -328,7 +326,11 @@ function init(id: string) {
   }
 
   trpc.chat.get.query({ id }).then(chat => {
-    if (token !== fetchToken.value || !chat) return;
+    if (token !== fetchToken.value) return;
+    if (!chat) {
+      router.push({ name: 'chat', params: { id: 'new' } });
+      return;
+    }
     messages.value = chat.messages;
     if (chat.model) {
       model.value = chat.model;
@@ -519,6 +521,11 @@ async function requestCompletion(
   );
 
   for await (const chunk of stream) {
+    if (chunk?.type === 'title-update') {
+      chatStore.$modify({ id: input.id, name: chunk.textDelta });
+      continue;
+    }
+
     msg.chunks.push(chunk);
   }
 

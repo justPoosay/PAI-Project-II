@@ -1,4 +1,4 @@
-import { streamText } from 'ai';
+import { generateObject, streamText, type CoreMessage } from 'ai';
 import { type } from 'arktype';
 import { redis } from 'bun';
 import { Effort, models, type MessageChunk } from 'common';
@@ -8,6 +8,7 @@ import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
 import { ObjectId } from 'mongodb';
 import { stringify } from 'superjson';
+import { z } from 'zod';
 import { tools } from '../../core/tools';
 import { getAvailableModels, getTextContent } from '../../core/utils';
 import { ChatService } from '../../lib/db';
@@ -79,7 +80,7 @@ export const completionRouter = protectedProcedure
     c.model = input.model;
     c.reasoningEffort = input.reasoningEffort;
 
-    await ChatService.updateOne({ _id }, { messages: c.messages });
+    await ChatService.updateOne({ _id }, { $set: { messages: c.messages } });
 
     let prompt: string | undefined;
     if (input.system) {
@@ -119,11 +120,29 @@ export const completionRouter = protectedProcedure
     const providerRaw = models[c.model].provider;
     const provider = Array.isArray(providerRaw) ? providerRaw.find(p => env[p.env])! : providerRaw;
 
+    const coreMessages: CoreMessage[] = c.messages.map(m =>
+      m.role === 'user' ? m : { role: 'assistant', content: getTextContent(m.chunks) }
+    );
+
+    // TODO: more "modular" approach
+    const titleQueue: { type: 'title-update'; textDelta: string }[] = [];
+    if (!c.name && env.OPENROUTER_API_KEY) {
+      generateObject({
+        model: models['gemini-2.0-flash'].provider.it,
+        messages: coreMessages,
+        schema: z.object({
+          title: z.string().describe('A short title you think would best describe the chat')
+        })
+      })
+        .then(({ object }) => titleQueue.push({ type: 'title-update', textDelta: object.title }))
+        .catch(err => {
+          logger.error('Failed to generate title', err);
+        });
+    }
+
     const options: Parameters<typeof streamText<typeof tools>>[0] = {
       model: provider.it,
-      messages: c.messages.map(m =>
-        m.role === 'user' ? m : { role: 'assistant', content: getTextContent(m.chunks) }
-      ),
+      messages: coreMessages,
       abortSignal: signal,
       system: prompt,
       tools,
@@ -211,6 +230,13 @@ export const completionRouter = protectedProcedure
 
         chunks.push(chunk);
         yield chunk;
+
+        if (titleQueue.length > 0) {
+          const titleChunk = titleQueue.shift();
+          if (titleChunk) {
+            yield titleChunk;
+          }
+        }
       }
     } catch (err) {
       logger.error(err);
@@ -222,6 +248,6 @@ export const completionRouter = protectedProcedure
       yield errorChunk;
     } finally {
       c.messages.push({ role: 'assistant', chunks, author: c.model });
-      await ChatService.updateOne({ _id }, { messages: c.messages });
+      await ChatService.updateOne({ _id }, { $set: { messages: c.messages } });
     }
   });

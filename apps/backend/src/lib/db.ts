@@ -7,7 +7,9 @@ import {
   type DeleteResult,
   type Filter,
   type OptionalUnlessRequiredId,
-  type WithId
+  type UpdateFilter,
+  type WithId,
+  type WithoutId
 } from 'mongodb';
 import { env } from './env';
 import { logger } from './logger';
@@ -60,7 +62,7 @@ function createService<A extends Type<object, object>>(collectionName: string, s
     },
     async updateOne<
       S extends Filter<T>,
-      U extends V extends true ? T : Partial<T>,
+      U extends V extends true ? WithoutId<T> : UpdateFilter<T>,
       V extends boolean
     >(
       where: S,
@@ -71,7 +73,7 @@ function createService<A extends Type<object, object>>(collectionName: string, s
 
       const value = replace
         ? await collection.findOneAndReplace(where, data, { returnDocument: 'after' })
-        : await collection.findOneAndUpdate(where, { $set: data }, { returnDocument: 'after' });
+        : await collection.findOneAndUpdate(where, data, { returnDocument: 'after' });
 
       return schema.allows(value)
         ? (value as WithId<Fallback<Extract<T, Pick<Merge<S, U>, keyof T>>, T>>)

@@ -54,8 +54,8 @@
               >
                 <RouterLink
                   :to="{ name: 'chat', params: { id: c._id.toHexString() } }"
-                  class="block w-full truncate p-2"
-                  v-tooltip="c.name ?? undefined"
+                  class="block w-full truncate p-2 transition-all duration-100 group-hover:pr-14"
+                  :title="c.name ?? undefined"
                 >
                   {{ c.name ?? 'Untitled' }}
                 </RouterLink>
@@ -66,6 +66,7 @@
                     :data-pinned="!!c.pinned"
                     @click="pinThread(c._id.toHexString())"
                     class="group hover:bg-accent/15 cursor-pointer rounded-lg p-1.5 transition"
+                    v-tooltip="c.pinned ? 'Unpin Thread' : 'Pin Thread'"
                   >
                     <PinIcon class="size-4 group-data-[pinned=true]:hidden" />
                     <PinOffIcon class="size-4 group-data-[pinned=false]:hidden" />
@@ -73,6 +74,7 @@
                   <DialogRoot>
                     <DialogTrigger
                       class="hover:bg-danger/50 cursor-pointer rounded-lg p-1.5 transition"
+                      v-tooltip="'Delete Thread'"
                     >
                       <XIcon class="size-4" />
                     </DialogTrigger>
