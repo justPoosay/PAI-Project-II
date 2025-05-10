@@ -4,7 +4,7 @@ import { z } from 'zod';
 import type { Tool } from '..';
 import { env } from '../../../lib/env';
 
-export default {
+export const contents = {
   dependency: () => (env.EXA_API_KEY ? null : 'Missing EXA_API_KEY'),
   core: tool({
     description: 'Returns the contents of a webpage',

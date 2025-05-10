@@ -52,7 +52,7 @@ function selectEffort(reasoningEffort: Effort) {
   toLS('default-reasoning-effort', reasoningEffort);
 
   const id = selfOrFirst(route.params['id']);
-  if (id) {
+  if (id && id !== 'new') {
     trpc.chat.modify.mutate({ id, reasoningEffort });
   }
 }

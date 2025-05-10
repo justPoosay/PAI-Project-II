@@ -3,15 +3,21 @@ import { type } from 'arktype';
 import { redis } from 'bun';
 import { Effort, models, type MessageChunk } from 'common';
 import { includes } from 'common/utils';
+import dayjs from 'dayjs';
+import timezone from 'dayjs/plugin/timezone';
+import utc from 'dayjs/plugin/utc';
 import { ObjectId } from 'mongodb';
 import { stringify } from 'superjson';
-import tools from '../../core/tools';
+import { tools } from '../../core/tools';
 import { getAvailableModels, getTextContent } from '../../core/utils';
 import { ChatService } from '../../lib/db';
 import { env } from '../../lib/env';
-import logger from '../../lib/logger';
+import { logger } from '../../lib/logger';
 import { getLimits } from '../../lib/stripe';
 import { protectedProcedure } from '../trpc';
+
+dayjs.extend(timezone);
+dayjs.extend(utc);
 
 export const completionRouter = protectedProcedure
   .input(
@@ -103,7 +109,7 @@ export const completionRouter = protectedProcedure
         prompt += ` Additional information about the user: ${input.preferences.additionalInfo}. Use this information to provide more personalized responses.`;
       }
 
-      prompt += ` Always strive to be helpful, respectful and engaging in your interactions.`;
+      prompt += ` Always strive to be helpful, respectful and engaging in your interactions. The current date and time is ${dayjs().tz('America/Los_Angeles').format('h:mm A on MMMM D, YYYY PST')}`;
     }
 
     let max_tokens = 1024;
@@ -113,14 +119,16 @@ export const completionRouter = protectedProcedure
     const providerRaw = models[c.model].provider;
     const provider = Array.isArray(providerRaw) ? providerRaw.find(p => env[p.env])! : providerRaw;
 
-    const options: Parameters<typeof streamText>[0] = {
+    const options: Parameters<typeof streamText<typeof tools>>[0] = {
       model: provider.it,
       messages: c.messages.map(m =>
         m.role === 'user' ? m : { role: 'assistant', content: getTextContent(m.chunks) }
       ),
       abortSignal: signal,
       system: prompt,
-      tools
+      tools,
+      maxSteps: limits.tier === 'pro' ? 100 : 10,
+      maxRetries: 3
     };
 
     if (includes(models[c.model].capabilities, 'effortControl')) {
@@ -160,10 +168,17 @@ export const completionRouter = protectedProcedure
       const stream = streamText(options);
       let reasoning = false;
       for await (let chunk of stream.fullStream) {
+        if (chunk.type === 'finish') {
+          chunks.push(null);
+          yield null;
+          continue;
+        }
+
         if (
           chunk.type !== 'tool-call' &&
           chunk.type !== 'text-delta' &&
-          chunk.type !== 'reasoning'
+          chunk.type !== 'reasoning' &&
+          chunk.type !== 'tool-result'
         ) {
           continue;
         }
@@ -185,11 +200,8 @@ export const completionRouter = protectedProcedure
         }
 
         chunks.push(chunk);
-
         yield chunk;
       }
-      chunks.push(null);
-      yield null;
     } catch (err) {
       logger.error(err);
       const errorChunk: MessageChunk = {

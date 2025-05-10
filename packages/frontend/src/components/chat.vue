@@ -40,9 +40,7 @@
               <div
                 class="border-accent/40 group-data-[self=true]:bg-accent/50 relative w-fit rounded-lg px-2 group-data-[self=true]:border group-data-[self=true]:px-4 group-data-[self=true]:py-2 group-data-[self=true]:shadow-xs dark:border-[#422f42] dark:group-data-[self=true]:bg-[#3E2A3E]"
               >
-                <template
-                  v-if="!(messageMetadata.author === 'user' && editingIndex === messageIndex)"
-                >
+                <template v-if="editingIndex !== messageIndex">
                   <template v-for="(part, partIndex) in messageMetadata.message">
                     <div
                       v-if="typeof part === 'string'"
@@ -50,35 +48,63 @@
                       class="markdown-content"
                       :key="`str@${partIndex}`"
                     />
-                    <div v-else class="m-1 ml-0" :key="partIndex">
-                      <button
-                        class="inline-flex cursor-pointer items-center space-x-1 rounded-lg bg-white/15 p-1 text-sm dark:bg-[#282828]"
-                        @click="
-                          unfoldedTools.includes(part.id)
-                            ? (unfoldedTools = unfoldedTools.filter(v => v !== part.id))
-                            : unfoldedTools.push(part.id)
-                        "
+                    <div v-else class="my-1.5 w-fit" :key="partIndex">
+                      <div
+                        class="border-border bg-sidebar dark:bg-background overflow-hidden rounded-lg border shadow-sm transition-all hover:shadow-md"
                       >
-                        <component
-                          :is="toolIcons[part.name] ?? toolIcons['default']"
-                          class="size-4"
-                        />
-                        <div class="inline-flex items-center space-x-3 select-none">
-                          <p>{{ capitalize(part.name) }}</p>
-                          <LoaderCircleIcon
-                            class="size-4 animate-spin"
-                            v-if="!('result' in part)"
+                        <div
+                          class="flex cursor-pointer items-center space-x-2 p-2.5 transition-colors hover:bg-black/5 dark:hover:bg-white/5"
+                          @click="
+                            unfoldedTools.includes(part.id)
+                              ? (unfoldedTools = unfoldedTools.filter(v => v !== part.id))
+                              : unfoldedTools.push(part.id)
+                          "
+                        >
+                          <component
+                            :is="toolIcons[part.name] ?? toolIcons['default']"
+                            class="text-muted size-5 flex-shrink-0"
                           />
+                          <div class="flex-grow">
+                            <p class="text-primary text-sm font-medium">
+                              {{ capitalize(part.name) }}
+                            </p>
+                          </div>
                           <span
-                            v-else-if="part.result"
-                            class="size-4 transition-all duration-100 ease-in-out data-[folded=true]:rotate-180"
-                            :data-folded="!unfoldedTools.includes(part.id)"
+                            :data-finished="!!('result' in part)"
+                            class="group relative flex h-5 w-5 flex-shrink-0 items-center"
                           >
-                            <ChevronUpIcon />
+                            <LoaderCircleIcon
+                              class="text-blue absolute inset-0 size-full animate-spin transition-opacity duration-300 group-data-[finished=false]:opacity-100 group-data-[finished=true]:opacity-0"
+                            />
+                            <CheckIcon
+                              class="absolute inset-0 size-full text-emerald-500 transition-opacity duration-300 group-data-[finished=false]:opacity-0 group-data-[finished=true]:opacity-100"
+                            />
                           </span>
-                          <CheckIcon v-else class="size-4 text-green-500" />
+                          <ChevronRightIcon
+                            :data-unfolded="unfoldedTools.includes(part.id)"
+                            class="text-muted ml-1 size-4 flex-shrink-0 transition-transform duration-200 data-[unfolded=true]:rotate-90"
+                          />
                         </div>
-                      </button>
+                        <div
+                          v-if="unfoldedTools.includes(part.id)"
+                          class="border-border border-t bg-black/5 p-2.5 text-xs dark:bg-white/5"
+                        >
+                          <div>
+                            <p class="text-muted mb-0.5 font-medium">Arguments:</p>
+                            <pre
+                              class="text-primary mt-1 rounded-md bg-black/10 p-2 font-mono text-xs leading-relaxed whitespace-pre-wrap dark:bg-black/30"
+                              >{{ formatJson(part.args) }}</pre
+                            >
+                          </div>
+                          <div v-if="'result' in part" class="mt-2">
+                            <p class="text-muted mb-0.5 font-medium">Result:</p>
+                            <pre
+                              class="text-primary mt-1 rounded-md bg-black/10 p-2 font-mono text-xs leading-relaxed whitespace-pre-wrap dark:bg-black/30"
+                              >{{ formatJson(part.result) }}</pre
+                            >
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </template>
                   <p
@@ -101,6 +127,13 @@
                   @input="handleInput"
                   class="placeholder:text-muted-light dark:placeholder:text-muted-dark -mx-4 -my-2 max-h-48 min-h-[3rem] overflow-y-auto bg-transparent p-2 focus:outline-none"
                 />
+                <div
+                  v-if="messageMetadata.error && editingIndex !== messageIndex"
+                  class="mt-1 flex items-center space-x-1 rounded-md bg-red-100 p-2 text-red-700 dark:bg-red-900/50"
+                >
+                  <AlertTriangleIcon class="size-4" />
+                  <span class="text-sm">{{ messageMetadata.error }}</span>
+                </div>
               </div>
               <div
                 v-if="editingIndex !== messageIndex"
@@ -214,9 +247,9 @@ import { useChatStore } from '@/stores/chats';
 import { models, type AssistantMessage, type Effort, type Message, type Model } from 'common';
 import { includes, type EnhancedOmit } from 'common/utils';
 import {
+  AlertTriangleIcon,
   CheckIcon,
   ChevronRightIcon,
-  ChevronUpIcon,
   CircleStopIcon,
   CopyIcon,
   FileDiffIcon,
@@ -260,6 +293,14 @@ const toolIcons: Record<string, FunctionalComponent<LucideProps, any, any, any>>
   repo_file: FileDiffIcon,
   default: HammerIcon
 };
+
+function formatJson(data: unknown) {
+  try {
+    return JSON.stringify(data, null, 2);
+  } catch {
+    return String(data); // Fallback for non-serializable data
+  }
+}
 
 function copyToClipboard(text: string) {
   navigator.clipboard.writeText(text);
@@ -390,6 +431,8 @@ function getMessageMetadata(msg: Message): MessageMetadata {
   } else if (last === null) {
     messageMetadata.finished = true;
   }
+
+  console.log(messageMetadata, msg.chunks);
 
   return messageMetadata;
 }

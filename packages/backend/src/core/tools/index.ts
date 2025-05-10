@@ -1,10 +1,10 @@
 import { type Tool as CoreTool } from 'ai';
 import { entries } from 'common/utils';
-import logger from '../../lib/logger';
-import contents from './impl/contents';
+import { logger } from '../../lib/logger';
+import { contents } from './impl/contents';
 import { repo_file, repo_tree } from './impl/github';
-import search from './impl/search';
-import weather from './impl/weather';
+import { search } from './impl/search';
+import { weather } from './impl/weather';
 
 export interface Tool {
   core: CoreTool;
@@ -13,22 +13,18 @@ export interface Tool {
   dependency(): (string | null) | Promise<string | null>;
 }
 
-export const tools = Object.freeze({
-  weather,
-  contents,
-  search,
-  repo_tree,
-  repo_file
-} satisfies Record<string, Tool>);
-
 const toolEntries = await Promise.all(
-  entries(tools).map(async ([name, { core, dependency }]): Promise<[string, CoreTool] | null> => {
+  entries({
+    weather,
+    contents,
+    search,
+    repo_tree,
+    repo_file
+  }).map(async ([name, { core, dependency }]) => {
     const error = await dependency();
     if (error) logger.warn(`"${name}" tool is not available! Error: ${error}`);
-    return error ? null : [name, core];
+    return error ? null : ([name, core] as const);
   })
 );
 
-export default Object.fromEntries(
-  toolEntries.filter((entry): entry is [string, CoreTool] => entry !== null)
-);
+export const tools = Object.fromEntries(toolEntries.filter(entry => entry !== null));

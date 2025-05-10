@@ -4,7 +4,7 @@ import { z } from 'zod';
 import type { Tool } from '../../../core/tools';
 import { getFileContent, getRepositoryTree } from '../../../core/tools/utils/github';
 import { env } from '../../../lib/env';
-import logger from '../../../lib/logger';
+import { logger } from '../../../lib/logger';
 
 export const repo_tree = {
   dependency() {

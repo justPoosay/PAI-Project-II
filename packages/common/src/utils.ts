@@ -8,7 +8,7 @@ export type EnhancedOmit<T, K extends keyof T> = string extends keyof T
     : never;
 
 export type Entry<T extends object> = NonNullable<{ [K in keyof T]: [K, T[K]] }[keyof T]>;
-export function entries<T extends object>(obj: Nullish<T>): Entry<T>[] {
+export function entries<const T extends object>(obj: Nullish<T>): Entry<T>[] {
   if (!obj) return [];
   return Object.entries(obj) as Entry<T>[];
 }

@@ -16,7 +16,7 @@ const logLevel = Object.freeze({
   fatal: [4, 'magenta']
 } satisfies Record<LogLevel, [number, ColorInput]>);
 
-const logger = Object.fromEntries(
+export const logger = Object.fromEntries(
   (['trace', 'debug', 'info', 'warn', 'error', 'fatal'] satisfies LogLevel[]).map(level => [
     level,
     (...args: unknown[]) => {
@@ -27,5 +27,3 @@ const logger = Object.fromEntries(
     }
   ])
 ) as Record<LogLevel, (...args: unknown[]) => void>;
-
-export default logger;

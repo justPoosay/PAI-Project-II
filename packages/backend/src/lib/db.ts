@@ -10,7 +10,7 @@ import {
   type WithId
 } from 'mongodb';
 import { env } from './env';
-import logger from './logger';
+import { logger } from './logger';
 
 const mongoClient = new MongoClient(env.DATABASE_URL);
 export const db = mongoClient.db('assistant');

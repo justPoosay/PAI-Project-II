@@ -80,7 +80,7 @@ function selectModel(model: Model) {
   toLS('default-model', model);
 
   const id = selfOrFirst(route.params['id']);
-  if (id) {
+  if (id && id !== 'new') {
     trpc.chat.modify.mutate({ id, model });
   }
 }

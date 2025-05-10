@@ -2,11 +2,11 @@ import { tool } from 'ai';
 import { z } from 'zod';
 import type { Tool } from '../../../core/tools';
 import { env } from '../../../lib/env';
-import logger from '../../../lib/logger';
+import { logger } from '../../../lib/logger';
 
 const baseUrl = 'https://api.weatherapi.com/v1';
 
-export default {
+export const weather = {
   async dependency() {
     if (!env.WEATHER_API_KEY) return 'Missing WEATHER_API_KEY';
     const res = await fetch(`${baseUrl}/current.json?key=${env.WEATHER_API_KEY}&q=London`);

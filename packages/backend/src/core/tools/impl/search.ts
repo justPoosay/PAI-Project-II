@@ -4,7 +4,7 @@ import { literal, number, object, string, union } from 'zod';
 import type { Tool } from '../../../core/tools';
 import { env } from '../../../lib/env';
 
-export default {
+export const search = {
   dependency: () => (env.EXA_API_KEY ? null : 'Missing EXA_API_KEY'),
   core: tool({
     description: 'Search the web',
@@ -34,7 +34,12 @@ export default {
         numResults
       });
 
-      return results.map(({ title, url }) => ({ title, url }));
+      return results.map(({ title, url, publishedDate, score }) => ({
+        title,
+        url,
+        publishedDate,
+        score
+      }));
     }
   })
 } satisfies Tool;
