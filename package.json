@@ -15,6 +15,7 @@
     "lint:oxlint:fix": "oxlint . --fix -D correctness --ignore-path .gitignore"
   },
   "workspaces": [
+    "apps/*",
     "packages/*"
   ],
   "devDependencies": {

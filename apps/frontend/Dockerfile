@@ -9,19 +9,19 @@ ENV VITE_MESSAGES_PER_MONTH_PAID=${VITE_MESSAGES_PER_MONTH_PAID}
 
 COPY package.json bun.lock ./
 
-COPY packages/frontend packages/frontend
+COPY apps/frontend apps/frontend
 COPY packages/common packages/common
 
 COPY patches patches
 
-WORKDIR /usr/src/app/packages/frontend
+WORKDIR /usr/src/app/apps/frontend
 
 RUN bun install
 
 RUN bunx vite build
 
 FROM nginx:alpine
-COPY --from=build /usr/src/app/packages/frontend/dist /usr/share/nginx/html
+COPY --from=build /usr/src/app/apps/frontend/dist /usr/share/nginx/html
 
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
