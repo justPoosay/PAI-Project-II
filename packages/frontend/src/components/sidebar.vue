@@ -55,7 +55,7 @@
                 <RouterLink
                   :to="{ name: 'chat', params: { id: c._id.toHexString() } }"
                   class="block w-full truncate p-2"
-                  :title="c.name ?? undefined"
+                  v-tooltip="c.name ?? undefined"
                 >
                   {{ c.name ?? 'Untitled' }}
                 </RouterLink>

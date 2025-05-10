@@ -19,24 +19,23 @@
             >
               <div v-if="messageMetadata.reasoning" class="pb-4">
                 <button
-                  class="text-muted flex cursor-pointer items-center gap-2 text-sm"
+                  :data-reasoning="!messageMetadata.message.length"
+                  class="text-muted flex cursor-pointer items-center gap-2 text-sm data-[reasoning=true]:animate-pulse"
                   @click="
                     unfoldedReasoning = unfoldedReasoning === messageIndex ? null : messageIndex
                   "
                 >
-                  <span
-                    class="size-4 transition-all duration-100 ease-in-out data-[unfolded=true]:rotate-90"
+                  <ChevronRightIcon
                     :data-unfolded="unfoldedReasoning === messageIndex"
-                  >
-                    <ChevronRightIcon />
-                  </span>
+                    class="size-4 transition-all duration-100 ease-in-out data-[unfolded=true]:rotate-90"
+                  />
                   Reasoning
                 </button>
                 <div
                   v-if="unfoldedReasoning === messageIndex"
                   v-html="parseMarkdown(messageMetadata.reasoning)"
                   class="markdown-content mt-1 rounded-md bg-black/5 p-2 dark:bg-black/50"
-                ></div>
+                />
               </div>
               <div
                 class="border-accent/40 group-data-[self=true]:bg-accent/50 relative w-fit rounded-lg px-2 group-data-[self=true]:border group-data-[self=true]:px-4 group-data-[self=true]:py-2 group-data-[self=true]:shadow-xs dark:border-[#422f42] dark:group-data-[self=true]:bg-[#3E2A3E]"
@@ -100,21 +99,22 @@
                   @keydown="e => handleKeyDown(e, () => confirmEdit(messageIndex))"
                   @keydown.esc.prevent="cancelEdit"
                   @input="handleInput"
-                  class="placeholder:text-muted-light dark:placeholder:text-muted-dark -mx-4 -my-2 max-h-48 min-h-[2rem] overflow-y-auto bg-transparent p-2 focus:outline-none"
+                  class="placeholder:text-muted-light dark:placeholder:text-muted-dark -mx-4 -my-2 max-h-48 min-h-[3rem] overflow-y-auto bg-transparent p-2 focus:outline-none"
                 />
               </div>
               <div
+                v-if="editingIndex !== messageIndex"
                 class="flex items-center gap-1 pt-1 opacity-0 transition group-hover:opacity-100 group-data-[self=true]:justify-end"
               >
                 <button
-                  title="Retry message"
+                  v-tooltip="{ content: 'Retry message', position: 'bottom' }"
                   @click="regenerateMessage(messageIndex)"
                   class="hover:bg-accent/10 cursor-pointer rounded-md p-2 transition dark:hover:bg-white/5"
                 >
                   <RefreshCwIcon class="size-4" />
                 </button>
                 <button
-                  title="Edit message"
+                  v-tooltip="{ content: 'Edit message', position: 'bottom' }"
                   class="hover:bg-accent/10 cursor-pointer rounded-md p-2 transition dark:hover:bg-white/5"
                   v-if="messageMetadata.author === 'user' && editingIndex !== messageIndex"
                   @click="startEditing(messageIndex)"
@@ -122,7 +122,7 @@
                   <SquarePenIcon class="size-4" />
                 </button>
                 <button
-                  title="Copy message"
+                  v-tooltip="{ content: 'Copy message', position: 'bottom' }"
                   @click="
                     copyToClipboard(
                       messageMetadata.message.filter(v => typeof v === 'string').join('')
@@ -171,7 +171,7 @@
             <label
               :aria-disabled="!includes(models[model].capabilities, 'imageInput')"
               class="aria-disabled:text-muted rounded-xl p-2 transition hover:bg-black/10 aria-disabled:hover:bg-transparent aria-[disabled=false]:cursor-pointer dark:hover:bg-white/5 dark:aria-disabled:text-white/40"
-              :title="
+              v-tooltip="
                 includes(models[model].capabilities, 'imageInput')
                   ? 'Upload File'
                   : 'This model does not support file input'

@@ -31,7 +31,7 @@
                 .sort()"
               :key="capability"
               :is="capabilities[capability][0]"
-              :title="capabilities[capability][1]"
+              v-tooltip="capabilities[capability][1]"
             />
           </div>
         </button>

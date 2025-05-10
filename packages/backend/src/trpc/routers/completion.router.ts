@@ -9,6 +9,7 @@ import tools from '../../core/tools';
 import { getAvailableModels, getTextContent } from '../../core/utils';
 import { ChatService } from '../../lib/db';
 import { env } from '../../lib/env';
+import logger from '../../lib/logger';
 import { getLimits } from '../../lib/stripe';
 import { protectedProcedure } from '../trpc';
 
@@ -39,14 +40,9 @@ export const completionRouter = protectedProcedure
     const messagesPerMonth =
       limits.tier === 'pro' ? env.VITE_MESSAGES_PER_MONTH_PAID : env.VITE_MESSAGES_PER_MONTH_FREE;
     if (limits.messagesUsed >= messagesPerMonth) {
-      yield {
-        type: 'error' as const,
-        message: 'You have reached your message limit for this month.'
-      } satisfies MessageChunk;
       return;
-    } else {
-      limits.messagesUsed += 1;
     }
+    limits.messagesUsed += 1;
 
     const _id = new ObjectId(input.id);
     const c = await ChatService.findOne({
@@ -195,6 +191,7 @@ export const completionRouter = protectedProcedure
       chunks.push(null);
       yield null;
     } catch (err) {
+      logger.error(err);
       const errorChunk: MessageChunk = {
         type: 'error',
         message: err instanceof Error && err.name === 'AbortError' ? 'Aborted by user' : `${err}`

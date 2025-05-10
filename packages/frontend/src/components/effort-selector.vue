@@ -2,7 +2,7 @@
   <PopoverRoot v-model:open="isOpen">
     <PopoverTrigger
       class="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm font-semibold hover:bg-gray-200/5"
-      title="Reasoning effort"
+      v-tooltip="'Reasoning effort'"
     >
       {{ capitalize(selected) }}
     </PopoverTrigger>
