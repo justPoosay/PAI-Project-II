@@ -169,6 +169,16 @@ export const completionRouter = protectedProcedure
       let reasoning = false;
       for await (let chunk of stream.fullStream) {
         if (chunk.type === 'finish') {
+          if (chunk.finishReason === 'error') {
+            const errorChunk: MessageChunk = {
+              type: 'error',
+              message: 'An error occurred while generating the response'
+            };
+            chunks.push(errorChunk);
+            yield errorChunk;
+            continue;
+          }
+
           chunks.push(null);
           yield null;
           continue;

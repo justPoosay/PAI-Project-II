@@ -19,7 +19,7 @@
             >
               <div v-if="messageMetadata.reasoning" class="pb-4">
                 <button
-                  :data-reasoning="!messageMetadata.message.length"
+                  :data-reasoning="!messageMetadata.message.length && !messageMetadata.finished"
                   class="text-muted flex cursor-pointer items-center gap-2 text-sm data-[reasoning=true]:animate-pulse"
                   @click="
                     unfoldedReasoning = unfoldedReasoning === messageIndex ? null : messageIndex
@@ -244,7 +244,7 @@ import { trpc } from '@/lib/trpc';
 import { capitalize, selfOrFirst } from '@/lib/utils.ts';
 import router from '@/router';
 import { useChatStore } from '@/stores/chats';
-import { models, type AssistantMessage, type Effort, type Message, type Model } from 'common';
+import { models, type Effort, type Message, type Model } from 'common';
 import { includes, type EnhancedOmit } from 'common/utils';
 import {
   AlertTriangleIcon,
@@ -438,14 +438,18 @@ function getMessageMetadata(msg: Message): MessageMetadata {
 }
 
 async function handleSend() {
+  const last = messages.value.at(-1);
+
   if (abortController.value) {
     abortController.value.abort();
-    (messages.value.at(-1) as AssistantMessage).chunks.push(null);
+    if (last?.role === 'assistant') {
+      last.chunks.push({ type: 'error', message: 'Aborted by user' });
+    }
     abortController.value = null;
     return;
   }
 
-  if (messages.value.at(-1)?.role === 'user') {
+  if (last?.role === 'user') {
     return;
   }
 
