@@ -1,21 +1,78 @@
 import DOMPurify from 'dompurify';
 import hljs from 'highlight.js';
-import { Marked, Renderer } from 'marked';
+import { marked, Marked } from 'marked';
 import { markedHighlight } from 'marked-highlight';
 import markedKatex from 'marked-katex-extension';
-import { capitalize } from './utils';
+import { Lru } from './lru';
 
-export const highlight = (code: string, lang?: string) =>
-  DOMPurify.sanitize(
+const codeCache = new Lru<string, string>(100);
+const markdownCache = new Lru<string, string>(100);
+
+function hash(str: string): string {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) {
+    h = (h * 31 + str.charCodeAt(i)) | 0;
+  }
+  return h.toString(36);
+}
+
+export const highlight = (code: string, lang?: string) => {
+  const key = hash(`${lang}-${code}`);
+  const cached = codeCache.get(key);
+  if (cached !== undefined) {
+    return cached;
+  }
+
+  const highlighted = DOMPurify.sanitize(
     lang
       ? hljs.getLanguage(lang)
         ? hljs.highlight(code, { language: lang }).value
         : hljs.highlightAuto(code).value
       : hljs.highlightAuto(code).value
   );
+  codeCache.set(key, highlighted);
+  return highlighted;
+};
 
-const stock = new Marked(); // for parsing blockquotes
-const marked = new Marked(
+const _marked = new Marked({
+  gfm: true,
+  breaks: true,
+  extensions: [
+    {
+      name: 'callout',
+      level: 'block',
+      start(src) {
+        return src.match(/^> \[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION|ERROR)]/)?.index;
+      },
+      tokenizer(src) {
+        const match = src.match(
+          /^> \[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION|ERROR)]([^\n]*)(\n(?:>.*\n?)*)?/
+        );
+        if (!match) return;
+        const [raw, kind, title, body] = match;
+        return {
+          type: 'callout',
+          raw,
+          kind: kind?.toLowerCase(),
+          title: title?.trim() || kind,
+          body: body?.replace(/^>\s?/gm, '')
+        };
+      },
+      renderer(token) {
+        const inner = marked(token['body'], { async: false });
+        return `
+          <blockquote data-type="${token['kind']}">
+            <p class="callout-title">${token['title']}</p>
+            ${inner}
+          </blockquote>
+        `;
+      }
+    }
+  ]
+});
+
+_marked.use(markedKatex({ throwOnError: false, nonStandard: true, output: 'mathml' }));
+_marked.use(
   markedHighlight({
     emptyLangClass: 'hljs',
     langPrefix: 'hljs language-',
@@ -23,51 +80,19 @@ const marked = new Marked(
   })
 );
 
-const renderer = new Renderer();
-
-renderer.blockquote = function ({ text, raw }) {
-  const match = text.match(/^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION|ERROR)]/);
-  if (match) {
-    const type = match[1]!.toLowerCase();
-    const title = capitalize(type);
-    return `<blockquote data-type="${type}">${text
-      .replace(match[0], title)
-      .split('\n')
-      .filter(Boolean)
-      .map(v => {
-        const isTitle = v === title;
-        return `<p${isTitle ? ' class="callout-title"' : ''}>${isTitle ? v : stock.parse(v, { async: false })}</p>`;
-      })
-      .join('\n')}</blockquote>`;
+export function parseMarkdown(md: string, strict = true) {
+  if (!md) {
+    return '';
   }
-  return stock.parse(raw, { async: false });
-};
-
-marked.use({ renderer });
-marked.use(markedKatex({ throwOnError: false, nonStandard: true, output: 'mathml' }));
-
-// ---
-
-const markdownCache = new Map<string, string>();
-
-export function parseMarkdown(text: string, strict = true) {
-  if (markdownCache.has(text)) {
-    return markdownCache.get(text);
+  const key = hash(md);
+  const cached = markdownCache.get(key);
+  if (cached !== undefined) {
+    return cached;
   }
 
-  const parsed = DOMPurify.sanitize(
-    marked.parse(text.replace(/^[\u200B\u200C\u200D\u200E\u200F\uFEFF]/, ''), {
-      async: false,
-      breaks: true,
-      gfm: true
-    }),
-    strict
-      ? {}
-      : {
-          ADD_ATTR: ['onclick']
-        }
-  );
+  const html = _marked.parse(md.replace(/^[\u200B-\uFEFF]/, ''), { async: false });
+  const clean = DOMPurify.sanitize(html, strict ? {} : { ADD_ATTR: ['onclick'] });
 
-  markdownCache.set(text, parsed);
-  return parsed;
+  markdownCache.set(key, clean);
+  return clean;
 }
