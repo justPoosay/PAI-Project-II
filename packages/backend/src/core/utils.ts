@@ -4,7 +4,12 @@ import { env } from '../lib/env';
 
 export function getAvailableModels() {
   return entries(models)
-    .filter(v => !!env[v[1].provider.env])
+    .filter(([, { provider }]) => {
+      if (Array.isArray(provider)) {
+        return provider.some(p => env[p.env]);
+      }
+      return env[provider.env];
+    })
     .map(v => v[0]);
 }
 

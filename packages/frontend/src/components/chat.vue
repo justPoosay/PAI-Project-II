@@ -72,6 +72,16 @@
                     </button>
                   </div>
                 </template>
+                <p
+                  v-if="
+                    !messageMetadata.message.length &&
+                    !messageMetadata.reasoning &&
+                    !messageMetadata.finished
+                  "
+                  class="text-muted animate-pulse text-sm"
+                >
+                  Waiting for response...
+                </p>
               </div>
               <div
                 class="flex items-center gap-1 pt-1 opacity-0 transition group-hover:opacity-100 group-data-[self=true]:justify-end"

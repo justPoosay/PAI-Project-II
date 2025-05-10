@@ -1,11 +1,12 @@
 import { streamText } from 'ai';
 import { type } from 'arktype';
 import { redis } from 'bun';
-import { Effort, Model, models, type MessageChunk } from 'common';
+import { Effort, models, type MessageChunk } from 'common';
+import { includes } from 'common/utils';
 import { ObjectId } from 'mongodb';
 import { stringify } from 'superjson';
 import tools from '../../core/tools';
-import { getTextContent } from '../../core/utils';
+import { getAvailableModels, getTextContent } from '../../core/utils';
 import { ChatService } from '../../lib/db';
 import { env } from '../../lib/env';
 import { getLimits } from '../../lib/stripe';
@@ -22,7 +23,7 @@ export const completionRouter = protectedProcedure
       },
       'system?': 'string',
       id: 'string.hex==24',
-      model: Model,
+      model: type.or(...getAvailableModels().map(v => `'${v}'` as const)),
       reasoningEffort: Effort
     })
   )
@@ -96,8 +97,15 @@ export const completionRouter = protectedProcedure
       prompt += ` Always strive to be helpful, respectful and engaging in your interactions.`;
     }
 
+    let max_tokens = 1024;
+    if (c.reasoningEffort === 'medium') max_tokens = 2048;
+    if (c.reasoningEffort === 'high') max_tokens = 4096;
+
+    const providerRaw = models[c.model].provider;
+    const provider = Array.isArray(providerRaw) ? providerRaw.find(p => env[p.env])! : providerRaw;
+
     const options: Parameters<typeof streamText>[0] = {
-      model: models[c.model].provider.it,
+      model: provider.it,
       messages: c.messages.map(m =>
         m.role === 'user' ? m : { role: 'assistant', content: getTextContent(m.chunks) }
       ),
@@ -106,39 +114,33 @@ export const completionRouter = protectedProcedure
       tools
     };
 
-    if (c.model === 'claude-3-7-sonnet-thinking') {
-      let budgetTokens = 1024;
-      if (c.reasoningEffort === 'medium') budgetTokens = 2048;
-      if (c.reasoningEffort === 'high') budgetTokens = 4096;
-
-      options.providerOptions = {
-        anthropic: {
-          thinking: {
-            type: 'enabled',
-            budgetTokens
+    if (includes(models[c.model].capabilities, 'effortControl')) {
+      if (c.model === 'claude-3-7-sonnet-thinking') {
+        options.providerOptions = {
+          anthropic: {
+            thinking: {
+              type: 'enabled',
+              budgetTokens: max_tokens
+            }
           }
+        };
+        if (provider.env === 'OPENROUTER_API_KEY') {
+          (options.model as typeof provider.it).settings.reasoning = {
+            max_tokens
+          };
         }
-      };
-    }
-
-    if (c.model === 'o4-mini' || c.model === 'o3-mini') {
-      options.providerOptions = {
-        openai: {
-          reasoningEffort: c.reasoningEffort
+      } else {
+        options.providerOptions = {
+          openai: {
+            reasoningEffort: c.reasoningEffort
+          }
+        };
+        if (provider.env === 'OPENROUTER_API_KEY') {
+          (options.model as typeof provider.it).settings.reasoning = {
+            effort: c.reasoningEffort
+          };
         }
-      };
-    }
-
-    if (c.model === 'gemini-2.5-flash-thinking') {
-      let max_tokens = 1024;
-      if (c.reasoningEffort === 'medium') max_tokens = 2048;
-      if (c.reasoningEffort === 'high') max_tokens = 4096;
-
-      options.providerOptions = {
-        openrouter: {
-          max_tokens
-        }
-      };
+      }
     }
 
     await redis.set(`user:limits:${ctx.auth.user.id}`, stringify(limits));
