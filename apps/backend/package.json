@@ -9,13 +9,13 @@
     "type-check": "tsc --noEmit"
   },
   "devDependencies": {
-    "@types/bun": "latest",
+    "@types/bun": "^1.2.13",
     "@types/jest": "^29.5.14",
     "@types/mongodb": "^4.0.7",
-    "@types/node": "latest"
+    "@types/node": "^22.15.17"
   },
   "peerDependencies": {
-    "typescript": "latest"
+    "typescript": "^5.8.3"
   },
   "dependencies": {
     "@trpc/server": "^11.1.2",

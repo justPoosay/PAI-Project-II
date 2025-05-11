@@ -18,10 +18,10 @@
     "type-check": "tsc --noEmit"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "^1.2.13"
   },
   "peerDependencies": {
-    "typescript": "latest"
+    "typescript": "^5.8.3"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^1.2.11",

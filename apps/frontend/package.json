@@ -16,9 +16,9 @@
     "@types/node": "^22.15.17",
     "@vitejs/plugin-vue": "^5.2.4",
     "@vue/tsconfig": "^0.7.0",
-    "npm-run-all2": "^7.0.2",
+    "npm-run-all2": "^8.0.1",
     "postcss": "^8.5.3",
-    "sass": "^1.87.0",
+    "sass": "^1.88.0",
     "sass-loader": "^16.0.5",
     "tailwindcss": "^4.1.6",
     "tailwindcss-safe-area": "^0.6.0",
@@ -27,7 +27,7 @@
     "vue-tsc": "^2.2.10"
   },
   "peerDependencies": {
-    "typescript": "latest"
+    "typescript": "^5.8.3"
   },
   "dependencies": {
     "@stripe/stripe-js": "^7.3.0",
@@ -40,11 +40,11 @@
     "dexie": "^4.0.11",
     "dompurify": "^3.2.5",
     "highlight.js": "^11.11.1",
-    "lucide-vue-next": "^0.469.0",
+    "lucide-vue-next": "^0.509.0",
     "marked": "^15.0.11",
     "marked-highlight": "^2.2.1",
     "marked-katex-extension": "^5.1.4",
-    "pinia": "^2.3.1",
+    "pinia": "^3.0.2",
     "reka-ui": "^2.2.1",
     "superjson": "^2.2.2",
     "vue": "^3.5.13",
