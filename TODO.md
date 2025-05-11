@@ -2,3 +2,4 @@
 - editing messages
 - better error displaying
 - "Anonymous" chats
+- fix performance

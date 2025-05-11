@@ -44,7 +44,7 @@
                   <template v-for="(part, partIndex) in messageMetadata.message">
                     <div
                       v-if="typeof part === 'string'"
-                      v-html="parseMarkdown(part, false)"
+                      v-html="parseMarkdown(part)"
                       class="markdown-content"
                       :key="`str@${partIndex}`"
                     />
@@ -431,8 +431,6 @@ function getMessageMetadata(msg: Message): MessageMetadata {
   } else if (last === null) {
     messageMetadata.finished = true;
   }
-
-  console.log(messageMetadata, msg.chunks);
 
   return messageMetadata;
 }
