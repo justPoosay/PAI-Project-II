@@ -101,6 +101,8 @@ export function splitMarkdown(text: string, chunkSize = 500): string[] {
           chunks.push(current + line + '\n');
           current = '';
         }
+      } else {
+        current += line + '\n';
       }
       continue;
     }
@@ -121,6 +123,7 @@ export function splitMarkdown(text: string, chunkSize = 500): string[] {
   if (current !== '') {
     chunks.push(current);
   }
+
   return chunks;
 }
 
