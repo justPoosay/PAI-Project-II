@@ -74,6 +74,34 @@ export const models = Object.freeze({
     icon: 'openai',
     provider: [provider('o3-mini', 'openai'), provider('openai/o3-mini', 'openrouter')]
   },
+  'claude-4-sonnet': {
+    capabilities: ['toolUsage', 'imageInput'],
+    name: 'Claude 4 Sonnet',
+    icon: 'anthropic',
+    provider: [
+      provider('claude-4-sonnet-latest', 'anthropic'),
+      provider('anthropic/claude-sonnet-4', 'openrouter')
+    ]
+  },
+  'claude-4-sonnet-thinking': {
+    capabilities: ['toolUsage', 'reasoning', 'effortControl', 'imageInput'],
+    name: 'Claude 4 Sonnet',
+    text: 'Thinking',
+    icon: 'anthropic',
+    provider: [
+      provider('claude-4-sonnet-latest', 'anthropic'),
+      provider('anthropic/claude-sonnet-4', 'openrouter')
+    ]
+  },
+  'claude-4-opus': {
+    capabilities: ['toolUsage', 'imageInput'],
+    name: 'Claude 4 Opus',
+    icon: 'anthropic',
+    provider: [
+      provider('claude-4-opus-latest', 'anthropic'),
+      provider('anthropic/claude-opus-4', 'openrouter')
+    ]
+  },
   'claude-3-5-sonnet': {
     capabilities: ['toolUsage', 'imageInput'],
     name: 'Claude 3.5 Sonnet',

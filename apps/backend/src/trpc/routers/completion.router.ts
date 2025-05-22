@@ -151,7 +151,7 @@ export const completionRouter = protectedProcedure
     };
 
     if (includes(models[c.model].capabilities, 'effortControl')) {
-      if (c.model === 'claude-3-7-sonnet-thinking') {
+      if (c.model === 'claude-3-7-sonnet-thinking' || c.model === 'claude-4-sonnet-thinking') {
         options.providerOptions = {
           anthropic: {
             thinking: {
